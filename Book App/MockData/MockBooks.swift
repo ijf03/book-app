@@ -14,7 +14,12 @@ extension Book {
         coverURL: nil,
         pageCount: 498,
         status: .reading,
-        format: .physical
+        format: .physical,
+        progress: ReadingProgress(
+            page: 184,
+            percentage: 37,
+            timestampSeconds: nil
+        ),
     )
 
     static let mockTomorrow = Book(
@@ -27,7 +32,12 @@ extension Book {
         coverURL: nil,
         pageCount: 401,
         status: .toRead,
-        format: .ebook
+        format: .ebook,
+        progress: ReadingProgress(
+            page: 321,
+            percentage: 40,
+            timestampSeconds: nil
+        )
     )
 
     static let mockProjectHailMary = Book(
@@ -66,7 +76,12 @@ extension Book {
         coverURL: nil,
         pageCount: 688,
         status: .reading,
-        format: .ebook
+        format: .ebook,
+        progress: ReadingProgress(
+            page: 241,
+            percentage: 35,
+            timestampSeconds: nil
+        )
     )
 
     static let mockCirce = Book(

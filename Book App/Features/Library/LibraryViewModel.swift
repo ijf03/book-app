@@ -43,4 +43,18 @@ final class LibraryViewModel {
             .trimmingCharacters(in: .whitespacesAndNewlines)
             .isEmpty
     }
+    
+    func updateBook(_ updatedBook: Book) {
+        guard
+            let index = books.firstIndex(
+                where: {
+                    $0.id == updatedBook.id
+                }
+            )
+        else {
+            return
+        }
+
+        books[index] = updatedBook
+    }
 }

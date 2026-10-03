@@ -37,7 +37,9 @@ struct BookStatusCard: View {
                         secondaryAction()
                     }
                     .buttonStyle(
-                        AppButtonStyle(kind: .secondary)
+                        AppButtonStyle(
+                            kind: .secondary
+                        )
                     )
                 }
             }
@@ -60,19 +62,9 @@ struct BookStatusCard: View {
     @ViewBuilder
     private var statusContent: some View {
         switch book.status {
-        case .reading:
-            VStack(
-                alignment: .leading,
-                spacing: AppSpacing.sm
-            ) {
-                Text(
-                    "Progress tracking will appear here."
-                )
-                .font(AppTypography.body)
-                .foregroundStyle(Color.textSecondary)
 
-                ProgressBar(progress: 0)
-            }
+        case .reading:
+            readingProgress
 
         case .toRead:
             Text(
@@ -89,23 +81,107 @@ struct BookStatusCard: View {
             .foregroundStyle(Color.textSecondary)
         }
     }
-}
 
-#Preview {
-    VStack(spacing: AppSpacing.lg) {
-        BookStatusCard(
-            book: .mockFourthWing,
-            primaryActionTitle: "Start a Reading Session",
-            primaryAction: {},
-            secondaryAction: {}
-        )
+    private var readingProgress: some View {
+        VStack(
+            alignment: .leading,
+            spacing: AppSpacing.sm
+        ) {
+            ProgressBar(
+                progress: progressFraction
+            )
 
-        BookStatusCard(
-            book: .mockTomorrow,
-            primaryActionTitle: "Start Reading",
-            primaryAction: {},
-            secondaryAction: nil
+            Text(progressDescription)
+                .font(AppTypography.caption)
+                .foregroundStyle(Color.textSecondary)
+        }
+    }
+
+    private var progressFraction: Double {
+        if let percentage = book.progress.percentage {
+            return min(
+                max(percentage / 100, 0),
+                1
+            )
+        }
+
+        if
+            let page = book.progress.page,
+            let pageCount = book.pageCount,
+            pageCount > 0
+        {
+            return min(
+                max(
+                    Double(page) /
+                    Double(pageCount),
+                    0
+                ),
+                1
+            )
+        }
+
+        return 0
+    }
+
+    private var progressDescription: String {
+        var parts: [String] = []
+
+        if let page = book.progress.page {
+            if let pageCount = book.pageCount {
+                parts.append(
+                    "Page \(page) of \(pageCount)"
+                )
+            } else {
+                parts.append(
+                    "Page \(page)"
+                )
+            }
+        }
+
+        if let percentage = book.progress.percentage {
+            let value =
+                percentage.rounded() == percentage
+                ? String(Int(percentage))
+                : String(
+                    format: "%.1f",
+                    percentage
+                )
+
+            parts.append("\(value)%")
+        }
+
+        if
+            let seconds =
+                book.progress.timestampSeconds
+        {
+            parts.append(
+                formattedTimestamp(seconds)
+            )
+        }
+
+        if parts.isEmpty {
+            return "No progress recorded yet"
+        }
+
+        return parts.joined(
+            separator: " · "
         )
     }
-    .padding()
+
+    private func formattedTimestamp(
+        _ seconds: Int
+    ) -> String {
+        let hours = seconds / 3600
+        let minutes =
+            (seconds % 3600) / 60
+        let remaining =
+            seconds % 60
+
+        return String(
+            format: "%02d:%02d:%02d",
+            hours,
+            minutes,
+            remaining
+        )
+    }
 }

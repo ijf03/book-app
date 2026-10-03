@@ -19,6 +19,8 @@ struct Book: Identifiable, Codable, Hashable {
     var status: ReadingStatus
     var format: ReadingFormat
 
+    var progress: ReadingProgress = .empty
+
     var authorText: String {
         authors.joined(separator: ", ")
     }

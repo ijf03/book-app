@@ -46,4 +46,8 @@ final class BookDetailViewModel {
     var shouldShowReadingProgress: Bool {
         book.status == .reading
     }
+
+    func updateBook(_ updatedBook: Book) {
+        book = updatedBook
+    }
 }

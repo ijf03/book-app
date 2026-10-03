@@ -79,7 +79,12 @@ struct LibraryView: View {
         ) {
             ForEach(viewModel.filteredBooks) { book in
                 NavigationLink {
-                    BookDetailView(book: book)
+                    BookDetailView(
+                        book: book,
+                        onBookUpdated: { updatedBook in
+                            viewModel.updateBook(updatedBook)
+                        }
+                    )
                 } label: {
                     BookShelfItem(book: book)
                 }
