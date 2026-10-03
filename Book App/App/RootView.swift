@@ -1,31 +1,44 @@
 import SwiftUI
 
 struct RootView: View {
+
+    let bookRepository: any BookRepository
+
     var body: some View {
         TabView {
             HomeView()
                 .tabItem {
-                    Label("Home", systemImage: "house")
+                    Label(
+                        "Home",
+                        systemImage: "house"
+                    )
                 }
 
             LibraryView()
                 .tabItem {
-                    Label("Library", systemImage: "books.vertical")
+                    Label(
+                        "Library",
+                        systemImage: "books.vertical"
+                    )
                 }
 
-            SearchView()
-                .tabItem {
-                    Label("Search", systemImage: "magnifyingglass")
-                }
+            SearchView(
+                repository: bookRepository
+            )
+            .tabItem {
+                Label(
+                    "Search",
+                    systemImage: "magnifyingglass"
+                )
+            }
 
-            ProgressView()
+            ProgressDashboardView()
                 .tabItem {
-                    Label("Progress", systemImage: "chart.bar")
+                    Label(
+                        "Progress",
+                        systemImage: "chart.bar"
+                    )
                 }
         }
     }
-}
-
-#Preview {
-    RootView()
 }

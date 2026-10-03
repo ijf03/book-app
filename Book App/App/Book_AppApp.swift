@@ -14,8 +14,9 @@ struct Book_AppApp: App {
     
     var body: some Scene {
         WindowGroup {
-            RootView()
-                .environment(container.router)
+            RootView(
+                bookRepository: container.bookRepository
+            )                .environment(container.router)
         }
     }
 }

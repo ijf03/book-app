@@ -1,6 +1,6 @@
 import SwiftUI
 
-struct ProgressView: View {
+struct ProgressDashboardView: View {
     var body: some View {
         NavigationStack {
             VStack {
@@ -12,5 +12,5 @@ struct ProgressView: View {
 }
 
 #Preview {
-    ProgressView()
+    ProgressDashboardView()
 }
