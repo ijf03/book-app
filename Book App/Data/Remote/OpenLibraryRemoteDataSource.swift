@@ -1,10 +1,3 @@
-//
-//  OpenLibraryRemoteDataSource.swift
-//  Book App
-//
-//  Created by Sabi on 8/10/2026.
-//
-
 import Foundation
 
 enum OpenLibraryError: LocalizedError {
@@ -46,11 +39,7 @@ struct OpenLibraryRemoteDataSource: Sendable {
             ),
             URLQueryItem(
                 name: "fields",
-                value: """
-                key,title,author_name,cover_i,\
-                first_publish_year,edition_key,\
-                number_of_pages_median
-                """
+                value: "key,title,author_name,cover_i,first_publish_year,edition_key,number_of_pages_median"
             )
         ]
 
@@ -125,19 +114,9 @@ struct OpenLibraryRemoteDataSource: Sendable {
             )
 
             return decoded.docs
-
         } catch {
             print("Open Library decoding error:")
             print(error)
-
-            if let body = String(
-                data: data,
-                encoding: .utf8
-            ) {
-                print("Response body:")
-                print(body)
-            }
-
             throw error
         }
     }

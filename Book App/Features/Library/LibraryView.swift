@@ -63,13 +63,33 @@ struct LibraryView: View {
     }
 
     private var readingList: some View {
-        LazyVStack(spacing: AppSpacing.md) {
-            ForEach(viewModel.filteredBooks) { book in
+
+        LazyVStack(
+            spacing: AppSpacing.md
+        ) {
+            ForEach(
+                viewModel.filteredBooks
+            ) { book in
+
                 NavigationLink {
-                    BookDetailView(book: book)
+
+                    BookDetailView(
+                        book: book,
+                        onBookUpdated: {
+                            updatedBook in
+
+                            viewModel.updateBook(
+                                updatedBook
+                            )
+                        }
+                    )
+
                 } label: {
+
                     AppCard {
-                        BookRowCard(book: book)
+                        BookRowCard(
+                            book: book
+                        )
                     }
                 }
                 .buttonStyle(.plain)
@@ -126,7 +146,9 @@ struct LibraryView: View {
 #Preview {
     LibraryView(
         store: LibraryStore(
-            books: Book.mockBooks
+            books: Book.mockBooks,
+            localDataSource:
+                LocalLibraryDataSource()
         )
     )
 }
