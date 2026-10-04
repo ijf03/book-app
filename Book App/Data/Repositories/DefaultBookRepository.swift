@@ -36,7 +36,7 @@ struct DefaultBookRepository: BookRepository, Sendable {
                 coverURL: coverURL(
                     coverID: item.coverID
                 ),
-                pageCount: nil
+                pageCount: item.numberOfPagesMedian
             )
         }
     }

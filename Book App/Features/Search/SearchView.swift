@@ -5,12 +5,19 @@ struct SearchView: View {
     @State
     private var viewModel: SearchViewModel
 
-    init(repository: any BookRepository) {
+    let libraryStore: LibraryStore
+
+    init(
+        repository: any BookRepository,
+        libraryStore: LibraryStore
+    ) {
         _viewModel = State(
             initialValue: SearchViewModel(
                 repository: repository
             )
         )
+        
+        self.libraryStore = libraryStore
     }
 
     var body: some View {
@@ -161,9 +168,24 @@ struct SearchView: View {
             ScrollView {
                 LazyVStack(spacing: 0) {
                     ForEach(books) { book in
-                        SearchResultRow(
-                            book: book
-                        )
+
+                        NavigationLink {
+                            SearchBookDetailView(
+                                book: book,
+                                libraryStore:
+                                    libraryStore
+                            )
+                        } label: {
+
+                            SearchResultRow(
+                                book: book,
+                                isAdded:
+                                    libraryStore.contains(
+                                        bookID: book.id
+                                    )
+                            )
+                        }
+                        .buttonStyle(.plain)
 
                         Divider()
                     }

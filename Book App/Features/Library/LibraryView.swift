@@ -2,7 +2,17 @@ import SwiftUI
 
 struct LibraryView: View {
 
-    @State private var viewModel = LibraryViewModel()
+    @State
+        private var viewModel: LibraryViewModel
+
+    init(store: LibraryStore) {
+        _viewModel = State(
+            initialValue:
+                LibraryViewModel(
+                    store: store
+                )
+        )
+    }
 
     var body: some View {
         NavigationStack {
@@ -114,5 +124,9 @@ struct LibraryView: View {
 }
 
 #Preview {
-    LibraryView()
+    LibraryView(
+        store: LibraryStore(
+            books: Book.mockBooks
+        )
+    )
 }

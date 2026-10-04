@@ -18,6 +18,7 @@ struct OpenLibraryBookDTO: Decodable, Sendable {
     let coverID: Int?
     let firstPublishYear: Int?
     let editionKey: [String]?
+    let numberOfPagesMedian: Int?
 
     enum CodingKeys: String, CodingKey {
         case key
@@ -26,5 +27,6 @@ struct OpenLibraryBookDTO: Decodable, Sendable {
         case coverID = "cover_i"
         case firstPublishYear = "first_publish_year"
         case editionKey = "edition_key"
+        case numberOfPagesMedian = "number_of_pages_median"
     }
 }

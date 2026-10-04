@@ -3,9 +3,11 @@ import SwiftUI
 struct RootView: View {
 
     let bookRepository: any BookRepository
+    let libraryStore: LibraryStore
 
     var body: some View {
         TabView {
+
             HomeView()
                 .tabItem {
                     Label(
@@ -14,16 +16,19 @@ struct RootView: View {
                     )
                 }
 
-            LibraryView()
-                .tabItem {
-                    Label(
-                        "Library",
-                        systemImage: "books.vertical"
-                    )
-                }
+            LibraryView(
+                store: libraryStore
+            )
+            .tabItem {
+                Label(
+                    "Library",
+                    systemImage: "books.vertical"
+                )
+            }
 
             SearchView(
-                repository: bookRepository
+                repository: bookRepository,
+                libraryStore: libraryStore
             )
             .tabItem {
                 Label(

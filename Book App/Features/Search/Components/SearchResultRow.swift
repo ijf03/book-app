@@ -10,12 +10,14 @@ import SwiftUI
 struct SearchResultRow: View {
 
     let book: BookSearchResult
+    let isAdded: Bool
 
     var body: some View {
         HStack(
             alignment: .top,
             spacing: AppSpacing.md
         ) {
+
             BookCoverView(
                 url: book.coverURL
             )
@@ -25,6 +27,7 @@ struct SearchResultRow: View {
                 alignment: .leading,
                 spacing: AppSpacing.xs
             ) {
+
                 Text(book.title)
                     .font(
                         AppTypography.headline
@@ -43,19 +46,49 @@ struct SearchResultRow: View {
                     )
                     .lineLimit(2)
 
-                if let pageCount = book.pageCount {
-                    Text("\(pageCount) pages")
-                        .font(
-                            AppTypography.caption
-                        )
-                        .foregroundStyle(
-                            Color.textSecondary
-                        )
+                if let pageCount =
+                    book.pageCount
+                {
+                    Text(
+                        "\(pageCount) pages"
+                    )
+                    .font(
+                        AppTypography.caption
+                    )
+                    .foregroundStyle(
+                        Color.textSecondary
+                    )
+                }
+
+                if isAdded {
+                    Label(
+                        "In Library",
+                        systemImage:
+                            "checkmark.circle.fill"
+                    )
+                    .font(
+                        AppTypography.caption
+                    )
+                    .foregroundStyle(
+                        Color.appAccent
+                    )
                 }
             }
 
             Spacer()
+
+            Image(
+                systemName:
+                    "chevron.right"
+            )
+            .font(.caption)
+            .foregroundStyle(
+                Color.textSecondary
+            )
         }
-        .padding(.vertical, AppSpacing.sm)
+        .padding(
+            .vertical,
+            AppSpacing.sm
+        )
     }
 }

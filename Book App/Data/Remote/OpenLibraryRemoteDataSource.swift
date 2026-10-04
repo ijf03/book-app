@@ -46,7 +46,11 @@ struct OpenLibraryRemoteDataSource: Sendable {
             ),
             URLQueryItem(
                 name: "fields",
-                value: "key,title,author_name,cover_i,first_publish_year,edition_key"
+                value: """
+                key,title,author_name,cover_i,\
+                first_publish_year,edition_key,\
+                number_of_pages_median
+                """
             )
         ]
 

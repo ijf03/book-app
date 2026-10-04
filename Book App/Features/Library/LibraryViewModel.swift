@@ -11,50 +11,57 @@ import Observation
 @MainActor
 @Observable
 final class LibraryViewModel {
-    var books: [Book]
+
+    private let store: LibraryStore
+
     var selectedStatus: ReadingStatus = .reading
     var searchText = ""
 
-    init(books: [Book]) {
-        self.books = books
-    }
-
-    convenience init() {
-        self.init(books: Book.mockBooks)
+    init(store: LibraryStore) {
+        self.store = store
     }
 
     var filteredBooks: [Book] {
-        books.filter { book in
-            let matchesStatus = book.status == selectedStatus
+        store.books.filter { book in
+
+            let matchesStatus =
+                book.status == selectedStatus
+
+            let trimmedSearch =
+                searchText.trimmingCharacters(
+                    in: .whitespacesAndNewlines
+                )
 
             let matchesSearch =
-                searchText.isEmpty ||
-                book.title.localizedCaseInsensitiveContains(searchText) ||
+                trimmedSearch.isEmpty ||
+                book.title
+                    .localizedCaseInsensitiveContains(
+                        trimmedSearch
+                    ) ||
                 book.authors.contains {
-                    $0.localizedCaseInsensitiveContains(searchText)
+                    $0.localizedCaseInsensitiveContains(
+                        trimmedSearch
+                    )
                 }
 
-            return matchesStatus && matchesSearch
+            return matchesStatus &&
+                matchesSearch
         }
     }
 
     var hasSearchQuery: Bool {
         !searchText
-            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .trimmingCharacters(
+                in: .whitespacesAndNewlines
+            )
             .isEmpty
     }
-    
-    func updateBook(_ updatedBook: Book) {
-        guard
-            let index = books.firstIndex(
-                where: {
-                    $0.id == updatedBook.id
-                }
-            )
-        else {
-            return
-        }
 
-        books[index] = updatedBook
+    func updateBook(
+        _ updatedBook: Book
+    ) {
+        store.updateBook(
+            updatedBook
+        )
     }
 }
