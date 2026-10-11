@@ -79,52 +79,40 @@ struct HomeView: View {
 
     // MARK: - Reading Snapshot
 
-    private var readingSnapshotSection:
-        some View
-    {
+    private var readingSnapshotSection: some View {
         VStack(
             alignment: .leading,
-            spacing: AppSpacing.sm
+            spacing: AppSpacing.md
         ) {
-
             SectionHeader(
                 title: "Reading Snapshot"
             )
 
             HStack(
+                alignment: .top,
                 spacing: AppSpacing.sm
             ) {
-
                 summaryCard(
-                    value:
-                        viewModel.readingCount,
-                    label:
-                        "Reading",
-                    systemImage:
-                        "book.open"
+                    title: "Reading",
+                    count: viewModel.readingCount,
+                    systemImage: "book"
                 )
 
                 summaryCard(
-                    value:
-                        viewModel.toReadCount,
-                    label:
-                        "To Read",
-                    systemImage:
-                        "bookmark"
+                    title: "To Read",
+                    count: viewModel.toReadCount,
+                    systemImage: "bookmark"
                 )
 
                 summaryCard(
-                    value:
-                        viewModel.completedCount,
-                    label:
-                        "Completed",
-                    systemImage:
-                        "checkmark.circle"
+                    title: "Completed",
+                    count: viewModel.completedCount,
+                    systemImage: "checkmark.circle"
                 )
             }
         }
     }
-
+    
     // MARK: - Currently Reading
 
     private var currentlyReadingSection:
@@ -356,8 +344,8 @@ struct HomeView: View {
     // MARK: - Summary Card
 
     private func summaryCard(
-        value: Int,
-        label: String,
+        title: String,
+        count: Int,
         systemImage: String
     ) -> some View {
 
@@ -368,44 +356,57 @@ struct HomeView: View {
             ) {
 
                 Image(
-                    systemName:
-                        systemImage
+                    systemName: systemImage
+                )
+                .font(
+                    .system(
+                        size: 22,
+                        weight: .medium
+                    )
                 )
                 .foregroundStyle(
                     Color.appAccent
                 )
+                .frame(
+                    width: 24,
+                    height: 24,
+                    alignment: .center
+                )
 
                 Text(
-                    "\(value)"
+                    "\(count)"
                 )
                 .font(
-                    AppTypography.title
+                    .system(
+                        size: 32,
+                        weight: .semibold,
+                        design: .rounded
+                    )
                 )
                 .foregroundStyle(
                     Color.textPrimary
                 )
 
-                Text(
-                    label
-                )
-                .font(
-                    AppTypography.caption
-                )
-                .foregroundStyle(
-                    Color.textSecondary
-                )
-                .lineLimit(1)
-                .minimumScaleFactor(
-                    0.75
-                )
+                Text(title)
+                    .font(
+                        AppTypography.body
+                    )
+                    .foregroundStyle(
+                        Color.textSecondary
+                    )
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.8)
             }
             .frame(
                 maxWidth: .infinity,
                 alignment: .leading
             )
+            .frame(
+                minHeight: 105
+            )
         }
     }
-
+    
     // MARK: - Empty Card
 
     private func emptyCard(

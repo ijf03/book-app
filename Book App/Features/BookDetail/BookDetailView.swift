@@ -259,6 +259,10 @@ struct BookDetailView: View {
                     )
 
                     Divider()
+                        .padding(
+                            .leading,
+                            38 + AppSpacing.md
+                        )
 
                     BookDetailActionRow(
                         title:
@@ -309,6 +313,10 @@ struct BookDetailView: View {
                     )
 
                     Divider()
+                        .padding(
+                            .leading,
+                            38 + AppSpacing.md
+                        )
 
                     BookDetailActionRow(
                         title:

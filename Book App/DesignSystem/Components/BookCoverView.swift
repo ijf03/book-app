@@ -35,6 +35,12 @@ struct BookCoverView: View {
                 style: .continuous
             )
         )
+        .shadow(
+            color: Color.black.opacity(0.14),
+            radius: 6,
+            x: 0,
+            y: 3
+        )
     }
 
     private var placeholder: some View {

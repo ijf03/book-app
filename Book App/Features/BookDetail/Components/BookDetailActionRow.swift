@@ -8,43 +8,125 @@
 import SwiftUI
 
 struct BookDetailActionRow: View {
+
     let title: String
     let systemImage: String
     var subtitle: String?
     var action: () -> Void
 
     var body: some View {
-        Button(action: action) {
-            HStack(spacing: AppSpacing.md) {
-                Image(systemName: systemImage)
-                    .frame(width: 24)
-                    .foregroundStyle(Color.appAccent)
 
-                VStack(alignment: .leading, spacing: AppSpacing.xs) {
-                    Text(title)
-                        .font(AppTypography.headline)
-                        .foregroundStyle(Color.textPrimary)
+        Button(
+            action: action
+        ) {
 
-                    if let subtitle {
-                        Text(subtitle)
-                            .font(AppTypography.caption)
-                            .foregroundStyle(Color.textSecondary)
-                    }
-                }
+            HStack(
+                alignment: .center,
+                spacing: AppSpacing.md
+            ) {
 
-                Spacer()
+                icon
 
-                Image(systemName: "chevron.right")
-                    .font(.caption)
-                    .foregroundStyle(Color.textSecondary)
+                textContent
+
+                Spacer(
+                    minLength: AppSpacing.sm
+                )
+
+                Image(
+                    systemName: "chevron.right"
+                )
+                .font(
+                    .system(
+                        size: 13,
+                        weight: .semibold
+                    )
+                )
+                .foregroundStyle(
+                    Color.textSecondary
+                )
             }
-            .contentShape(Rectangle())
+            .frame(
+                minHeight: 56
+            )
+            .contentShape(
+                Rectangle()
+            )
         }
         .buttonStyle(.plain)
-        .frame(minHeight: 44)
+    }
+
+    // MARK: - Icon
+
+    private var icon: some View {
+
+        ZStack {
+
+            RoundedRectangle(
+                cornerRadius: AppRadius.sm,
+                style: .continuous
+            )
+            .fill(
+                Color.accentTint
+            )
+
+            Image(
+                systemName: systemImage
+            )
+            .font(
+                .system(
+                    size: 17,
+                    weight: .medium
+                )
+            )
+            .foregroundStyle(
+                Color.appAccent
+            )
+        }
+        .frame(
+            width: 38,
+            height: 38
+        )
+    }
+
+    // MARK: - Text
+
+    private var textContent: some View {
+
+        VStack(
+            alignment: .leading,
+            spacing: AppSpacing.xs
+        ) {
+
+            Text(title)
+                .font(
+                    AppTypography.headline
+                )
+                .foregroundStyle(
+                    Color.textPrimary
+                )
+
+            if let subtitle {
+
+                Text(subtitle)
+                    .font(
+                        AppTypography.caption
+                    )
+                    .foregroundStyle(
+                        Color.textSecondary
+                    )
+                    .fixedSize(
+                        horizontal: false,
+                        vertical: true
+                    )
+            }
+        }
+        .frame(
+            maxWidth: .infinity,
+            alignment: .leading
+        )
     }
 }
-
 #Preview {
     VStack {
         BookDetailActionRow(

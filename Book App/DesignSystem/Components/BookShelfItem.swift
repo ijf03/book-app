@@ -12,8 +12,13 @@ struct BookShelfItem: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: AppSpacing.sm) {
-            BookCoverView(url: book.coverURL)
-                .frame(width: 110)
+            BookCoverView(
+                url: book.coverURL
+            )
+            .frame(
+                width: 110,
+                height: 165
+            )
 
             Text(book.title)
                 .font(AppTypography.headline)
