@@ -8,7 +8,9 @@ struct RootView: View {
     var body: some View {
         TabView {
 
-            HomeView()
+            HomeView(
+                store: libraryStore
+            )
                 .tabItem {
                     Label(
                         "Home",
