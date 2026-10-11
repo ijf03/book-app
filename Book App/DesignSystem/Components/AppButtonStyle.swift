@@ -12,6 +12,7 @@ struct AppButtonStyle: ButtonStyle {
     enum Kind {
         case primary
         case secondary
+        case destructive
     }
 
     let kind: Kind
@@ -39,6 +40,8 @@ struct AppButtonStyle: ButtonStyle {
             return .white
         case .secondary:
             return .appAccent
+        case .destructive:
+            return .white
         }
     }
 
@@ -48,6 +51,8 @@ struct AppButtonStyle: ButtonStyle {
             return .appAccent
         case .secondary:
             return .surfaceSecondary
+        case .destructive:
+            return .danger
         }
     }
 }

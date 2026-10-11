@@ -3,7 +3,8 @@ import Foundation
 @MainActor
 final class AppContainer {
 
-    let router: AppRouter
+    let router:
+        AppRouter
 
     let bookRepository:
         any BookRepository
@@ -11,23 +12,25 @@ final class AppContainer {
     let libraryStore:
         LibraryStore
 
+    let readingSessionStore:
+        ReadingSessionStore
+
     init() {
 
         self.router =
             AppRouter()
 
-        // MARK: - Local Persistence
+        // MARK: - Library Persistence
 
-        let localDataSource =
+        let localLibraryDataSource =
             LocalLibraryDataSource()
 
         var initialBooks =
             Book.mockBooks
 
         do {
-
             if let savedBooks =
-                try localDataSource
+                try localLibraryDataSource
                     .loadBooks()
             {
                 initialBooks =
@@ -38,8 +41,7 @@ final class AppContainer {
                 )
 
             } else {
-
-                try localDataSource
+                try localLibraryDataSource
                     .saveBooks(
                         initialBooks
                     )
@@ -50,15 +52,9 @@ final class AppContainer {
             }
 
         } catch {
-
             print(
-                "❌ Failed to initialise local library:"
-            )
-
-            print(error)
-
-            print(
-                "⚠️ Using mock books for this launch."
+                "❌ Failed to initialise local library:",
+                error
             )
         }
 
@@ -67,7 +63,35 @@ final class AppContainer {
                 books:
                     initialBooks,
                 localDataSource:
-                    localDataSource
+                    localLibraryDataSource
+            )
+
+        // MARK: - Reading Sessions
+
+        let localSessionDataSource =
+            LocalReadingSessionDataSource()
+
+        var initialSessions:
+            [ReadingSession] = []
+
+        do {
+            initialSessions =
+                try localSessionDataSource
+                    .loadSessions()
+
+        } catch {
+            print(
+                "❌ Failed to initialise reading sessions:",
+                error
+            )
+        }
+
+        self.readingSessionStore =
+            ReadingSessionStore(
+                sessions:
+                    initialSessions,
+                localDataSource:
+                    localSessionDataSource
             )
 
         // MARK: - Open Library

@@ -15,19 +15,25 @@ struct UpdateProgressView: View {
     @State
     private var viewModel: UpdateProgressViewModel
 
+    let book: Book
     let onSave: (Book) -> Void
+    let onSaveAndEndSession: ((Book) -> Void)?
 
     init(
         book: Book,
-        onSave: @escaping (Book) -> Void
+        onSave: @escaping (Book) -> Void,
+        onSaveAndEndSession: ((Book) -> Void)? = nil
     ) {
-        _viewModel = State(
-            initialValue: UpdateProgressViewModel(
-                book: book
-            )
-        )
-
+        self.book = book
         self.onSave = onSave
+        self.onSaveAndEndSession = onSaveAndEndSession
+
+        _viewModel = State(
+            initialValue:
+                UpdateProgressViewModel(
+                    book: book
+                )
+        )
     }
 
     var body: some View {
@@ -58,7 +64,61 @@ struct UpdateProgressView: View {
         .navigationTitle("Update Progress")
         .navigationBarTitleDisplayMode(.inline)
         .safeAreaInset(edge: .bottom) {
-            saveButton
+            VStack(
+                spacing: AppSpacing.sm
+            ) {
+
+                Button("Save") {
+                    guard let updatedBook =
+                        viewModel.makeUpdatedBook()
+                    else {
+                        return
+                    }
+
+                    onSave(
+                        updatedBook
+                    )
+                }
+                .buttonStyle(
+                    AppButtonStyle(
+                        kind: .primary
+                    )
+                )
+                .disabled(
+                    !viewModel.canSave
+                )
+
+                if let onSaveAndEndSession {
+
+                    Button(
+                        "Save & End Session"
+                    ) {
+                        guard let updatedBook =
+                            viewModel.makeUpdatedBook()
+                        else {
+                            return
+                        }
+
+                        onSaveAndEndSession(
+                            updatedBook
+                        )
+                    }
+                    .buttonStyle(
+                        AppButtonStyle(
+                            kind: .secondary
+                        )
+                    )
+                    .disabled(
+                        !viewModel.canSave
+                    )
+                }
+            }
+            .padding(
+                AppSpacing.md
+            )
+            .background(
+                Color.surface
+            )
         }
     }
 

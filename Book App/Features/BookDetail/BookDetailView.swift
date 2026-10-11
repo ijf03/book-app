@@ -27,7 +27,11 @@ struct BookDetailView: View {
     @State
     private var isShowingRemoveAlert =
         false
-
+    
+    @State
+    private var isShowingReadingSession =
+        false
+    
     let onBookUpdated:
         (Book) -> Void
 
@@ -117,6 +121,23 @@ struct BookDetailView: View {
                 book:
                     viewModel.book,
                 onSave: {
+                    updatedBook in
+
+                    saveUpdatedBook(
+                        updatedBook
+                    )
+                }
+            )
+        }
+        
+        .navigationDestination(
+            isPresented:
+                $isShowingReadingSession
+        ) {
+            ReadingSessionView(
+                book:
+                    viewModel.book,
+                onBookUpdated: {
                     updatedBook in
 
                     saveUpdatedBook(
@@ -338,11 +359,8 @@ struct BookDetailView: View {
 
         case .reading:
 
-            // Reading session feature
-            // will be implemented later.
-            print(
-                "Start reading session tapped"
-            )
+            isShowingReadingSession =
+                true
 
         case .toRead:
 
@@ -350,11 +368,17 @@ struct BookDetailView: View {
                 to: .reading
             )
 
+            isShowingReadingSession =
+                true
+
         case .completed:
 
             changeStatus(
                 to: .reading
             )
+
+            isShowingReadingSession =
+                true
         }
     }
 
@@ -422,10 +446,24 @@ struct BookDetailView: View {
 }
 
 #Preview {
+
+    let dataSource =
+        LocalReadingSessionDataSource()
+
+    let sessionStore =
+        ReadingSessionStore(
+            sessions: [],
+            localDataSource:
+                dataSource
+        )
+
     NavigationStack {
         BookDetailView(
             book:
                 .mockFourthWing
         )
     }
+    .environment(
+        sessionStore
+    )
 }
