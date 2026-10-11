@@ -9,17 +9,39 @@ import SwiftUI
 
 struct BookDetailView: View {
 
-    @State
-    private var viewModel: BookDetailViewModel
+    @Environment(\.dismiss)
+    private var dismiss
 
     @State
-    private var isShowingUpdateProgress = false
+    private var viewModel:
+        BookDetailViewModel
 
-    let onBookUpdated: (Book) -> Void
+    @State
+    private var isShowingUpdateProgress =
+        false
+
+    @State
+    private var isShowingStatusSheet =
+        false
+
+    @State
+    private var isShowingRemoveAlert =
+        false
+
+    let onBookUpdated:
+        (Book) -> Void
+
+    let onBookRemoved:
+        (String) -> Void
 
     init(
         book: Book,
-        onBookUpdated: @escaping (Book) -> Void = { _ in }
+        onBookUpdated:
+            @escaping (Book) -> Void =
+                { _ in },
+        onBookRemoved:
+            @escaping (String) -> Void =
+                { _ in }
     ) {
         _viewModel = State(
             initialValue:
@@ -30,6 +52,9 @@ struct BookDetailView: View {
 
         self.onBookUpdated =
             onBookUpdated
+
+        self.onBookRemoved =
+            onBookRemoved
     }
 
     var body: some View {
@@ -38,12 +63,14 @@ struct BookDetailView: View {
                 alignment: .leading,
                 spacing: AppSpacing.xl
             ) {
+
                 BookDetailHeader(
                     book: viewModel.book
                 )
 
                 BookStatusCard(
-                    book: viewModel.book,
+                    book:
+                        viewModel.book,
                     primaryActionTitle:
                         viewModel
                             .primaryActionTitle,
@@ -66,22 +93,89 @@ struct BookDetailView: View {
 
                 manageSection
             }
-            .padding(AppSpacing.md)
+            .padding(
+                AppSpacing.md
+            )
         }
-        .background(Color.surfaceSecondary)
-        .navigationTitle("Book Details")
-        .navigationBarTitleDisplayMode(.inline)
+        .background(
+            Color.surfaceSecondary
+        )
+        .navigationTitle(
+            "Book Details"
+        )
+        .navigationBarTitleDisplayMode(
+            .inline
+        )
+
+        // MARK: Update Progress
+
         .navigationDestination(
             isPresented:
                 $isShowingUpdateProgress
         ) {
             UpdateProgressView(
-                book: viewModel.book,
-                onSave: { updatedBook in
+                book:
+                    viewModel.book,
+                onSave: {
+                    updatedBook in
+
                     saveUpdatedBook(
                         updatedBook
                     )
                 }
+            )
+        }
+
+        // MARK: Change Status
+
+        .sheet(
+            isPresented:
+                $isShowingStatusSheet
+        ) {
+            ChangeReadingStatusSheet(
+                currentStatus:
+                    viewModel.book.status,
+                onSave: {
+                    newStatus in
+
+                    changeStatus(
+                        to: newStatus
+                    )
+                }
+            )
+            .presentationDetents(
+                [
+                    .medium,
+                    .large
+                ]
+            )
+        }
+
+        // MARK: Remove
+
+        .alert(
+            "Remove From Library?",
+            isPresented:
+                $isShowingRemoveAlert
+        ) {
+            Button(
+                "Cancel",
+                role: .cancel
+            ) {}
+
+            Button(
+                "Remove",
+                role: .destructive
+            ) {
+                confirmRemoveBook()
+            }
+
+        } message: {
+
+            Text(
+                """
+                "\(viewModel.book.title)" will be removed from your library.
+                """
             )
         }
     }
@@ -89,7 +183,9 @@ struct BookDetailView: View {
     // MARK: - About
 
     @ViewBuilder
-    private var aboutSection: some View {
+    private var aboutSection:
+        some View
+    {
         if let description =
             viewModel.book.description
         {
@@ -97,12 +193,15 @@ struct BookDetailView: View {
                 alignment: .leading,
                 spacing: AppSpacing.sm
             ) {
+
                 SectionHeader(
                     title: "About"
                 )
 
                 Text(description)
-                    .font(AppTypography.body)
+                    .font(
+                        AppTypography.body
+                    )
                     .foregroundStyle(
                         Color.textPrimary
                     )
@@ -119,12 +218,14 @@ struct BookDetailView: View {
             alignment: .leading,
             spacing: AppSpacing.sm
         ) {
+
             SectionHeader(
                 title: "Your Book"
             )
 
             AppCard {
                 VStack(spacing: 0) {
+
                     BookDetailActionRow(
                         title: "Notes",
                         systemImage:
@@ -139,8 +240,10 @@ struct BookDetailView: View {
                     Divider()
 
                     BookDetailActionRow(
-                        title: reviewTitle,
-                        systemImage: "star",
+                        title:
+                            reviewTitle,
+                        systemImage:
+                            "star",
                         subtitle:
                             "Record your thoughts",
                         action: {
@@ -161,17 +264,24 @@ struct BookDetailView: View {
             alignment: .leading,
             spacing: AppSpacing.sm
         ) {
+
             SectionHeader(
                 title: "Manage"
             )
 
             AppCard {
                 VStack(spacing: 0) {
+
                     BookDetailActionRow(
                         title:
                             "Change Reading Status",
                         systemImage:
                             "arrow.triangle.2.circlepath",
+                        subtitle:
+                            viewModel
+                                .book
+                                .status
+                                .displayName,
                         action: {
                             changeStatusTapped()
                         }
@@ -182,7 +292,10 @@ struct BookDetailView: View {
                     BookDetailActionRow(
                         title:
                             "Remove From Library",
-                        systemImage: "trash",
+                        systemImage:
+                            "trash",
+                        subtitle:
+                            "Delete this book from your library",
                         action: {
                             removeBookTapped()
                         }
@@ -192,7 +305,10 @@ struct BookDetailView: View {
         }
     }
 
+    // MARK: - Review
+
     private var reviewTitle: String {
+
         viewModel.book.status ==
             .completed
         ? "Write a Review"
@@ -204,6 +320,7 @@ struct BookDetailView: View {
     private func saveUpdatedBook(
         _ updatedBook: Book
     ) {
+
         viewModel.updateBook(
             updatedBook
         )
@@ -213,31 +330,93 @@ struct BookDetailView: View {
         )
     }
 
-    // MARK: - Other Actions
+    // MARK: - Primary Action
 
     private func primaryActionTapped() {
-        print(
-            "Primary action tapped"
+
+        switch viewModel.book.status {
+
+        case .reading:
+
+            // Reading session feature
+            // will be implemented later.
+            print(
+                "Start reading session tapped"
+            )
+
+        case .toRead:
+
+            changeStatus(
+                to: .reading
+            )
+
+        case .completed:
+
+            changeStatus(
+                to: .reading
+            )
+        }
+    }
+
+    // MARK: - Status
+
+    private func changeStatusTapped() {
+
+        isShowingStatusSheet =
+            true
+    }
+
+    private func changeStatus(
+        to status: ReadingStatus
+    ) {
+
+        guard status !=
+                viewModel.book.status
+        else {
+            return
+        }
+
+        let updatedBook =
+            viewModel.updateStatus(
+                status
+            )
+
+        onBookUpdated(
+            updatedBook
         )
     }
 
+    // MARK: - Removal
+
+    private func removeBookTapped() {
+
+        isShowingRemoveAlert =
+            true
+    }
+
+    private func confirmRemoveBook() {
+
+        let bookID =
+            viewModel.book.id
+
+        onBookRemoved(
+            bookID
+        )
+
+        dismiss()
+    }
+
+    // MARK: - Future Features
+
     private func notesTapped() {
-        print("Notes tapped")
+        print(
+            "Notes tapped"
+        )
     }
 
     private func reviewTapped() {
-        print("Review tapped")
-    }
-
-    private func changeStatusTapped() {
         print(
-            "Change status tapped"
-        )
-    }
-
-    private func removeBookTapped() {
-        print(
-            "Remove book tapped"
+            "Review tapped"
         )
     }
 }
@@ -245,7 +424,8 @@ struct BookDetailView: View {
 #Preview {
     NavigationStack {
         BookDetailView(
-            book: .mockFourthWing
+            book:
+                .mockFourthWing
         )
     }
 }

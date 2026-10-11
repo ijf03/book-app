@@ -11,16 +11,19 @@ import Observation
 @MainActor
 @Observable
 final class BookDetailViewModel {
+
     var book: Book
 
     init(book: Book) {
         self.book = book
     }
 
+    // MARK: - Status
+
     var statusTitle: String {
         switch book.status {
         case .reading:
-            return "Currently reading"
+            return "Currently Reading"
 
         case .toRead:
             return "To Read"
@@ -47,7 +50,27 @@ final class BookDetailViewModel {
         book.status == .reading
     }
 
-    func updateBook(_ updatedBook: Book) {
+    // MARK: - Updates
+
+    func updateBook(
+        _ updatedBook: Book
+    ) {
         book = updatedBook
+    }
+
+    func updateStatus(
+        _ status: ReadingStatus
+    ) -> Book {
+
+        var updatedBook =
+            book
+
+        updatedBook.status =
+            status
+
+        book =
+            updatedBook
+
+        return updatedBook
     }
 }

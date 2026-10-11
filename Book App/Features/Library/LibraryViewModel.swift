@@ -64,4 +64,12 @@ final class LibraryViewModel {
             updatedBook
         )
     }
+    
+    func removeBook(
+        id: String
+    ) {
+        store.removeBook(
+            id: id
+        )
+    }
 }

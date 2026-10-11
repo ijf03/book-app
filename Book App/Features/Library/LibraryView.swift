@@ -81,6 +81,13 @@ struct LibraryView: View {
                             viewModel.updateBook(
                                 updatedBook
                             )
+                        },
+                        onBookRemoved: {
+                            bookID in
+
+                            viewModel.removeBook(
+                                id: bookID
+                            )
                         }
                     )
 
@@ -92,33 +99,62 @@ struct LibraryView: View {
                         )
                     }
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(
+                    .plain
+                )
             }
         }
     }
     
     private var bookGrid: some View {
+
         LazyVGrid(
             columns: [
                 GridItem(
-                    .adaptive(minimum: 110),
-                    spacing: AppSpacing.md
+                    .adaptive(
+                        minimum: 110
+                    ),
+                    spacing:
+                        AppSpacing.md
                 )
             ],
-            spacing: AppSpacing.lg
+            spacing:
+                AppSpacing.lg
         ) {
-            ForEach(viewModel.filteredBooks) { book in
+
+            ForEach(
+                viewModel.filteredBooks
+            ) { book in
+
                 NavigationLink {
+
                     BookDetailView(
                         book: book,
-                        onBookUpdated: { updatedBook in
-                            viewModel.updateBook(updatedBook)
+                        onBookUpdated: {
+                            updatedBook in
+
+                            viewModel.updateBook(
+                                updatedBook
+                            )
+                        },
+                        onBookRemoved: {
+                            bookID in
+
+                            viewModel.removeBook(
+                                id: bookID
+                            )
                         }
                     )
+
                 } label: {
-                    BookShelfItem(book: book)
+
+                    BookShelfItem(
+                        book: book
+                    )
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(
+                    .plain
+                )
             }
         }
     }
