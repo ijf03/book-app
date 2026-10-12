@@ -4,12 +4,16 @@ struct RootView: View {
 
     let bookRepository: any BookRepository
     let libraryStore: LibraryStore
+    let readingSessionStore: ReadingSessionStore
 
     var body: some View {
         TabView {
 
             HomeView(
-                store: libraryStore
+                store:
+                    libraryStore,
+                sessionStore:
+                    readingSessionStore
             )
                 .tabItem {
                     Label(
@@ -39,13 +43,19 @@ struct RootView: View {
                 )
             }
 
-            ProgressDashboardView()
-                .tabItem {
-                    Label(
-                        "Progress",
-                        systemImage: "chart.bar"
-                    )
-                }
+            ProgressDashboardView(
+                libraryStore:
+                    libraryStore,
+                sessionStore:
+                    readingSessionStore
+            )
+            .tabItem {
+                Label(
+                    "Progress",
+                    systemImage:
+                        "chart.bar.fill"
+                )
+            }
         }
     }
 }

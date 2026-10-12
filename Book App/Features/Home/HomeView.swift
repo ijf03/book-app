@@ -6,12 +6,16 @@ struct HomeView: View {
     private var viewModel: HomeViewModel
 
     init(
-        store: LibraryStore
+        store: LibraryStore,
+        sessionStore:
+            ReadingSessionStore
     ) {
         _viewModel = State(
             initialValue:
                 HomeViewModel(
-                    store: store
+                    store: store,
+                    sessionStore:
+                        sessionStore
                 )
         )
     }
@@ -75,6 +79,224 @@ struct HomeView: View {
                 Color.textPrimary
             )
         }
+    }
+    
+    // MARK: - Reading Activity
+
+    private var readingActivitySection:
+        some View
+    {
+        VStack(
+            alignment: .leading,
+            spacing: AppSpacing.sm
+        ) {
+
+            SectionHeader(
+                title:
+                    "Reading Activity"
+            )
+
+            AppCard {
+
+                VStack(
+                    alignment: .leading,
+                    spacing: AppSpacing.md
+                ) {
+
+                    HStack(
+                        spacing: AppSpacing.md
+                    ) {
+
+                        ZStack {
+
+                            RoundedRectangle(
+                                cornerRadius:
+                                    AppRadius.md,
+                                style:
+                                    .continuous
+                            )
+                            .fill(
+                                Color.accentTint
+                            )
+
+                            Image(
+                                systemName:
+                                    viewModel
+                                        .currentStreak > 0
+                                    ? "flame.fill"
+                                    : "flame"
+                            )
+                            .font(
+                                .system(
+                                    size: 23,
+                                    weight:
+                                        .semibold
+                                )
+                            )
+                            .foregroundStyle(
+                                Color.appAccent
+                            )
+                        }
+                        .frame(
+                            width: 50,
+                            height: 50
+                        )
+
+                        VStack(
+                            alignment: .leading,
+                            spacing: AppSpacing.xs
+                        ) {
+
+                            Text(
+                                streakHeadline
+                            )
+                            .font(
+                                AppTypography.headline
+                            )
+                            .foregroundStyle(
+                                Color.textPrimary
+                            )
+
+                            Text(
+                                activitySubtitle
+                            )
+                            .font(
+                                AppTypography.caption
+                            )
+                            .foregroundStyle(
+                                Color.textSecondary
+                            )
+                        }
+
+                        Spacer()
+                    }
+
+                    Divider()
+
+                    HStack(
+                        spacing: AppSpacing.md
+                    ) {
+
+                        activityMetric(
+                            value:
+                                viewModel
+                                    .formattedTodayReadingTime,
+                            label:
+                                "Today",
+                            systemImage:
+                                "clock"
+                        )
+
+                        Divider()
+                            .frame(
+                                height: 42
+                            )
+
+                        activityMetric(
+                            value:
+                                "\(viewModel.todaySessionCount)",
+                            label:
+                                viewModel
+                                    .todaySessionCount == 1
+                                ? "Session"
+                                : "Sessions",
+                            systemImage:
+                                "timer"
+                        )
+                    }
+                }
+            }
+        }
+    }
+
+    private func activityMetric(
+        value: String,
+        label: String,
+        systemImage: String
+    ) -> some View {
+
+        HStack(
+            spacing: AppSpacing.sm
+        ) {
+
+            Image(
+                systemName: systemImage
+            )
+            .font(
+                .system(
+                    size: 17,
+                    weight: .medium
+                )
+            )
+            .foregroundStyle(
+                Color.appAccent
+            )
+            .frame(
+                width: 22
+            )
+
+            VStack(
+                alignment: .leading,
+                spacing: 2
+            ) {
+
+                Text(value)
+                    .font(
+                        AppTypography.headline
+                    )
+                    .foregroundStyle(
+                        Color.textPrimary
+                    )
+                    .monospacedDigit()
+
+                Text(label)
+                    .font(
+                        AppTypography.caption
+                    )
+                    .foregroundStyle(
+                        Color.textSecondary
+                    )
+            }
+
+            Spacer()
+        }
+        .frame(
+            maxWidth: .infinity
+        )
+    }
+
+    private var streakHeadline:
+        String
+    {
+        switch viewModel.currentStreak {
+
+        case 0:
+            return "Start your reading streak"
+
+        case 1:
+            return "1 day reading streak"
+
+        default:
+            return
+                "\(viewModel.currentStreak) day reading streak"
+        }
+    }
+
+    private var activitySubtitle:
+        String
+    {
+        if viewModel.todaySessionCount > 0 {
+            return
+                "You've already spent time reading today."
+        }
+
+        if viewModel.currentStreak > 0 {
+            return
+                "Read today to keep your streak going."
+        }
+
+        return
+            "Finish a reading session to begin tracking activity."
     }
 
     // MARK: - Reading Snapshot

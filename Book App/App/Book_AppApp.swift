@@ -23,7 +23,10 @@ struct Book_AppApp: App {
                         .bookRepository,
                 libraryStore:
                     container
-                        .libraryStore
+                        .libraryStore,
+                readingSessionStore:
+                    container
+                        .readingSessionStore
             )
             .environment(
                 container.router
