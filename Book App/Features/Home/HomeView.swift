@@ -4,11 +4,17 @@ struct HomeView: View {
 
     @State
     private var viewModel: HomeViewModel
-
+    
+    let onGoHome:
+        () -> Void
+    
     init(
         store: LibraryStore,
         sessionStore:
-            ReadingSessionStore
+            ReadingSessionStore,
+        onGoHome:
+            @escaping () -> Void =
+                {}
     ) {
         _viewModel = State(
             initialValue:
@@ -18,8 +24,11 @@ struct HomeView: View {
                         sessionStore
                 )
         )
-    }
 
+        self.onGoHome =
+            onGoHome
+    }
+    
     var body: some View {
         NavigationStack {
             ScrollView {
@@ -559,10 +568,13 @@ struct HomeView: View {
                 viewModel.removeBook(
                     id: bookID
                 )
+            },
+            onGoHome: {
+                onGoHome()
             }
         )
     }
-
+    
     // MARK: - Summary Card
 
     private func summaryCard(

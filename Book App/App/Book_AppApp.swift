@@ -35,6 +35,9 @@ struct Book_AppApp: App {
                 container
                     .readingSessionStore
             )
+            .environment(
+                container.bookContentStore
+            )
         }
     }
 }

@@ -14,6 +14,9 @@ final class AppContainer {
 
     let readingSessionStore:
         ReadingSessionStore
+    
+    let bookContentStore:
+        BookContentStore
 
     init() {
 
@@ -93,7 +96,37 @@ final class AppContainer {
                 localDataSource:
                     localSessionDataSource
             )
+        
+        // MARK: - Notes & Reviews
 
+        let localBookContentDataSource =
+            LocalBookContentDataSource()
+
+        var initialContent =
+            BookContentData.empty
+
+        do {
+            initialContent =
+                try localBookContentDataSource
+                    .loadContent()
+
+        } catch {
+            print(
+                "❌ Failed to initialise notes and reviews:",
+                error
+            )
+        }
+
+        self.bookContentStore =
+            BookContentStore(
+                notes:
+                    initialContent.notes,
+                reviews:
+                    initialContent.reviews,
+                localDataSource:
+                    localBookContentDataSource
+            )
+        
         // MARK: - Open Library
 
         let openLibraryDataSource =

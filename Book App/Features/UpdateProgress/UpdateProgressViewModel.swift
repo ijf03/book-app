@@ -269,39 +269,89 @@ final class UpdateProgressViewModel {
     // MARK: - Saving
 
     func makeUpdatedBook() -> Book? {
+
         guard canSave else {
             return nil
         }
 
-        var updatedBook = originalBook
-        var progress = originalBook.progress
+        var updatedBook =
+            originalBook
+
+        var progress =
+            originalBook.progress
 
         if
             isPageEnabled,
-            let page = Int(pageText)
+            let page =
+                Int(pageText)
         {
-            progress.page = page
+            progress.page =
+                page
         }
 
         if
             isPercentageEnabled,
-            let percentage = Double(percentageText)
+            let percentage =
+                Double(
+                    percentageText
+                )
         {
-            progress.percentage = percentage
+            progress.percentage =
+                percentage
         }
 
         if
             isTimestampEnabled,
-            let seconds = Self.parseTimestamp(timestampText)
+            let seconds =
+                Self.parseTimestamp(
+                    timestampText
+                )
         {
-            progress.timestampSeconds = seconds
+            progress.timestampSeconds =
+                seconds
         }
 
-        updatedBook.progress = progress
+        updatedBook.progress =
+            progress
+
+        if isCompleted(
+            progress:
+                progress,
+            book:
+                updatedBook
+        ) {
+            updatedBook.status =
+                .completed
+        }
 
         return updatedBook
     }
 
+    private func isCompleted(
+        progress: ReadingProgress,
+        book: Book
+    ) -> Bool {
+
+        if let percentage =
+            progress.percentage,
+           percentage >= 100
+        {
+            return true
+        }
+
+        if
+            let page =
+                progress.page,
+            let pageCount =
+                book.pageCount,
+            pageCount > 0,
+            page >= pageCount
+        {
+            return true
+        }
+
+        return false
+    }
     // MARK: - Formatting
 
     private static func formatPercentage(

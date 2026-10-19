@@ -3,15 +3,26 @@ import SwiftUI
 struct LibraryView: View {
 
     @State
-        private var viewModel: LibraryViewModel
+    private var viewModel:
+        LibraryViewModel
 
-    init(store: LibraryStore) {
+    let onGoHome:
+        () -> Void
+
+    init(
+        store: LibraryStore,
+        onGoHome:
+            @escaping () -> Void = {}
+    ) {
         _viewModel = State(
             initialValue:
                 LibraryViewModel(
                     store: store
                 )
         )
+
+        self.onGoHome =
+            onGoHome
     }
 
     var body: some View {
@@ -88,6 +99,9 @@ struct LibraryView: View {
                             viewModel.removeBook(
                                 id: bookID
                             )
+                        },
+                        onGoHome: {
+                            onGoHome()
                         }
                     )
 

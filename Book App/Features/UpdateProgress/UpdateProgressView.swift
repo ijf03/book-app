@@ -17,25 +17,43 @@ struct UpdateProgressView: View {
 
     let book: Book
     let onSave: (Book) -> Void
+    let onCompleted: ((Book) -> Void)?
     let onSaveAndEndSession: ((Book) -> Void)?
+
+    @State
+    private var completedBookToReport:
+        Book?
 
     init(
         book: Book,
-        onSave: @escaping (Book) -> Void,
-        onSaveAndEndSession: ((Book) -> Void)? = nil
+        onSave:
+            @escaping (Book) -> Void,
+        onCompleted:
+            ((Book) -> Void)? = nil,
+        onSaveAndEndSession:
+            ((Book) -> Void)? = nil
     ) {
-        self.book = book
-        self.onSave = onSave
-        self.onSaveAndEndSession = onSaveAndEndSession
+        self.book =
+            book
 
-        _viewModel = State(
-            initialValue:
-                UpdateProgressViewModel(
-                    book: book
-                )
-        )
+        self.onSave =
+            onSave
+
+        self.onCompleted =
+            onCompleted
+
+        self.onSaveAndEndSession =
+            onSaveAndEndSession
+
+        _viewModel =
+            State(
+                initialValue:
+                    UpdateProgressViewModel(
+                        book: book
+                    )
+            )
     }
-
+    
     var body: some View {
         ScrollView {
             VStack(
@@ -68,16 +86,8 @@ struct UpdateProgressView: View {
                 spacing: AppSpacing.sm
             ) {
 
-                Button("Save") {
-                    guard let updatedBook =
-                        viewModel.makeUpdatedBook()
-                    else {
-                        return
-                    }
-
-                    onSave(
-                        updatedBook
-                    )
+                Button("Save Progress") {
+                    saveProgress()
                 }
                 .buttonStyle(
                     AppButtonStyle(
@@ -112,6 +122,21 @@ struct UpdateProgressView: View {
                         !viewModel.canSave
                     )
                 }
+            }
+            .onDisappear {
+
+                guard let completedBook =
+                    completedBookToReport
+                else {
+                    return
+                }
+
+                completedBookToReport =
+                    nil
+
+                onCompleted?(
+                    completedBook
+                )
             }
             .padding(
                 AppSpacing.md
@@ -270,17 +295,32 @@ struct UpdateProgressView: View {
     }
 
     private func saveProgress() {
-        guard
-            let updatedBook =
-                viewModel.makeUpdatedBook()
+
+        guard let updatedBook =
+            viewModel
+                .makeUpdatedBook()
         else {
             return
         }
 
-        onSave(updatedBook)
+        let justCompleted =
+            updatedBook.status ==
+                .completed &&
+            book.status !=
+                .completed
+
+        onSave(
+            updatedBook
+        )
+
+        if justCompleted {
+            completedBookToReport =
+                updatedBook
+        }
+
         dismiss()
     }
-
+    
     // MARK: - Bindings
 
     private var pageEnabledBinding:

@@ -11,6 +11,9 @@ struct BookDetailView: View {
 
     @Environment(\.dismiss)
     private var dismiss
+    
+    @Environment(BookContentStore.self)
+    private var contentStore
 
     @State
     private var viewModel:
@@ -32,12 +35,27 @@ struct BookDetailView: View {
     private var isShowingReadingSession =
         false
     
+    @State
+    private var isShowingCompletionPrompt =
+        false
+
+    @State
+    private var isShowingCompletionReview =
+        false
+
+    @State
+    private var isShowingCompletionNote =
+        false
+    
     let onBookUpdated:
         (Book) -> Void
 
     let onBookRemoved:
         (String) -> Void
-
+    
+    let onGoHome:
+        () -> Void
+    
     init(
         book: Book,
         onBookUpdated:
@@ -45,20 +63,27 @@ struct BookDetailView: View {
                 { _ in },
         onBookRemoved:
             @escaping (String) -> Void =
-                { _ in }
+                { _ in },
+        onGoHome:
+            @escaping () -> Void =
+                {}
     ) {
-        _viewModel = State(
-            initialValue:
-                BookDetailViewModel(
-                    book: book
-                )
-        )
+        _viewModel =
+            State(
+                initialValue:
+                    BookDetailViewModel(
+                        book: book
+                    )
+            )
 
         self.onBookUpdated =
             onBookUpdated
 
         self.onBookRemoved =
             onBookRemoved
+
+        self.onGoHome =
+            onGoHome
     }
 
     var body: some View {
@@ -126,6 +151,12 @@ struct BookDetailView: View {
                     saveUpdatedBook(
                         updatedBook
                     )
+                },
+                onCompleted: {
+                    _ in
+
+                    isShowingCompletionPrompt =
+                        true
                 }
             )
         }
@@ -171,6 +202,51 @@ struct BookDetailView: View {
                 ]
             )
         }
+        
+        // MARK: Completion Review
+
+        .sheet(
+            isPresented:
+                $isShowingCompletionReview
+        ) {
+
+            NavigationStack {
+
+                BookReviewView(
+                    book:
+                        viewModel.book,
+                    existingReview:
+                        contentStore.review(
+                            for:
+                                viewModel.book.id
+                        )
+                )
+            }
+        }
+
+        // MARK: Completion Note
+
+        .sheet(
+            isPresented:
+                $isShowingCompletionNote
+        ) {
+
+            NavigationStack {
+
+                NoteEditorView(
+                    bookID:
+                        viewModel.book.id,
+                    onSave: {
+                        note in
+
+                        contentStore
+                            .addNote(
+                                note
+                            )
+                    }
+                )
+            }
+        }
 
         // MARK: Remove
 
@@ -197,6 +273,47 @@ struct BookDetailView: View {
                 """
                 "\(viewModel.book.title)" will be removed from your library.
                 """
+            )
+        }
+        
+        .confirmationDialog(
+            "You finished \(viewModel.book.title)!",
+            isPresented:
+                $isShowingCompletionPrompt,
+            titleVisibility:
+                .visible
+        ) {
+
+            Button(
+                "Write a Review"
+            ) {
+                isShowingCompletionReview =
+                    true
+            }
+
+            Button(
+                "Add a Note"
+            ) {
+                isShowingCompletionNote =
+                    true
+            }
+
+            Button(
+                "Back to Home"
+            ) {
+                dismiss()
+                onGoHome()
+            }
+
+            Button(
+                "Stay on Book Details",
+                role: .cancel
+            ) {}
+
+        } message: {
+
+            Text(
+                "Would you like to save some thoughts before you move on?"
             )
         }
     }
@@ -245,41 +362,71 @@ struct BookDetailView: View {
             )
 
             AppCard {
-                VStack(spacing: 0) {
 
-                    BookDetailActionRow(
-                        title: "Notes",
-                        systemImage:
-                            "note.text",
-                        subtitle:
-                            "View or add reading notes",
-                        action: {
-                            notesTapped()
-                        }
+                VStack(
+                    spacing: 0
+                ) {
+
+                    NavigationLink {
+
+                        BookNotesView(
+                            book:
+                                viewModel.book
+                        )
+
+                    } label: {
+
+                        BookDetailNavigationRow(
+                            title: "Notes",
+                            systemImage:
+                                "note.text",
+                            subtitle:
+                                notesSubtitle
+                        )
+                    }
+                    .buttonStyle(
+                        .plain
                     )
 
                     Divider()
                         .padding(
                             .leading,
-                            38 + AppSpacing.md
+                            38 +
+                            AppSpacing.md
                         )
 
-                    BookDetailActionRow(
-                        title:
-                            reviewTitle,
-                        systemImage:
-                            "star",
-                        subtitle:
-                            "Record your thoughts",
-                        action: {
-                            reviewTapped()
-                        }
+                    NavigationLink {
+
+                        BookReviewView(
+                            book:
+                                viewModel.book,
+                            existingReview:
+                                contentStore
+                                    .review(
+                                        for:
+                                            viewModel
+                                                .book.id
+                                    )
+                        )
+
+                    } label: {
+
+                        BookDetailNavigationRow(
+                            title:
+                                reviewTitle,
+                            systemImage:
+                                "star",
+                            subtitle:
+                                reviewSubtitle
+                        )
+                    }
+                    .buttonStyle(
+                        .plain
                     )
                 }
             }
         }
     }
-
     // MARK: - Manage
 
     private var manageSection:
@@ -336,12 +483,67 @@ struct BookDetailView: View {
 
     // MARK: - Review
 
-    private var reviewTitle: String {
+    private var reviewTitle:
+        String
+    {
+        if contentStore.review(
+            for:
+                viewModel.book.id
+        ) != nil
+        {
+            return "Edit Review"
+        }
 
-        viewModel.book.status ==
+        return viewModel.book.status ==
             .completed
-        ? "Write a Review"
-        : "Review"
+            ? "Write a Review"
+            : "Review"
+    }
+    
+    private var notesSubtitle:
+        String
+    {
+        let count =
+            contentStore
+                .notes(
+                    for:
+                        viewModel
+                            .book.id
+                )
+                .count
+
+        switch count {
+
+        case 0:
+            return
+                "View or add reading notes"
+
+        case 1:
+            return
+                "1 saved note"
+
+        default:
+            return
+                "\(count) saved notes"
+        }
+    }
+
+    private var reviewSubtitle:
+        String
+    {
+        guard let review =
+            contentStore.review(
+                for:
+                    viewModel
+                        .book.id
+            )
+        else {
+            return
+                "Record your thoughts"
+        }
+
+        return
+            "\(review.rating) out of 5 stars"
     }
 
     // MARK: - Progress
@@ -431,41 +633,38 @@ struct BookDetailView: View {
         let bookID =
             viewModel.book.id
 
+        contentStore
+            .deleteAllContent(
+                for: bookID
+            )
+
         onBookRemoved(
             bookID
         )
 
         dismiss()
     }
-
-    // MARK: - Future Features
-
-    private func notesTapped() {
-        print(
-            "Notes tapped"
-        )
-    }
-
-    private func reviewTapped() {
-        print(
-            "Review tapped"
-        )
-    }
 }
 
 #Preview {
-
-    let dataSource =
-        LocalReadingSessionDataSource()
 
     let sessionStore =
         ReadingSessionStore(
             sessions: [],
             localDataSource:
-                dataSource
+                LocalReadingSessionDataSource()
+        )
+
+    let contentStore =
+        BookContentStore(
+            notes: [],
+            reviews: [],
+            localDataSource:
+                LocalBookContentDataSource()
         )
 
     NavigationStack {
+
         BookDetailView(
             book:
                 .mockFourthWing
@@ -473,5 +672,8 @@ struct BookDetailView: View {
     }
     .environment(
         sessionStore
+    )
+    .environment(
+        contentStore
     )
 }
