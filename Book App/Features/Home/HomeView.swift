@@ -63,30 +63,22 @@ struct HomeView: View {
     // MARK: - Welcome
 
     private var welcomeSection: some View {
-        VStack(
-            alignment: .leading,
-            spacing: AppSpacing.xs
-        ) {
+        VStack(alignment: .leading, spacing: AppSpacing.sm) {
+            HStack(spacing: AppSpacing.sm) {
+                Image("AppLogo")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 40, height: 40)
+                    .accessibilityHidden(true)
 
-            Text(
-                "Your reading"
-            )
-            .font(
-                AppTypography.body
-            )
-            .foregroundStyle(
-                Color.textSecondary
-            )
+                Text("Your reading")
+                    .font(AppTypography.body)
+                    .foregroundStyle(Color.textSecondary)
+            }
 
-            Text(
-                "Pick up where you left off."
-            )
-            .font(
-                AppTypography.title
-            )
-            .foregroundStyle(
-                Color.textPrimary
-            )
+            Text("Pick up where you left off.")
+                .font(AppTypography.title)
+                .foregroundStyle(Color.textPrimary)
         }
     }
     
