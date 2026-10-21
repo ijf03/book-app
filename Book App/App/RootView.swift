@@ -109,5 +109,29 @@ struct RootView: View {
                 )
             }
         }
+        .task {
+            await libraryStore.refreshSampleBooks(using: bookRepository)
+        }
+        .overlay(alignment: .top) {
+            if libraryStore.isRefreshingSampleBooks {
+                SwiftUI.ProgressView("Loading real books…")
+                    .font(AppTypography.caption)
+                    .padding(AppSpacing.sm)
+                    .background(Color.surface, in: RoundedRectangle(cornerRadius: AppRadius.md))
+                    .padding(AppSpacing.md)
+                    .accessibilityLabel("Refreshing sample books from Open Library")
+            }
+        }
+        .alert("Some Books Couldn’t Load", isPresented: Binding(
+            get: { libraryStore.sampleRefreshError != nil },
+            set: { if !$0 { libraryStore.dismissSampleRefreshError() } }
+        )) {
+            Button("Try Again") {
+                Task { await libraryStore.refreshSampleBooks(using: bookRepository) }
+            }
+            Button("Later", role: .cancel) { libraryStore.dismissSampleRefreshError() }
+        } message: {
+            Text(libraryStore.sampleRefreshError ?? "Please try again.")
+        }
     }
 }

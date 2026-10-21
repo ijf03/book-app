@@ -28,8 +28,7 @@ final class AppContainer {
         let localLibraryDataSource =
             LocalLibraryDataSource()
 
-        var initialBooks =
-            Book.mockBooks
+        var initialBooks: [Book] = []
 
         do {
             if let savedBooks =
@@ -50,7 +49,7 @@ final class AppContainer {
                     )
 
                 print(
-                    "🌱 First launch: seeded library with \(initialBooks.count) mock books."
+                    "📚 First launch: created an empty library."
                 )
             }
 

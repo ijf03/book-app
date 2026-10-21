@@ -1,10 +1,3 @@
-//
-//  Book.swift
-//  Book App
-//
-//  Created by Sabi on 1/10/2026.
-//
-
 import Foundation
 
 struct Book: Identifiable, Codable, Hashable {
@@ -19,6 +12,8 @@ struct Book: Identifiable, Codable, Hashable {
     var status: ReadingStatus
     var format: ReadingFormat
 
+    // Preserve local identity for existing notes and sessions.
+    var sourceBookID: String? = nil
     var progress: ReadingProgress = .empty
 
     var authorText: String {

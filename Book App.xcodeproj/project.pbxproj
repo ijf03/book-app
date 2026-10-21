@@ -6,12 +6,28 @@
 	objectVersion = 110;
 	objects = {
 
+/* Begin PBXContainerItemProxy section */
+		1242B6C630890411000C72EF /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 128AF177306D5CC700936867 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 128AF17E306D5CC700936867;
+			remoteInfo = "Book App";
+		};
+/* End PBXContainerItemProxy section */
+
 /* Begin PBXFileReference section */
 		1242B6BD3088FC57000C72EF /* Book-App-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = "Book-App-Info.plist"; sourceTree = "<group>"; };
+		1242B6C230890411000C72EF /* BookAppTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = BookAppTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		128AF17F306D5CC700936867 /* Book App.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Book App.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
+		1242B6C330890411000C72EF /* BookAppTests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = BookAppTests;
+			sourceTree = "<group>";
+		};
 		128AF181306D5CC700936867 /* Book App */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = "Book App";
@@ -20,6 +36,11 @@
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		1242B6BF30890411000C72EF /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			files = (
+			);
+		};
 		128AF17C306D5CC700936867 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			files = (
@@ -33,6 +54,7 @@
 			children = (
 				1242B6BD3088FC57000C72EF /* Book-App-Info.plist */,
 				128AF181306D5CC700936867 /* Book App */,
+				1242B6C330890411000C72EF /* BookAppTests */,
 				128AF180306D5CC700936867 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -41,6 +63,7 @@
 			isa = PBXGroup;
 			children = (
 				128AF17F306D5CC700936867 /* Book App.app */,
+				1242B6C230890411000C72EF /* BookAppTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -48,6 +71,27 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
+		1242B6C130890411000C72EF /* BookAppTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 1242B6C830890411000C72EF /* Build configuration list for PBXNativeTarget "BookAppTests" */;
+			buildPhases = (
+				1242B6BE30890411000C72EF /* Sources */,
+				1242B6BF30890411000C72EF /* Frameworks */,
+				1242B6C030890411000C72EF /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				1242B6C730890411000C72EF /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				1242B6C330890411000C72EF /* BookAppTests */,
+			);
+			name = BookAppTests;
+			productName = BookAppTests;
+			productReference = 1242B6C230890411000C72EF /* BookAppTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 		128AF17E306D5CC700936867 /* Book App */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 128AF18A306D5CC800936867 /* Build configuration list for PBXNativeTarget "Book App" */;
@@ -73,9 +117,13 @@
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
-				LastSwiftUpdateCheck = 2700;
+				LastSwiftUpdateCheck = 2710;
 				LastUpgradeCheck = 2700;
 				TargetAttributes = {
+					1242B6C130890411000C72EF = {
+						CreatedOnToolsVersion = 27.1;
+						TestTargetID = 128AF17E306D5CC700936867;
+					};
 					128AF17E306D5CC700936867 = {
 						CreatedOnToolsVersion = 27.0;
 					};
@@ -96,11 +144,17 @@
 			projectRoot = "";
 			targets = (
 				128AF17E306D5CC700936867 /* Book App */,
+				1242B6C130890411000C72EF /* BookAppTests */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+		1242B6C030890411000C72EF /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			files = (
+			);
+		};
 		128AF17D306D5CC700936867 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			files = (
@@ -109,6 +163,11 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		1242B6BE30890411000C72EF /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			files = (
+			);
+		};
 		128AF17B306D5CC700936867 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			files = (
@@ -116,7 +175,55 @@
 		};
 /* End PBXSourcesBuildPhase section */
 
+/* Begin PBXTargetDependency section */
+		1242B6C730890411000C72EF /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 128AF17E306D5CC700936867 /* Book App */;
+			targetProxy = 1242B6C630890411000C72EF /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
 /* Begin XCBuildConfiguration section */
+		1242B6C930890411000C72EF /* Debug configuration for PBXNativeTarget "BookAppTests" */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = edu.monash.BookAppTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Book App.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Book App";
+			};
+			name = Debug;
+		};
+		1242B6CA30890411000C72EF /* Release configuration for PBXNativeTarget "BookAppTests" */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = edu.monash.BookAppTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Book App.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Book App";
+			};
+			name = Release;
+		};
 		128AF188306D5CC800936867 /* Debug configuration for PBXProject "Book App" */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -305,6 +412,14 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		1242B6C830890411000C72EF /* Build configuration list for PBXNativeTarget "BookAppTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				1242B6C930890411000C72EF /* Debug configuration for PBXNativeTarget "BookAppTests" */,
+				1242B6CA30890411000C72EF /* Release configuration for PBXNativeTarget "BookAppTests" */,
+			);
+			defaultConfigurationName = Release;
+		};
 		128AF17A306D5CC700936867 /* Build configuration list for PBXProject "Book App" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (

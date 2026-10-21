@@ -225,21 +225,16 @@ struct SearchBookDetailView: View {
     private func addBook(
         status: ReadingStatus,
         format: ReadingFormat
-    ) {
-        let newBook =
-            BookFactory.makeBook(
-                from: book,
-                status: status,
-                format: format
-            )
+    ) -> Bool {
+        guard !isAlreadyAdded else { return true }
 
-        let didAdd =
-            libraryStore.addBook(
-                newBook
-            )
-
-        if didAdd {
-            wasJustAdded = true
-        }
+        let newBook = BookFactory.makeBook(
+            from: book,
+            status: status,
+            format: format
+        )
+        let didAdd = libraryStore.addBook(newBook)
+        if didAdd { wasJustAdded = true }
+        return didAdd
     }
 }
