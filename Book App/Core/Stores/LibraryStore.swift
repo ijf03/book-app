@@ -24,8 +24,13 @@ final class LibraryStore {
         books: [Book],
         localDataSource: LocalLibraryDataSource
     ) {
-        self.books = books
+        self.books = books.map { book in
+            var updated = book
+            if updated.status == .completed && updated.completedAt == nil { updated.completedAt = Date() }
+            return updated
+        }
         self.localDataSource = localDataSource
+        if self.books != books { save() }
     }
 
     // MARK: - Add
@@ -46,7 +51,9 @@ final class LibraryStore {
             return false
         }
 
-        books.append(book)
+        var savedBook = book
+        if savedBook.status == .completed && savedBook.completedAt == nil { savedBook.completedAt = Date() }
+        books.append(savedBook)
 
         print(
             "➕ Added to LibraryStore:",
@@ -84,8 +91,11 @@ final class LibraryStore {
         let oldBook =
             books[index]
 
-        books[index] =
-            updatedBook
+        var savedBook = updatedBook
+        savedBook.completedAt = savedBook.status == .completed
+            ? (oldBook.status == .completed ? oldBook.completedAt ?? Date() : Date())
+            : nil
+        books[index] = savedBook
 
         if !save() {
             // Restore old value if persistence failed.

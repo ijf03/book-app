@@ -6,6 +6,12 @@
 	objectVersion = 110;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		1242B6CC30895C4E000C72EF /* ReadingGoals.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1242B6CB30895C4E000C72EF /* ReadingGoals.swift */; };
+		1242B6D030895D86000C72EF /* CustomBookLists.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1242B6CF30895D86000C72EF /* CustomBookLists.swift */; };
+		1242B6D430895E16000C72EF /* ReadingReminders.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1242B6D330895E16000C72EF /* ReadingReminders.swift */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXContainerItemProxy section */
 		1242B6C630890411000C72EF /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -19,6 +25,9 @@
 /* Begin PBXFileReference section */
 		1242B6BD3088FC57000C72EF /* Book-App-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = "Book-App-Info.plist"; sourceTree = "<group>"; };
 		1242B6C230890411000C72EF /* BookAppTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = BookAppTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		1242B6CB30895C4E000C72EF /* ReadingGoals.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = ReadingGoals.swift; path = "Book App/Features/Progress/ReadingGoals.swift"; sourceTree = "<group>"; };
+		1242B6CF30895D86000C72EF /* CustomBookLists.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = CustomBookLists.swift; path = "Book App/Features/Library/CustomBookLists.swift"; sourceTree = "<group>"; };
+		1242B6D330895E16000C72EF /* ReadingReminders.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = ReadingReminders.swift; path = "Book App/Features/Progress/ReadingReminders.swift"; sourceTree = "<group>"; };
 		128AF17F306D5CC700936867 /* Book App.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Book App.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -52,6 +61,9 @@
 		128AF176306D5CC700936867 = {
 			isa = PBXGroup;
 			children = (
+				1242B6D330895E16000C72EF /* ReadingReminders.swift */,
+				1242B6CF30895D86000C72EF /* CustomBookLists.swift */,
+				1242B6CB30895C4E000C72EF /* ReadingGoals.swift */,
 				1242B6BD3088FC57000C72EF /* Book-App-Info.plist */,
 				128AF181306D5CC700936867 /* Book App */,
 				1242B6C330890411000C72EF /* BookAppTests */,
@@ -171,6 +183,9 @@
 		128AF17B306D5CC700936867 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			files = (
+				1242B6CC30895C4E000C72EF /* ReadingGoals.swift in Sources */,
+				1242B6D030895D86000C72EF /* CustomBookLists.swift in Sources */,
+				1242B6D430895E16000C72EF /* ReadingReminders.swift in Sources */,
 			);
 		};
 /* End PBXSourcesBuildPhase section */

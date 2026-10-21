@@ -14,6 +14,7 @@ struct Book: Identifiable, Codable, Hashable {
 
     // Preserve local identity for existing notes and sessions.
     var sourceBookID: String? = nil
+    var completedAt: Date? = nil
     var progress: ReadingProgress = .empty
 
     var authorText: String {

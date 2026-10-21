@@ -6,6 +6,8 @@ struct LibraryView: View {
     private var viewModel:
         LibraryViewModel
 
+    private let libraryStore: LibraryStore
+
     let onGoHome:
         () -> Void
 
@@ -14,6 +16,7 @@ struct LibraryView: View {
         onGoHome:
             @escaping () -> Void = {}
     ) {
+        self.libraryStore = store
         _viewModel = State(
             initialValue:
                 LibraryViewModel(
@@ -42,6 +45,9 @@ struct LibraryView: View {
             }
             .background(Color.surfaceSecondary)
             .navigationTitle("My Library")
+            .toolbar {
+                NavigationLink { CustomBookListsView(library: libraryStore) } label: { Label("Custom Lists", systemImage: "folder") }
+            }
             .searchable(
                 text: $viewModel.searchText,
                 prompt: "Search your library"

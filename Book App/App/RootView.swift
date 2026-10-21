@@ -110,6 +110,7 @@ struct RootView: View {
             }
         }
         .task {
+            await ReadingRemindersViewModel().reconcile()
             await libraryStore.refreshSampleBooks(using: bookRepository)
         }
         .overlay(alignment: .top) {

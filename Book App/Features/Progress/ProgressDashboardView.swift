@@ -46,6 +46,8 @@ struct ProgressDashboardView: View {
                     spacing: AppSpacing.xl
                 ) {
 
+                    ReadingGoalSection(library: libraryStore)
+
                     overviewSection
 
                     streakSection
@@ -64,6 +66,9 @@ struct ProgressDashboardView: View {
             .navigationTitle(
                 "Stats & Goals"
             )
+            .toolbar {
+                NavigationLink { ReadingRemindersSettingsView() } label: { Label("Reading Reminders", systemImage: "gearshape") }
+            }
         }
     }
 
@@ -820,4 +825,3 @@ struct ProgressDashboardView: View {
         )
     }
 }
-
