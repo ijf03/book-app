@@ -71,6 +71,10 @@ final class LocalReadingSessionDataSource {
     func loadSessions()
         throws -> [ReadingSession]
     {
+        if let data = try scope?.syncedData(file: "reading-sessions.json") {
+            return try decoder.decode([ReadingSession].self, from: data)
+        }
+
         let fileURL =
             try sessionFileURL()
 
@@ -140,10 +144,8 @@ final class LocalReadingSessionDataSource {
                     sessions
                 )
 
-            try data.write(
-                to: fileURL,
-                options: .atomic
-            )
+            if let scope { try scope.save(data, to: fileURL) }
+            else { try data.write(to: fileURL, options: .atomic) }
 
             print(
                 "💾 Saved \(sessions.count) reading sessions."

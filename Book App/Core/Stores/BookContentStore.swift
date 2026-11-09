@@ -11,6 +11,16 @@ import Observation
 @MainActor
 @Observable
 final class BookContentStore {
+    /// Hydration never saves back to the repository, avoiding listener feedback.
+    func reloadFromLocalSync() {
+        do {
+            let content = try localDataSource.loadContent()
+            notes = content.notes
+            reviews = content.reviews
+            persistenceError = nil
+        } catch { persistenceError = SyncFailure.localStorage.message }
+    }
+
     func clearAccountMemory() { notes = []; reviews = []; persistenceError = nil }
 
 
@@ -39,6 +49,23 @@ final class BookContentStore {
     }
 
     // MARK: - Notes
+
+    /// Publish only after the local repository accepts the note. Cloud upload remains asynchronous.
+    @discardableResult
+    func saveProgressNote(_ note: ReadingNote) -> Bool {
+        var updated = notes
+        if let index = updated.firstIndex(where: { $0.id == note.id }) { updated[index] = note }
+        else { updated.append(note) }
+        do {
+            try localDataSource.saveContent(BookContentData(notes: updated, reviews: reviews))
+            notes = updated
+            persistenceError = nil
+            return true
+        } catch {
+            persistenceError = String(localized: "Your note couldn’t be saved. Please try again.")
+            return false
+        }
+    }
 
     func notes(
         for bookID: String

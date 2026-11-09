@@ -9,6 +9,9 @@ import SwiftUI
 
 struct UpdateProgressView: View {
 
+    @Environment(BookContentStore.self) private var contentStore: BookContentStore?
+    @State private var noteDraft = ProgressNoteDraft()
+
     @Environment(\.dismiss)
     private var dismiss
 
@@ -75,6 +78,8 @@ struct UpdateProgressView: View {
                 }
 
                 summarySection
+
+                ProgressNoteSection(draft: noteDraft)
             }
             .padding(AppSpacing.md)
         }
@@ -95,7 +100,7 @@ struct UpdateProgressView: View {
                     )
                 )
                 .disabled(
-                    !viewModel.canSave
+                    !viewModel.canSave || !noteDraft.canSave
                 )
 
                 if let onSaveAndEndSession {
@@ -109,6 +114,8 @@ struct UpdateProgressView: View {
                             return
                         }
 
+                        guard noteDraft.save(bookID: book.id, page: updatedBook.progress.page, to: contentStore) else { return }
+
                         onSaveAndEndSession(
                             updatedBook
                         )
@@ -119,7 +126,7 @@ struct UpdateProgressView: View {
                         )
                     )
                     .disabled(
-                        !viewModel.canSave
+                        !viewModel.canSave || !noteDraft.canSave
                     )
                 }
             }
@@ -302,6 +309,8 @@ struct UpdateProgressView: View {
         else {
             return
         }
+
+        guard noteDraft.save(bookID: book.id, page: updatedBook.progress.page, to: contentStore) else { return }
 
         let justCompleted =
             updatedBook.status ==

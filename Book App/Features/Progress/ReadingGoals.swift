@@ -13,11 +13,17 @@ struct LocalJSONRepository<Value: Codable> {
         return folder.appendingPathComponent(fileName)
     }
     func load(default fallback: Value) throws -> Value {
+        if let data = try scope?.syncedData(file: fileName) { return try JSONDecoder().decode(Value.self, from: data) }
         let url = try fileURL()
         guard FileManager.default.fileExists(atPath: url.path) else { return fallback }
         return try JSONDecoder().decode(Value.self, from: Data(contentsOf: url))
     }
-    func save(_ value: Value) throws { try JSONEncoder().encode(value).write(to: fileURL(), options: .atomic) }
+    func save(_ value: Value) throws {
+        let data = try JSONEncoder().encode(value)
+        let url = try fileURL()
+        if let scope { try scope.save(data, to: url) }
+        else { try data.write(to: url, options: .atomic) }
+    }
 }
 
 struct ReadingGoal: Codable, Identifiable, Equatable {
@@ -91,6 +97,7 @@ struct ReadingGoalSection: View {
                 }
             }
         }
+        .onChange(of: viewModel.library.accountScope?.cloudRevision) { _, _ in viewModel.reload() }
         .sheet(isPresented: $isEditing) {
             NavigationStack {
                 Form {

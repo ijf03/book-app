@@ -9,6 +9,9 @@ import SwiftUI
 
 struct FinishReadingSessionView: View {
 
+    @Environment(BookContentStore.self) private var contentStore: BookContentStore?
+    @State private var noteDraft = ProgressNoteDraft()
+
     @Environment(ReadingSessionStore.self)
     private var sessionStore
 
@@ -70,6 +73,8 @@ struct FinishReadingSessionView: View {
                 sessionSummaryCard
 
                 progressSection
+
+                ProgressNoteSection(draft: noteDraft)
 
                 actionButtons
             }
@@ -194,6 +199,8 @@ struct FinishReadingSessionView: View {
             Button("Save Session") {
                 saveSession()
             }
+            .disabled(!noteDraft.canSave)
+            .accessibilityIdentifier("session.save")
             .buttonStyle(
                 AppButtonStyle(
                     kind: .primary
@@ -296,6 +303,8 @@ struct FinishReadingSessionView: View {
                     timestampText
                 )
         )
+
+        guard noteDraft.save(bookID: book.id, page: updatedBook.progress.page, to: contentStore) else { return }
 
         onBookUpdated(updatedBook)
 

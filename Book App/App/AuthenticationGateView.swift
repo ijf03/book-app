@@ -16,9 +16,12 @@ struct AuthenticationGateView: View {
                         bookRepository: container.bookRepository,
                         libraryStore: account.libraryStore,
                         readingSessionStore: account.readingSessionStore,
-                        authentication: container.authentication
+                        authentication: container.authentication,
+                        sync: account.sync,
+                        reminders: account.reminders
                     )
                     .environment(account.router)
+                    .environment(account.libraryStore)
                     .environment(account.readingSessionStore)
                     .environment(account.bookContentStore)
                     .id(account.id)

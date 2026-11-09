@@ -34,7 +34,10 @@ final class AccountLocalStorage {
     func prepare(userID: String, importLegacy: Bool) throws -> AccountStorageScope {
         let destination = directory(for: userID)
         if fileManager.fileExists(atPath: destination.path) {
-            try validate(directory: destination)
+            // The sync journal repairs interrupted projection writes before stores load.
+            if !fileManager.fileExists(atPath: destination.appendingPathComponent("sync-journal-v1.json").path) {
+                try validate(directory: destination)
+            }
             return AccountStorageScope(directory: destination)
         }
         let parent = destination.deletingLastPathComponent()

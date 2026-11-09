@@ -12,6 +12,8 @@ struct BookDetailView: View {
     @Environment(\.dismiss)
     private var dismiss
     
+    @Environment(LibraryStore.self) private var libraryStore: LibraryStore?
+
     @Environment(BookContentStore.self)
     private var contentStore
 
@@ -129,6 +131,14 @@ struct BookDetailView: View {
         .background(
             Color.surfaceSecondary
         )
+        .onChange(of: libraryStore?.accountScope?.cloudRevision) { _, _ in
+            guard let libraryStore else { return }
+            if let updated = libraryStore.books.first(where: { $0.id == viewModel.book.id }) {
+                viewModel.updateBook(updated)
+            } else {
+                dismiss()
+            }
+        }
         .navigationTitle(
             "Book Details"
         )

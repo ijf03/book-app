@@ -1,0 +1,114 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function owner(uid) {
+      return request.auth != null && request.auth.uid == uid;
+    }
+    function collectionAllowed(kind) {
+      return kind in ['books', 'sessions', 'notes', 'reviews', 'goals', 'lists', 'preferences'];
+    }
+    function optionalString(data, key, limit) {
+      return !(key in data) || (data[key] is string && data[key].size() <= limit);
+    }
+    function optionalNumber(data, key) {
+      return !(key in data) || data[key] is number;
+    }
+    function optionalPositiveInt(data, key) {
+      return !(key in data) || (data[key] is int && data[key] >= 0);
+    }
+    function progress(data) {
+      return data is map && data.keys().hasOnly(['page', 'percentage', 'timestampSeconds'])
+        && optionalPositiveInt(data, 'page') && optionalPositiveInt(data, 'timestampSeconds')
+        && (!('percentage' in data) || (data.percentage is number && data.percentage >= 0 && data.percentage <= 100));
+    }
+    function book(data, id) {
+      return data.keys().hasAll(['id', 'title', 'authors', 'status', 'format', 'progress'])
+        && data.keys().hasOnly(['id', 'title', 'authors', 'description', 'coverURL', 'pageCount', 'status', 'format', 'sourceBookID', 'completedAt', 'progress'])
+        && data.id == id && data.title is string && data.title.size() <= 10000
+        && data.authors is list && data.authors.size() <= 1000
+        && data.status in ['reading', 'toRead', 'completed']
+        && data.format in ['physical', 'ebook', 'audiobook'] && progress(data.progress)
+        && optionalString(data, 'description', 700000) && optionalString(data, 'coverURL', 8192)
+        && optionalString(data, 'sourceBookID', 4096) && optionalPositiveInt(data, 'pageCount')
+        && optionalNumber(data, 'completedAt');
+    }
+    function session(data, id) {
+      return data.keys().hasAll(['id', 'bookID', 'startedAt', 'totalPausedSeconds', 'startProgress'])
+        && data.keys().hasOnly(['id', 'bookID', 'startedAt', 'endedAt', 'pausedAt', 'totalPausedSeconds', 'startProgress', 'endProgress'])
+        && data.id == id && data.bookID is string && data.bookID.size() > 0 && data.bookID.size() <= 4096
+        && data.startedAt is number && optionalNumber(data, 'endedAt') && optionalNumber(data, 'pausedAt')
+        && data.totalPausedSeconds is int && data.totalPausedSeconds >= 0 && progress(data.startProgress)
+        && (!('endProgress' in data) || progress(data.endProgress));
+    }
+    function note(data, id) {
+      return data.keys().hasAll(['id', 'bookID', 'text', 'containsSpoilers', 'createdAt', 'updatedAt'])
+        && data.keys().hasOnly(['id', 'bookID', 'text', 'page', 'containsSpoilers', 'createdAt', 'updatedAt'])
+        && data.id == id && data.bookID is string && data.bookID.size() > 0 && data.bookID.size() <= 4096
+        && data.text is string && data.text.size() <= 700000 && optionalPositiveInt(data, 'page')
+        && data.containsSpoilers is bool && data.createdAt is number && data.updatedAt is number;
+    }
+    function review(data, id) {
+      return data.keys().hasAll(['id', 'bookID', 'rating', 'text', 'containsSpoilers', 'createdAt', 'updatedAt'])
+        && data.keys().hasOnly(['id', 'bookID', 'rating', 'text', 'containsSpoilers', 'createdAt', 'updatedAt'])
+        && data.id is string && data.id.size() == 36 && data.bookID == id
+        && data.rating is int && data.rating >= 1 && data.rating <= 5
+        && data.text is string && data.text.size() <= 700000
+        && data.containsSpoilers is bool && data.createdAt is number && data.updatedAt is number;
+    }
+    function goal(data, id) {
+      return data.keys().hasAll(['year', 'target']) && data.keys().hasOnly(['year', 'target'])
+        && data.year is int && data.year >= 1 && data.year <= 9999 && string(data.year) == id
+        && data.target is int && data.target >= 1 && data.target <= 10000;
+    }
+    function customList(data, id) {
+      return data.keys().hasAll(['id', 'name', 'description', 'bookIDs'])
+        && data.keys().hasOnly(['id', 'name', 'description', 'bookIDs']) && data.id == id
+        && data.name is string && data.name.size() > 0 && data.name.size() <= 10000
+        && data.description is string && data.description.size() <= 700000
+        && data.bookIDs is list && data.bookIDs.size() <= 10000;
+    }
+    function preferences(data, id) {
+      return (id == 'reminders' && data.keys().hasAll(['isEnabled', 'hour', 'minute'])
+          && data.keys().hasOnly(['isEnabled', 'hour', 'minute']) && data.isEnabled is bool
+          && data.hour is int && data.hour >= 0 && data.hour <= 23
+          && data.minute is int && data.minute >= 0 && data.minute <= 59)
+        || (id in ['bookOrder', 'listOrder'] && data.keys().hasAll(['ids'])
+          && data.keys().hasOnly(['ids']) && data.ids is list && data.ids.size() <= 10000);
+    }
+    function payload(kind, data, id) {
+      return (kind == 'books' && book(data, id))
+        || (kind == 'sessions' && session(data, id))
+        || (kind == 'notes' && note(data, id))
+        || (kind == 'reviews' && review(data, id))
+        || (kind == 'goals' && goal(data, id))
+        || (kind == 'lists' && customList(data, id))
+        || (kind == 'preferences' && preferences(data, id));
+    }
+    function valid(kind, documentID) {
+      let value = request.resource.data;
+      return value.keys().hasAll(['schemaVersion', 'entityID', 'revision', 'operationID', 'deleted', 'data', 'updatedAt'])
+        && value.keys().hasOnly(['schemaVersion', 'entityID', 'revision', 'operationID', 'deleted', 'data', 'updatedAt'])
+        && documentID.matches('^[0-9a-f]{64}$')
+        && value.schemaVersion == 1 && value.schemaVersion is int
+        && value.entityID is string && value.entityID.size() > 0 && value.entityID.size() <= 4096
+        && value.revision is int && value.revision > 0
+        && value.operationID is string && value.operationID.size() == 36
+        && value.deleted is bool && value.data is map
+        && value.updatedAt is timestamp && value.updatedAt == request.time
+        && ((value.deleted && value.data.keys().size() == 0) || (!value.deleted && payload(kind, value.data, value.entityID)));
+    }
+    match /users/{uid}/{kind}/{documentID} {
+      allow read: if owner(uid) && collectionAllowed(kind);
+      allow create: if owner(uid) && collectionAllowed(kind) && valid(kind, documentID)
+        && request.resource.data.revision == 1;
+      allow update: if owner(uid) && collectionAllowed(kind) && valid(kind, documentID)
+        && request.resource.data.entityID == resource.data.entityID
+        && request.resource.data.revision == resource.data.revision + 1;
+      // Deletions are revisioned tombstones. Physical deletion would allow stale resurrection.
+      allow delete: if false;
+    }
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

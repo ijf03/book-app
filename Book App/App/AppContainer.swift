@@ -11,11 +11,13 @@ final class AppContainer {
     let authenticationService: any AuthenticationService
     let authentication: AuthenticationState
     let bookRepository: any BookRepository
+    private let cloudSyncService: any CloudSyncService
     private(set) var account: AccountSession?
     private(set) var storageState: StorageState = .unavailable
 
-    init(authenticationService: (any AuthenticationService)? = nil) {
+    init(authenticationService: (any AuthenticationService)? = nil, cloudSyncService: (any CloudSyncService)? = nil) {
         let service = authenticationService ?? FirebaseAuthenticationService()
+        self.cloudSyncService = cloudSyncService ?? FirestoreSyncService()
         self.authenticationService = service
         authentication = AuthenticationState(service: service)
         bookRepository = DefaultBookRepository(remoteDataSource: OpenLibraryRemoteDataSource())
@@ -52,8 +54,9 @@ final class AppContainer {
                 return
             }
             let scope = try storage.prepare(userID: user.id, importLegacy: importLegacy ?? false)
-            account = try AccountSession(scope: scope)
+            account = try AccountSession(scope: scope, userID: user.id, cloudService: cloudSyncService)
             storageState = .ready
+            account?.sync?.start()
         } catch {
             account = nil
             storageState = .failed

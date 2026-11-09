@@ -86,6 +86,7 @@ struct CustomBookListsView: View {
             .onMove { model.move(from: $0, to: $1) }
             if !model.canSave { Button("Retry Loading Lists") { model.reload() } }
         }
+        .onChange(of: model.library.accountScope?.cloudRevision) { _, _ in model.reload() }
         .scrollContentBackground(.hidden).background(Color.surfaceSecondary)
         .navigationTitle("Custom Lists")
         .toolbar {

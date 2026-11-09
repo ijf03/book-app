@@ -77,6 +77,10 @@ final class LocalBookContentDataSource {
     func loadContent()
         throws -> BookContentData
     {
+        if let data = try scope?.syncedData(file: "book-content.json") {
+            return try decoder.decode(BookContentData.self, from: data)
+        }
+
         let fileURL =
             try contentFileURL()
 
@@ -134,10 +138,8 @@ final class LocalBookContentDataSource {
                     content
                 )
 
-            try data.write(
-                to: fileURL,
-                options: .atomic
-            )
+            if let scope { try scope.save(data, to: fileURL) }
+            else { try data.write(to: fileURL, options: .atomic) }
 
         } catch is EncodingError {
 

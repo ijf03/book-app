@@ -64,18 +64,36 @@ enum ReminderPermission { case notDetermined, allowed, denied }
     var errorMessage: String?
     private let repository: LocalJSONRepository<ReadingReminderPreferences>
     private let notifications: any ReadingNotificationScheduling
+    private var needsReconciliation = false
+
+    private func finishSaving() {
+        isSaving = false
+        if needsReconciliation, repository.scope?.isActive != false {
+            needsReconciliation = false
+            Task { await reconcile() }
+        }
+    }
     init(repository: LocalJSONRepository<ReadingReminderPreferences> = .init(fileName: "reading-reminders.json"), notifications: (any ReadingNotificationScheduling)? = nil) {
         self.repository = repository; self.notifications = notifications ?? LocalReadingNotificationService(scope: repository.scope)
+        reloadPreferences()
+    }
+    func reloadPreferences() {
         do {
             let loaded = try repository.load(default: ReadingReminderPreferences())
             guard loaded.isValid else { throw CocoaError(.coderReadCorrupt) }
             preferences = loaded
+            canSave = true
         } catch { canSave = false; errorMessage = "Your reminder preferences couldn’t be loaded. The saved file has been preserved." }
     }
     func reconcile() async {
-        guard canSave, !isSaving else { return }
-        isSaving = true; defer { isSaving = false }
+        reloadPreferences()
+        guard canSave, repository.scope?.isActive != false else { return }
+        guard !isSaving else { needsReconciliation = true; return }
+        isSaving = true; defer { finishSaving() }
         let permission = await notifications.permission()
+        guard !Task.isCancelled, repository.scope?.isActive != false else { return }
+        reloadPreferences()
+        guard canSave else { return }
         permissionDenied = permission == .denied
         do {
             if preferences.isEnabled && permission == .allowed { try await notifications.schedule(hour: preferences.hour, minute: preferences.minute) }
@@ -85,7 +103,7 @@ enum ReminderPermission { case notDetermined, allowed, denied }
     @discardableResult func update(enabled: Bool, hour: Int, minute: Int) async -> Bool {
         let updated = ReadingReminderPreferences(isEnabled: enabled, hour: hour, minute: minute)
         guard canSave, updated.isValid, !isSaving else { return false }
-        isSaving = true; defer { isSaving = false }
+        isSaving = true; defer { finishSaving() }
         let previous = preferences
         do {
             if enabled {
@@ -117,8 +135,8 @@ enum ReminderPermission { case notDetermined, allowed, denied }
 
 struct ReadingRemindersSettingsView: View {
     @State private var model: ReadingRemindersViewModel
-    init(scope: AccountStorageScope? = nil) {
-        _model = State(initialValue: ReadingRemindersViewModel(repository: .init(fileName: "reading-reminders.json", scope: scope)))
+    init(model: ReadingRemindersViewModel) {
+        _model = State(initialValue: model)
     }
     @Environment(\.openURL) private var openURL
     @Environment(\.scenePhase) private var scenePhase
@@ -128,14 +146,14 @@ struct ReadingRemindersSettingsView: View {
     var body: some View {
         Form {
             Section("Daily Reading Reminder") {
-                Toggle("Enable Reminders", isOn: Binding(get: { model.preferences.isEnabled && !model.permissionDenied }, set: { value in
+                Toggle("Enable Reminders", isOn: Binding(get: { model.preferences.isEnabled }, set: { value in
                     Task { await model.update(enabled: value, hour: model.preferences.hour, minute: model.preferences.minute) }
                 })).tint(Color.appAccent)
                 DatePicker("Reminder Time", selection: Binding(get: { time }, set: { value in
                     let parts = Calendar.current.dateComponents([.hour, .minute], from: value)
                     Task { await model.update(enabled: model.preferences.isEnabled, hour: parts.hour ?? 20, minute: parts.minute ?? 0) }
                 }), displayedComponents: .hourAndMinute)
-                Text("A daily local notification at your chosen time. Your device’s Focus and notification settings can affect delivery.")
+                Text("Reminder preferences sync across devices. Each device needs notification permission and may notify separately. Focus settings can affect delivery.")
                     .font(AppTypography.caption).foregroundStyle(Color.textSecondary)
             }.disabled(model.isSaving || !model.canSave)
             if model.isSaving { SwiftUI.ProgressView("Updating reminder…") }

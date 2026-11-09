@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct ProgressDashboardView: View {
+    private let reminders: ReadingRemindersViewModel
     
     private let libraryStore:
         LibraryStore
@@ -15,8 +16,10 @@ struct ProgressDashboardView: View {
     init(
         libraryStore: LibraryStore,
         sessionStore:
-            ReadingSessionStore
+            ReadingSessionStore,
+        reminders: ReadingRemindersViewModel? = nil
     ) {
+        self.reminders = reminders ?? ReadingRemindersViewModel(repository: .init(fileName: "reading-reminders.json", scope: libraryStore.accountScope))
         self.libraryStore =
             libraryStore
 
@@ -67,7 +70,7 @@ struct ProgressDashboardView: View {
                 "Stats & Goals"
             )
             .toolbar {
-                NavigationLink { ReadingRemindersSettingsView(scope: libraryStore.accountScope) } label: { Label("Reading Reminders", systemImage: "gearshape") }
+                NavigationLink { ReadingRemindersSettingsView(model: reminders) } label: { Label("Reading Reminders", systemImage: "gearshape") }
             }
         }
     }

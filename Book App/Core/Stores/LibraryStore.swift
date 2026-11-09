@@ -11,6 +11,14 @@ import Observation
 @MainActor
 @Observable
 final class LibraryStore {
+    /// Hydration never saves back to the repository, avoiding listener feedback.
+    func reloadFromLocalSync() {
+        do {
+            books = try localDataSource.loadBooks() ?? []
+            persistenceError = nil
+        } catch { persistenceError = SyncFailure.localStorage.message }
+    }
+
     func clearAccountMemory() { books = []; sampleRefreshError = nil; persistenceError = nil }
 
 

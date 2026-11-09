@@ -57,6 +57,10 @@ final class LocalLibraryDataSource {
     // MARK: - Load
 
     func loadBooks() throws -> [Book]? {
+        if let data = try scope?.syncedData(file: "library.json") {
+            return try decoder.decode([Book].self, from: data)
+        }
+
 
         let fileURL = try libraryFileURL()
 
@@ -121,10 +125,8 @@ final class LocalLibraryDataSource {
                 books
             )
 
-            try data.write(
-                to: fileURL,
-                options: .atomic
-            )
+            if let scope { try scope.save(data, to: fileURL) }
+            else { try data.write(to: fileURL, options: .atomic) }
 
             print(
                 "💾 Saved \(books.count) books to:"
@@ -132,9 +134,7 @@ final class LocalLibraryDataSource {
 
             print(fileURL.path)
 
-            guard fileManager.fileExists(
-                atPath: fileURL.path
-            ) else {
+            guard scope?.syncRepository != nil || fileManager.fileExists(atPath: fileURL.path) else {
                 throw LocalLibraryError.unableToSave
             }
 
@@ -164,6 +164,10 @@ final class LocalLibraryDataSource {
     // MARK: - Delete
 
     func deleteSavedLibrary() throws {
+        if scope?.syncRepository != nil {
+            try saveBooks([])
+            return
+        }
 
         let fileURL = try libraryFileURL()
 
