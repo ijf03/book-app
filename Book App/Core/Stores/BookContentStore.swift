@@ -11,6 +11,8 @@ import Observation
 @MainActor
 @Observable
 final class BookContentStore {
+    func clearAccountMemory() { notes = []; reviews = []; persistenceError = nil }
+
 
     private(set) var notes:
         [ReadingNote]

@@ -11,6 +11,8 @@ import Observation
 @MainActor
 @Observable
 final class LibraryStore {
+    func clearAccountMemory() { books = []; sampleRefreshError = nil; persistenceError = nil }
+
 
     private(set) var books: [Book]
 
@@ -32,6 +34,8 @@ final class LibraryStore {
         self.localDataSource = localDataSource
         if self.books != books { save() }
     }
+
+    var accountScope: AccountStorageScope? { localDataSource.scope }
 
     // MARK: - Add
 

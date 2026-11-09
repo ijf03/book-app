@@ -33,6 +33,8 @@ enum LocalReadingSessionError:
 }
 
 final class LocalReadingSessionDataSource {
+    let scope: AccountStorageScope?
+
 
     private let fileManager:
         FileManager
@@ -45,8 +47,10 @@ final class LocalReadingSessionDataSource {
 
     init(
         fileManager:
-            FileManager = .default
+            FileManager = .default,
+        scope: AccountStorageScope? = nil
     ) {
+        self.scope = scope
         self.fileManager =
             fileManager
 
@@ -172,6 +176,12 @@ final class LocalReadingSessionDataSource {
     private func sessionFileURL()
         throws -> URL
     {
+        if let scope {
+            try scope.checkAccess()
+            try fileManager.createDirectory(at: scope.directory, withIntermediateDirectories: true)
+            return scope.directory.appendingPathComponent("reading-sessions.json")
+        }
+
         guard let supportURL =
             fileManager.urls(
                 for:

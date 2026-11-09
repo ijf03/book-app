@@ -15,8 +15,8 @@ struct CustomBookList: Codable, Identifiable, Equatable {
     private(set) var canSave = true
     let library: LibraryStore
     private let repository: LocalJSONRepository<[CustomBookList]>
-    init(library: LibraryStore, repository: LocalJSONRepository<[CustomBookList]> = .init(fileName: "custom-book-lists.json")) {
-        self.library = library; self.repository = repository; reload()
+    init(library: LibraryStore, repository: LocalJSONRepository<[CustomBookList]>? = nil) {
+        self.library = library; self.repository = repository ?? .init(fileName: "custom-book-lists.json", scope: library.accountScope); reload()
     }
     func reload() {
         do { lists = try repository.load(default: []); canSave = true; errorMessage = nil }

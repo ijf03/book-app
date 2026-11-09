@@ -22,6 +22,9 @@ enum ReminderPermission { case notDetermined, allowed, denied }
 
 @MainActor final class LocalReadingNotificationService: ReadingNotificationScheduling {
     static let identifier = "daily-reading-reminder"
+    private let scope: AccountStorageScope?
+    init(scope: AccountStorageScope? = nil) { self.scope = scope }
+    private var requestIdentifier: String { scope.map { Self.identifier + "." + $0.directory.lastPathComponent } ?? Self.identifier }
     private let center = UNUserNotificationCenter.current()
     func permission() async -> ReminderPermission {
         switch await center.notificationSettings().authorizationStatus {
@@ -40,12 +43,16 @@ enum ReminderPermission { case notDetermined, allowed, denied }
         return UNNotificationRequest(identifier: identifier, content: content, trigger: trigger)
     }
     func schedule(hour: Int, minute: Int) async throws {
+        try scope?.checkAccess()
         // Adding the same identifier replaces the old pending request.
-        try await center.add(Self.request(hour: hour, minute: minute))
+        let base = Self.request(hour: hour, minute: minute)
+        let request = UNNotificationRequest(identifier: requestIdentifier, content: base.content, trigger: base.trigger)
+        try await center.add(request)
+        if scope?.isActive == false { cancel() }
     }
     func cancel() {
-        center.removePendingNotificationRequests(withIdentifiers: [Self.identifier])
-        center.removeDeliveredNotifications(withIdentifiers: [Self.identifier])
+        center.removePendingNotificationRequests(withIdentifiers: [requestIdentifier])
+        center.removeDeliveredNotifications(withIdentifiers: [requestIdentifier])
     }
 }
 
@@ -58,7 +65,7 @@ enum ReminderPermission { case notDetermined, allowed, denied }
     private let repository: LocalJSONRepository<ReadingReminderPreferences>
     private let notifications: any ReadingNotificationScheduling
     init(repository: LocalJSONRepository<ReadingReminderPreferences> = .init(fileName: "reading-reminders.json"), notifications: (any ReadingNotificationScheduling)? = nil) {
-        self.repository = repository; self.notifications = notifications ?? LocalReadingNotificationService()
+        self.repository = repository; self.notifications = notifications ?? LocalReadingNotificationService(scope: repository.scope)
         do {
             let loaded = try repository.load(default: ReadingReminderPreferences())
             guard loaded.isValid else { throw CocoaError(.coderReadCorrupt) }
@@ -109,7 +116,10 @@ enum ReminderPermission { case notDetermined, allowed, denied }
 }
 
 struct ReadingRemindersSettingsView: View {
-    @State private var model = ReadingRemindersViewModel()
+    @State private var model: ReadingRemindersViewModel
+    init(scope: AccountStorageScope? = nil) {
+        _model = State(initialValue: ReadingRemindersViewModel(repository: .init(fileName: "reading-reminders.json", scope: scope)))
+    }
     @Environment(\.openURL) private var openURL
     @Environment(\.scenePhase) private var scenePhase
     private var time: Date {

@@ -167,7 +167,7 @@ struct ReadingSessionHistoryView: View {
 
                 Image(
                     systemName:
-                        "book.open"
+                        "book"
                 )
                 .font(
                     .system(

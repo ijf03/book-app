@@ -195,7 +195,7 @@ struct ChangeReadingStatusSheet: View {
 
         switch status {
         case .reading:
-            return "book.open"
+            return "book"
 
         case .toRead:
             return "bookmark"

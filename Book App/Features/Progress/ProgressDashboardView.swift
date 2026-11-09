@@ -67,7 +67,7 @@ struct ProgressDashboardView: View {
                 "Stats & Goals"
             )
             .toolbar {
-                NavigationLink { ReadingRemindersSettingsView() } label: { Label("Reading Reminders", systemImage: "gearshape") }
+                NavigationLink { ReadingRemindersSettingsView(scope: libraryStore.accountScope) } label: { Label("Reading Reminders", systemImage: "gearshape") }
             }
         }
     }
@@ -562,7 +562,7 @@ struct ProgressDashboardView: View {
 
                 Image(
                     systemName:
-                        "book.open"
+                        "book"
                 )
                 .foregroundStyle(
                     Color.appAccent

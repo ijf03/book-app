@@ -1,140 +1,62 @@
 import Foundation
+import Observation
 
 @MainActor
+@Observable
 final class AppContainer {
+    enum StorageState: Equatable {
+        case unavailable, needsLegacyChoice, ready, failed
+    }
 
-    let router:
-        AppRouter
+    let authenticationService: any AuthenticationService
+    let authentication: AuthenticationState
+    let bookRepository: any BookRepository
+    private(set) var account: AccountSession?
+    private(set) var storageState: StorageState = .unavailable
 
-    let bookRepository:
-        any BookRepository
+    init(authenticationService: (any AuthenticationService)? = nil) {
+        let service = authenticationService ?? FirebaseAuthenticationService()
+        self.authenticationService = service
+        authentication = AuthenticationState(service: service)
+        bookRepository = DefaultBookRepository(remoteDataSource: OpenLibraryRemoteDataSource())
+        authentication.willChangeAccount = { [weak self] user in
+            self?.changeAccount(user)
+        }
+        authentication.start()
+    }
 
-    let libraryStore:
-        LibraryStore
+    private func changeAccount(_ user: AuthenticatedUser?) {
+        account?.invalidate()
+        account = nil
+        LocalReadingNotificationService().cancel()
+        storageState = .unavailable
+        guard let user else { return }
+        prepareAccount(user: user, importLegacy: nil)
+    }
 
-    let readingSessionStore:
-        ReadingSessionStore
-    
-    let bookContentStore:
-        BookContentStore
+    func chooseLegacyImport(_ importLegacy: Bool) {
+        guard case .signedIn(let user) = authentication.session else { return }
+        prepareAccount(user: user, importLegacy: importLegacy)
+    }
 
-    init() {
+    func retryStorage() {
+        guard case .signedIn(let user) = authentication.session else { return }
+        prepareAccount(user: user, importLegacy: nil)
+    }
 
-        self.router =
-            AppRouter()
-
-        // MARK: - Library Persistence
-
-        let localLibraryDataSource =
-            LocalLibraryDataSource()
-
-        var initialBooks: [Book] = []
-
+    private func prepareAccount(user: AuthenticatedUser, importLegacy: Bool?) {
         do {
-            if let savedBooks =
-                try localLibraryDataSource
-                    .loadBooks()
-            {
-                initialBooks =
-                    savedBooks
-
-                print(
-                    "✅ App launched with \(savedBooks.count) saved books."
-                )
-
-            } else {
-                try localLibraryDataSource
-                    .saveBooks(
-                        initialBooks
-                    )
-
-                print(
-                    "📚 First launch: created an empty library."
-                )
+            let storage = try AccountLocalStorage()
+            if importLegacy == nil && storage.needsLegacyChoice(for: user.id) {
+                storageState = .needsLegacyChoice
+                return
             }
-
+            let scope = try storage.prepare(userID: user.id, importLegacy: importLegacy ?? false)
+            account = try AccountSession(scope: scope)
+            storageState = .ready
         } catch {
-            print(
-                "❌ Failed to initialise local library:",
-                error
-            )
+            account = nil
+            storageState = .failed
         }
-
-        self.libraryStore =
-            LibraryStore(
-                books:
-                    initialBooks,
-                localDataSource:
-                    localLibraryDataSource
-            )
-
-        // MARK: - Reading Sessions
-
-        let localSessionDataSource =
-            LocalReadingSessionDataSource()
-
-        var initialSessions:
-            [ReadingSession] = []
-
-        do {
-            initialSessions =
-                try localSessionDataSource
-                    .loadSessions()
-
-        } catch {
-            print(
-                "❌ Failed to initialise reading sessions:",
-                error
-            )
-        }
-
-        self.readingSessionStore =
-            ReadingSessionStore(
-                sessions:
-                    initialSessions,
-                localDataSource:
-                    localSessionDataSource
-            )
-        
-        // MARK: - Notes & Reviews
-
-        let localBookContentDataSource =
-            LocalBookContentDataSource()
-
-        var initialContent =
-            BookContentData.empty
-
-        do {
-            initialContent =
-                try localBookContentDataSource
-                    .loadContent()
-
-        } catch {
-            print(
-                "❌ Failed to initialise notes and reviews:",
-                error
-            )
-        }
-
-        self.bookContentStore =
-            BookContentStore(
-                notes:
-                    initialContent.notes,
-                reviews:
-                    initialContent.reviews,
-                localDataSource:
-                    localBookContentDataSource
-            )
-        
-        // MARK: - Open Library
-
-        let openLibraryDataSource =
-            OpenLibraryRemoteDataSource()
-
-        self.bookRepository =
-            DefaultBookRepository(
-                remoteDataSource:
-                    openLibraryDataSource
-            )
     }
 }

@@ -9,6 +9,7 @@ struct RootView: View {
         case library
         case search
         case progress
+        case account
     }
 
     let bookRepository:
@@ -19,6 +20,8 @@ struct RootView: View {
 
     let readingSessionStore:
         ReadingSessionStore
+
+    let authentication: AuthenticationState
 
     @State
     private var selectedTab:
@@ -108,9 +111,12 @@ struct RootView: View {
                         "chart.bar.fill"
                 )
             }
+            AccountView(authentication: authentication)
+                .tag(AppTab.account)
+                .tabItem { Label("Account", systemImage: "person.crop.circle") }
         }
         .task {
-            await ReadingRemindersViewModel().reconcile()
+            await ReadingRemindersViewModel(repository: .init(fileName: "reading-reminders.json", scope: libraryStore.accountScope)).reconcile()
             await libraryStore.refreshSampleBooks(using: bookRepository)
         }
         .overlay(alignment: .top) {

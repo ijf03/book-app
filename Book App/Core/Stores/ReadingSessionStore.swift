@@ -11,6 +11,8 @@ import Observation
 @MainActor
 @Observable
 final class ReadingSessionStore {
+    func clearAccountMemory() { sessions = []; persistenceError = nil }
+
 
     private(set) var sessions:
         [ReadingSession]

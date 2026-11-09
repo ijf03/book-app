@@ -31,14 +31,18 @@ enum LocalLibraryError: LocalizedError {
 }
 
 final class LocalLibraryDataSource {
+    let scope: AccountStorageScope?
+
 
     private let fileManager: FileManager
     private let encoder: JSONEncoder
     private let decoder: JSONDecoder
 
     init(
-        fileManager: FileManager = .default
+        fileManager: FileManager = .default,
+        scope: AccountStorageScope? = nil
     ) {
+        self.scope = scope
         self.fileManager = fileManager
 
         self.encoder = JSONEncoder()
@@ -179,6 +183,12 @@ final class LocalLibraryDataSource {
     // MARK: - File Location
 
     private func libraryFileURL() throws -> URL {
+        if let scope {
+            try scope.checkAccess()
+            try fileManager.createDirectory(at: scope.directory, withIntermediateDirectories: true)
+            return scope.directory.appendingPathComponent("library.json")
+        }
+
 
         guard let applicationSupportURL =
             fileManager.urls(

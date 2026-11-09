@@ -5,8 +5,10 @@ import SwiftUI
 struct LocalJSONRepository<Value: Codable> {
     let fileName: String
     var directory: URL? = nil
+    var scope: AccountStorageScope? = nil
     private func fileURL() throws -> URL {
-        let folder = try directory ?? FileManager.default.url(for: .applicationSupportDirectory, in: .userDomainMask, appropriateFor: nil, create: true).appendingPathComponent("BookApp", isDirectory: true)
+        try scope?.checkAccess()
+        let folder = try scope?.directory ?? directory ?? FileManager.default.url(for: .applicationSupportDirectory, in: .userDomainMask, appropriateFor: nil, create: true).appendingPathComponent("BookApp", isDirectory: true)
         try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
         return folder.appendingPathComponent(fileName)
     }
@@ -30,8 +32,8 @@ struct ReadingGoal: Codable, Identifiable, Equatable {
     private(set) var canSave = true
     let library: LibraryStore
     private let repository: LocalJSONRepository<[ReadingGoal]>
-    init(library: LibraryStore, repository: LocalJSONRepository<[ReadingGoal]> = .init(fileName: "reading-goals.json")) {
-        self.library = library; self.repository = repository; reload()
+    init(library: LibraryStore, repository: LocalJSONRepository<[ReadingGoal]>? = nil) {
+        self.library = library; self.repository = repository ?? .init(fileName: "reading-goals.json", scope: library.accountScope); reload()
     }
     func reload() {
         do { goals = try repository.load(default: []); canSave = true; errorMessage = nil }

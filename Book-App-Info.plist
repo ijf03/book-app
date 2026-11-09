@@ -5,8 +5,7 @@
 	<key>UILaunchScreen</key>
 	<dict>
 		<key>UIColorName</key>
-        <string>AppAccent</string>
-
+		<string>AppAccent</string>
 	</dict>
 </dict>
 </plist>

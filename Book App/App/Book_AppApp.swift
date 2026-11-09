@@ -1,13 +1,33 @@
 import SwiftUI
+import UIKit
+import FirebaseCore
+
+class AppDelegate: NSObject, UIApplicationDelegate {
+    lazy var container = AppContainer()
+    func application(
+        _ application: UIApplication,
+        didFinishLaunchingWithOptions launchOptions:
+            [UIApplication.LaunchOptionsKey: Any]? = nil
+    ) -> Bool {
+        FirebaseApp.configure()
+        return true
+    }
+}
 
 @main
 struct Book_AppApp: App {
+    @UIApplicationDelegateAdaptor(AppDelegate.self)
+    var delegate
+
     var body: some Scene {
-        WindowGroup { AppStartupView() }
+        WindowGroup {
+            AppStartupView(makeContainer: { delegate.container })
+        }
     }
 }
 
 private struct AppStartupView: View {
+    let makeContainer: () -> AppContainer
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var container: AppContainer?
     @State private var logoAppeared = false
@@ -15,14 +35,7 @@ private struct AppStartupView: View {
     var body: some View {
         ZStack {
             if let container {
-                RootView(
-                    bookRepository: container.bookRepository,
-                    libraryStore: container.libraryStore,
-                    readingSessionStore: container.readingSessionStore
-                )
-                .environment(container.router)
-                .environment(container.readingSessionStore)
-                .environment(container.bookContentStore)
+                AuthenticationGateView(container: container)
             } else {
                 ZStack {
                     Color("AppAccent").ignoresSafeArea()
@@ -36,8 +49,6 @@ private struct AppStartupView: View {
                         .opacity(logoAppeared ? 1 : 0.7)
                         .accessibilityLabel("Loading your library")
                 }
-                .transition(.opacity)
-                .zIndex(1)
             }
         }
         .onAppear {
@@ -49,10 +60,7 @@ private struct AppStartupView: View {
             guard container == nil else { return }
             await Task.yield()
             guard !Task.isCancelled else { return }
-            let loadedContainer = AppContainer()
-            withAnimation(reduceMotion ? nil : .easeOut(duration: 0.3)) {
-                container = loadedContainer
-            }
+            container = makeContainer()
         }
     }
 }

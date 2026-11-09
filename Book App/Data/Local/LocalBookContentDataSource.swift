@@ -39,6 +39,8 @@ enum LocalBookContentError:
 }
 
 final class LocalBookContentDataSource {
+    let scope: AccountStorageScope?
+
 
     private let fileManager:
         FileManager
@@ -51,8 +53,10 @@ final class LocalBookContentDataSource {
 
     init(
         fileManager:
-            FileManager = .default
+            FileManager = .default,
+        scope: AccountStorageScope? = nil
     ) {
+        self.scope = scope
         self.fileManager =
             fileManager
 
@@ -152,6 +156,12 @@ final class LocalBookContentDataSource {
     private func contentFileURL()
         throws -> URL
     {
+        if let scope {
+            try scope.checkAccess()
+            try fileManager.createDirectory(at: scope.directory, withIntermediateDirectories: true)
+            return scope.directory.appendingPathComponent("book-content.json")
+        }
+
         guard let supportURL =
             fileManager.urls(
                 for:

@@ -360,7 +360,7 @@ struct HomeView: View {
                     message:
                         "Move a book to Reading to see it here.",
                     systemImage:
-                        "book.open"
+                        "book"
                 )
 
             } else {
