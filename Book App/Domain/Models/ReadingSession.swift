@@ -15,6 +15,7 @@ struct ReadingSession:
 {
     let id: UUID
     let bookID: String
+    var readID: String? = nil
 
     let startedAt: Date
     var endedAt: Date?
@@ -33,8 +34,10 @@ struct ReadingSession:
         pausedAt: Date? = nil,
         totalPausedSeconds: Int = 0,
         startProgress: ReadingProgress,
-        endProgress: ReadingProgress? = nil
+        endProgress: ReadingProgress? = nil,
+        readID: String? = nil
     ) {
+        self.readID = readID
         self.id = id
         self.bookID = bookID
         self.startedAt = startedAt

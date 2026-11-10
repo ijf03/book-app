@@ -120,6 +120,13 @@ struct BookDetailView: View {
 
                 aboutSection
 
+                if let error = libraryStore?.persistenceError {
+                    Text(error)
+                        .font(AppTypography.caption)
+                        .foregroundStyle(Color.textSecondary)
+                        .accessibilityLabel("Could not save book. \(error)")
+                }
+
                 bookActionsSection
 
                 manageSection
@@ -378,6 +385,16 @@ struct BookDetailView: View {
                 ) {
 
                     NavigationLink {
+                        PastReadsView(bookID: viewModel.book.id)
+                    } label: {
+                        BookDetailNavigationRow(title: "Past reads", systemImage: "clock.arrow.circlepath",
+                                                subtitle: "Your completed reading dates")
+                    }
+                    .buttonStyle(.plain)
+
+                    Divider()
+
+                    NavigationLink {
 
                         BookNotesView(
                             book:
@@ -562,13 +579,8 @@ struct BookDetailView: View {
         _ updatedBook: Book
     ) {
 
-        viewModel.updateBook(
-            updatedBook
-        )
-
-        onBookUpdated(
-            updatedBook
-        )
+        onBookUpdated(updatedBook)
+        viewModel.updateBook(libraryStore?.book(id: updatedBook.id) ?? updatedBook)
     }
 
     // MARK: - Primary Action
@@ -592,13 +604,9 @@ struct BookDetailView: View {
                 true
 
         case .completed:
-
-            changeStatus(
-                to: .reading
-            )
-
-            isShowingReadingSession =
-                true
+            changeStatus(to: .reading)
+            // A failed local save must leave the completed read intact.
+            isShowingReadingSession = viewModel.book.status == .reading
         }
     }
 
@@ -625,9 +633,7 @@ struct BookDetailView: View {
                 status
             )
 
-        onBookUpdated(
-            updatedBook
-        )
+        saveUpdatedBook(updatedBook)
     }
 
     // MARK: - Removal

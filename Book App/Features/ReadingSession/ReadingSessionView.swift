@@ -15,6 +15,8 @@ struct ReadingSessionView: View {
     @Environment(\.dismiss)
     private var dismiss
 
+    @Environment(LibraryStore.self) private var libraryStore: LibraryStore?
+
     let book: Book
     let onBookUpdated: (Book) -> Void
 
@@ -44,6 +46,10 @@ struct ReadingSessionView: View {
         .navigationBarTitleDisplayMode(.inline)
         .task {
             beginSessionIfNeeded()
+        }
+        .onChange(of: libraryStore?.book(id: book.id)?.currentReadID) { _, newID in
+            // Another device may have started a reread while this timer was open.
+            if newID != book.currentReadID { dismiss() }
         }
         .navigationDestination(
             isPresented:
@@ -522,7 +528,7 @@ struct ReadingSessionView: View {
 
         if let existing =
             sessionStore.ongoingSession(
-                for: book.id
+                for: book.id, readID: book.currentReadID
             )
         {
             sessionID = existing.id

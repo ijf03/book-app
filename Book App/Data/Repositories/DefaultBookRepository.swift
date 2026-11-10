@@ -36,7 +36,8 @@ struct DefaultBookRepository: BookRepository, Sendable {
                 coverURL: coverURL(
                     coverID: item.coverID
                 ),
-                pageCount: item.numberOfPagesMedian
+                pageCount: item.numberOfPagesMedian,
+                genre: OpenLibraryGenre.primary(from: item.subjects ?? [])
             )
         }
     }

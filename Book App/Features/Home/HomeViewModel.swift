@@ -1,269 +1,92 @@
-//
-//  HomeViewModel.swift
-//  Book App
-//
-//  Created by Sabi on 11/10/2026.
-//
-
 import Foundation
 import Observation
 
-@MainActor
-@Observable
+@MainActor @Observable
 final class HomeViewModel {
+    let store: LibraryStore
+    let sessionStore: ReadingSessionStore
+    let goals: ReadingGoalsViewModel
+    private(set) var now = Date()
+    private(set) var statistics = ReadingStatistics()
+    private(set) var yearlyCompleted = 0
+    @ObservationIgnored private var refreshID = UUID()
 
-    private let store:
-        LibraryStore
-
-    private let sessionStore:
-        ReadingSessionStore
-
-    init(
-        store: LibraryStore,
-        sessionStore:
-            ReadingSessionStore
-    ) {
+    init(store: LibraryStore, sessionStore: ReadingSessionStore) {
         self.store = store
         self.sessionStore = sessionStore
+        goals = ReadingGoalsViewModel(library: store)
     }
 
-    // MARK: - Books
-
-    var currentlyReadingBooks:
-        [Book]
-    {
-        store.books.filter {
-            $0.status == .reading
+    var currentlyReadingBooks: [Book] { store.books.filter { $0.status == .reading } }
+    var upNextBooks: [Book] { store.books.filter { $0.status == .toRead } }
+    var completedBooks: [Book] {
+        store.books.filter { $0.status == .completed }
+            .sorted { ($0.completedAt ?? .distantPast) > ($1.completedAt ?? .distantPast) }
+    }
+    var readingCount: Int { currentlyReadingBooks.count }
+    var toReadCount: Int { upNextBooks.count }
+    var completedCount: Int { completedBooks.count }
+    var checkIns: ReadingCheckInStore { store.checkIns }
+    var refreshKey: String {
+        "\(store.books.hashValue)-\(sessionStore.sessions.hashValue)-\(checkIns.entries.hashValue)-\(store.accountScope?.cloudRevision ?? 0)"
+    }
+    var greeting: LocalizedStringResource {
+        switch Calendar.current.component(.hour, from: now) {
+        case 5..<12: "Good morning"
+        case 12..<17: "Good afternoon"
+        default: "Good evening"
         }
     }
-
-    var upNextBooks:
-        [Book]
-    {
-        store.books.filter {
-            $0.status == .toRead
-        }
-    }
-
-    var completedBooks:
-        [Book]
-    {
-        store.books.filter {
-            $0.status == .completed
-        }
-    }
-
-    var readingCount: Int {
-        currentlyReadingBooks.count
-    }
-
-    var toReadCount: Int {
-        upNextBooks.count
-    }
-
-    var completedCount: Int {
-        completedBooks.count
-    }
-
-    // MARK: - Reading Activity
-
-    private var completedSessions:
-        [ReadingSession]
-    {
-        sessionStore.sessions.filter {
-            $0.endedAt != nil
-        }
-    }
-
-    var todayReadingSeconds: Int {
-
-        let calendar =
-            Calendar.current
-
-        return completedSessions
-            .filter {
-                session in
-
-                guard let endedAt =
-                    session.endedAt
-                else {
-                    return false
-                }
-
-                return calendar.isDateInToday(
-                    endedAt
-                )
-            }
-            .reduce(0) {
-                total,
-                session in
-
-                total +
-                    session.elapsedSeconds(
-                        at:
-                            session.endedAt ??
-                            Date()
-                    )
-            }
-    }
-
-    var todaySessionCount: Int {
-
-        let calendar =
-            Calendar.current
-
-        return completedSessions
-            .filter {
-                guard let endedAt =
-                    $0.endedAt
-                else {
-                    return false
-                }
-
-                return calendar
-                    .isDateInToday(
-                        endedAt
-                    )
-            }
-            .count
-    }
-
     var currentStreak: Int {
-
-        let calendar =
-            Calendar.current
-
-        let sessionDays: Set<Date> =
-            Set(
-                completedSessions
-                    .compactMap {
-                        session -> Date? in
-
-                        guard let endedAt =
-                            session.endedAt
-                        else {
-                            return nil
-                        }
-
-                        return calendar
-                            .startOfDay(
-                                for: endedAt
-                            )
-                    }
-            )
-
-        guard !sessionDays.isEmpty
-        else {
-            return 0
-        }
-
-        let today =
-            calendar.startOfDay(
-                for: Date()
-            )
-
-        guard let yesterday =
-            calendar.date(
-                byAdding: .day,
-                value: -1,
-                to: today
-            )
-        else {
-            return 0
-        }
-
-        var day: Date
-
-        if sessionDays.contains(today) {
-
-            day = today
-
-        } else if sessionDays.contains(
-            yesterday
-        ) {
-
-            day = yesterday
-
-        } else {
-
-            return 0
-        }
-
-        var streak = 0
-
-        while sessionDays.contains(
-            day
-        ) {
-
-            streak += 1
-
-            guard let previousDay =
-                calendar.date(
-                    byAdding: .day,
-                    value: -1,
-                    to: day
-                )
-            else {
-                break
-            }
-
-            day =
-                previousDay
-        }
-
-        return streak
+        ReadingDayCalculator.currentStreak(
+            days: ReadingDayCalculator.days(events: statistics.events, checkIns: checkIns.entries, calendar: .current, now: now),
+            calendar: .current, now: now)
     }
-    var formattedTodayReadingTime:
-        String
-    {
-        formatDuration(
-            todayReadingSeconds
-        )
+    var didReadToday: Bool {
+        ReadingDayCalculator.days(events: statistics.events, checkIns: checkIns.entries, calendar: .current, now: now)
+            .contains(Calendar.current.startOfDay(for: now))
+    }
+    var todayAnswer: Bool? {
+        checkIns.entries.first { $0.day == ReadingCheckIn.dayKey(now, calendar: .current) }?.didRead
+    }
+    var hasSessionToday: Bool {
+        statistics.events.contains { $0.seconds > 0 && Calendar.current.isDate($0.end, inSameDayAs: now) }
+    }
+    var todayReadingSeconds: Int {
+        statistics.events.filter { Calendar.current.isDate($0.end, inSameDayAs: now) }.reduce(0) { $0 + $1.seconds }
+    }
+    var todaySessionCount: Int {
+        statistics.events.filter { Calendar.current.isDate($0.end, inSameDayAs: now) }.count
+    }
+    var formattedTodayReadingTime: String {
+        Duration.seconds(todayReadingSeconds).formatted(.units(allowed: [.hours, .minutes, .seconds], width: .abbreviated, maximumUnitCount: 2))
+    }
+    var yearlyTarget: Int? { goals.goal(for: Calendar.current.component(.year, from: now))?.target }
+
+    func checkIn(_ didRead: Bool) {
+        now = Date()
+        checkIns.setToday(didRead: didRead, now: now)
     }
 
-    private func formatDuration(
-        _ seconds: Int
-    ) -> String {
-
-        if seconds < 60 {
-            return "\(seconds)s"
+    func refresh(at date: Date = Date()) async {
+        now = date
+        goals.reload()
+        let token = UUID()
+        refreshID = token
+        guard store.accountScope?.isActive != false else { statistics = .init(); yearlyCompleted = 0; return }
+        let input = StatisticsInput(books: store.books, sessions: sessionStore.sessions, reviews: [], checkIns: checkIns.entries)
+        let calendar = Calendar.current
+        let task = Task.detached(priority: .userInitiated) {
+            let all = ReadingStatisticsCalculator.calculate(input, selection: .init(from: date, to: date), calendar: calendar, now: date)
+            let year = ReadingStatisticsCalculator.calculate(input, selection: .init(period: .year, from: date, to: date), calendar: calendar, now: date)
+            return (all, year.completedBooks)
         }
-
-        let minutes =
-            seconds / 60
-
-        if minutes < 60 {
-            return "\(minutes)m"
-        }
-
-        let hours =
-            minutes / 60
-
-        let remainder =
-            minutes % 60
-
-        if remainder == 0 {
-            return "\(hours)h"
-        }
-
-        return "\(hours)h \(remainder)m"
+        let result = await withTaskCancellationHandler { await task.value } onCancel: { task.cancel() }
+        guard !Task.isCancelled, token == refreshID, store.accountScope?.isActive != false else { return }
+        statistics = result.0
+        yearlyCompleted = result.1
     }
 
-    // MARK: - Library Actions
-
-    func updateBook(
-        _ updatedBook: Book
-    ) {
-        store.updateBook(
-            updatedBook
-        )
-    }
-
-    func removeBook(
-        id: String
-    ) {
-        store.removeBook(
-            id: id
-        )
-    }
+    func updateBook(_ book: Book) { store.updateBook(book) }
+    func removeBook(id: String) { store.removeBook(id: id) }
 }

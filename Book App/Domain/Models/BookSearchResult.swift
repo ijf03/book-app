@@ -14,6 +14,7 @@ struct BookSearchResult: Identifiable, Hashable, Sendable {
     let description: String?
     let coverURL: URL?
     let pageCount: Int?
+    var genre: String? = nil
 
     var authorText: String {
         authors.isEmpty

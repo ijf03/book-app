@@ -44,7 +44,9 @@ struct RootView: View {
                 onGoHome: {
                     selectedTab =
                         .home
-                }
+                },
+                onFindBooks: { selectedTab = .search },
+                onShowProgress: { selectedTab = .progress }
             )
             .tag(
                 AppTab.home
@@ -59,12 +61,10 @@ struct RootView: View {
             }
 
             LibraryView(
-                store:
-                    libraryStore,
-                onGoHome: {
-                    selectedTab =
-                        .home
-                }
+                store: libraryStore,
+                repository: bookRepository,
+                onGoHome: { selectedTab = .home },
+                onFindBooks: { selectedTab = .search }
             )
             .tag(
                 AppTab.library
@@ -101,7 +101,8 @@ struct RootView: View {
                     libraryStore,
                 sessionStore:
                     readingSessionStore,
-                reminders: reminders
+                reminders: reminders,
+                repository: bookRepository
             )
             .tag(
                 AppTab.progress

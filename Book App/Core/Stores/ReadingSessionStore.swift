@@ -49,7 +49,7 @@ final class ReadingSessionStore {
 
         if let existing =
             ongoingSession(
-                for: book.id
+                for: book.id, readID: book.currentReadID
             )
         {
             return existing
@@ -58,7 +58,8 @@ final class ReadingSessionStore {
         let session =
             ReadingSession(
                 bookID: book.id,
-                startProgress: book.progress
+                startProgress: book.progress,
+                readID: book.currentReadID
             )
 
         sessions.append(session)
@@ -196,10 +197,10 @@ final class ReadingSessionStore {
     }
 
     func ongoingSession(
-        for bookID: String
+        for bookID: String, readID: String? = nil
     ) -> ReadingSession? {
         sessions.first {
-            $0.bookID == bookID &&
+            $0.bookID == bookID && $0.readID == readID &&
             $0.endedAt == nil
         }
     }

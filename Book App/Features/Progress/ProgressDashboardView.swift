@@ -1,6 +1,8 @@
 import SwiftUI
 
 struct ProgressDashboardView: View {
+    @Environment(BookContentStore.self) private var contentStore: BookContentStore?
+    private let repository: (any BookRepository)?
     private let reminders: ReadingRemindersViewModel
     
     private let libraryStore:
@@ -17,8 +19,10 @@ struct ProgressDashboardView: View {
         libraryStore: LibraryStore,
         sessionStore:
             ReadingSessionStore,
-        reminders: ReadingRemindersViewModel? = nil
+        reminders: ReadingRemindersViewModel? = nil,
+        repository: (any BookRepository)? = nil
     ) {
+        self.repository = repository
         self.reminders = reminders ?? ReadingRemindersViewModel(repository: .init(fileName: "reading-reminders.json", scope: libraryStore.accountScope))
         self.libraryStore =
             libraryStore
@@ -49,9 +53,34 @@ struct ProgressDashboardView: View {
                     spacing: AppSpacing.xl
                 ) {
 
-                    ReadingGoalSection(library: libraryStore)
+                    if let contentStore {
+                        NavigationLink {
+                            DetailedStatisticsView(library: libraryStore, sessions: sessionStore, content: contentStore, repository: repository)
+                        } label: {
+                            HStack(spacing: AppSpacing.md) {
+                                Image(systemName: "chart.bar.xaxis")
+                                    .font(AppTypography.title)
+                                    .accessibilityHidden(true)
+                                VStack(alignment: .leading, spacing: AppSpacing.xs) {
+                                    Text("View reading stats").font(AppTypography.title)
+                                    Text("Explore your reading insights, streaks and pace")
+                                        .font(AppTypography.caption)
+                                        .multilineTextAlignment(.leading)
+                                }
+                                Spacer(minLength: 0)
+                                Image(systemName: "arrow.right").accessibilityHidden(true)
+                            }
+                            .padding(.vertical, AppSpacing.md)
+                        }
+                        .buttonStyle(.appPrimary)
+                        .accessibilityIdentifier("progress.detailedStats")
+                    }
+
+                    InsightGoalView(library: libraryStore, sessions: sessionStore)
 
                     overviewSection
+
+
 
                     streakSection
 
@@ -66,6 +95,7 @@ struct ProgressDashboardView: View {
             .background(
                 Color.surfaceSecondary
             )
+            .task(id: sessionStore.sessions) { await viewModel.refreshRecordedPages() }
             .navigationTitle(
                 "Stats & Goals"
             )
@@ -109,7 +139,7 @@ struct ProgressDashboardView: View {
 
                 statCard(
                     title:
-                        "Reading Time",
+                        "Recorded Time",
                     value:
                         viewModel
                             .formattedReadingTime(
@@ -131,7 +161,7 @@ struct ProgressDashboardView: View {
 
                 statCard(
                     title:
-                        "Pages Read",
+                        "Recorded Pages",
                     value:
                         "\(viewModel.totalPagesRead)",
                     systemImage:

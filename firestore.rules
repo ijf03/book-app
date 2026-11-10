@@ -23,19 +23,24 @@ service cloud.firestore {
     }
     function book(data, id) {
       return data.keys().hasAll(['id', 'title', 'authors', 'status', 'format', 'progress'])
-        && data.keys().hasOnly(['id', 'title', 'authors', 'description', 'coverURL', 'pageCount', 'status', 'format', 'sourceBookID', 'completedAt', 'progress'])
+        && data.keys().hasOnly(['id', 'title', 'authors', 'description', 'coverURL', 'pageCount', 'status', 'format', 'sourceBookID', 'completedAt', 'progress', 'genre', 'bookType', 'language', 'pastReads', 'currentReadID', 'currentReadStartedAt'])
         && data.id == id && data.title is string && data.title.size() <= 10000
         && data.authors is list && data.authors.size() <= 1000
         && data.status in ['reading', 'toRead', 'completed']
-        && data.format in ['physical', 'ebook', 'audiobook'] && progress(data.progress)
+        && data.format in ['physical', 'ebook', 'audiobook', 'immersive'] && progress(data.progress)
         && optionalString(data, 'description', 700000) && optionalString(data, 'coverURL', 8192)
         && optionalString(data, 'sourceBookID', 4096) && optionalPositiveInt(data, 'pageCount')
-        && optionalNumber(data, 'completedAt');
+        && optionalNumber(data, 'completedAt') && optionalString(data, 'genre', 100)
+        && optionalString(data, 'language', 100)
+        && optionalString(data, 'currentReadID', 100) && optionalNumber(data, 'currentReadStartedAt')
+        && (!('pastReads' in data) || (data.pastReads is list && data.pastReads.size() <= 10000))
+        && (!('bookType' in data) || data.bookType in ['fiction', 'nonfiction']);
     }
     function session(data, id) {
       return data.keys().hasAll(['id', 'bookID', 'startedAt', 'totalPausedSeconds', 'startProgress'])
-        && data.keys().hasOnly(['id', 'bookID', 'startedAt', 'endedAt', 'pausedAt', 'totalPausedSeconds', 'startProgress', 'endProgress'])
+        && data.keys().hasOnly(['id', 'bookID', 'startedAt', 'endedAt', 'pausedAt', 'totalPausedSeconds', 'startProgress', 'endProgress', 'readID'])
         && data.id == id && data.bookID is string && data.bookID.size() > 0 && data.bookID.size() <= 4096
+        && optionalString(data, 'readID', 100)
         && data.startedAt is number && optionalNumber(data, 'endedAt') && optionalNumber(data, 'pausedAt')
         && data.totalPausedSeconds is int && data.totalPausedSeconds >= 0 && progress(data.startProgress)
         && (!('endProgress' in data) || progress(data.endProgress));
@@ -49,16 +54,24 @@ service cloud.firestore {
     }
     function review(data, id) {
       return data.keys().hasAll(['id', 'bookID', 'rating', 'text', 'containsSpoilers', 'createdAt', 'updatedAt'])
-        && data.keys().hasOnly(['id', 'bookID', 'rating', 'text', 'containsSpoilers', 'createdAt', 'updatedAt'])
+        && data.keys().hasOnly(['id', 'bookID', 'rating', 'text', 'containsSpoilers', 'createdAt', 'updatedAt', 'mood'])
+        && optionalString(data, 'mood', 100)
         && data.id is string && data.id.size() == 36 && data.bookID == id
         && data.rating is int && data.rating >= 1 && data.rating <= 5
         && data.text is string && data.text.size() <= 700000
         && data.containsSpoilers is bool && data.createdAt is number && data.updatedAt is number;
     }
     function goal(data, id) {
-      return data.keys().hasAll(['year', 'target']) && data.keys().hasOnly(['year', 'target'])
-        && data.year is int && data.year >= 1 && data.year <= 9999 && string(data.year) == id
-        && data.target is int && data.target >= 1 && data.target <= 10000;
+      return data.keys().hasAll(['year', 'target'])
+        && data.keys().hasOnly(['year', 'target', 'period', 'metric', 'periodKey'])
+        && data.year is int && data.year >= 1 && data.year <= 9999
+        && data.target is int && data.target >= 1 && data.target <= 10000
+        && ((!('period' in data) && !('metric' in data) && !('periodKey' in data) && string(data.year) == id)
+          || (data.keys().hasAll(['period', 'metric', 'periodKey'])
+            && data.period in ['year', 'month', 'week'] && data.metric in ['books', 'pages', 'days']
+            && data.periodKey is string && data.periodKey.matches('^[0-9]{1,4}-[0-9]{1,2}-[0-9]{1,2}$')
+            && ((data.period == 'year' && data.metric == 'books' && string(data.year) == id)
+              || (!(data.period == 'year' && data.metric == 'books') && id == data.period + '-' + data.metric + '-' + data.periodKey))));
     }
     function customList(data, id) {
       return data.keys().hasAll(['id', 'name', 'description', 'bookIDs'])
@@ -68,7 +81,12 @@ service cloud.firestore {
         && data.bookIDs is list && data.bookIDs.size() <= 10000;
     }
     function preferences(data, id) {
-      return (id == 'reminders' && data.keys().hasAll(['isEnabled', 'hour', 'minute'])
+      return (id.matches('^checkIn-[0-9]{4}-[0-9]{2}-[0-9]{2}$')
+          && data.keys().hasAll(['day', 'didRead', 'recordedAt'])
+          && data.keys().hasOnly(['day', 'didRead', 'recordedAt'])
+          && data.day is string && data.day.matches('^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$')
+          && id == 'checkIn-' + data.day && data.didRead is bool && data.recordedAt is number)
+        || (id == 'reminders'  && data.keys().hasAll(['isEnabled', 'hour', 'minute'])
           && data.keys().hasOnly(['isEnabled', 'hour', 'minute']) && data.isEnabled is bool
           && data.hour is int && data.hour >= 0 && data.hour <= 23
           && data.minute is int && data.minute >= 0 && data.minute <= 59)

@@ -3,45 +3,62 @@ import SwiftUI
 struct AuthenticationView: View {
     @State private var model: AuthenticationViewModel
 
-    init(service: any AuthenticationService) {
-        _model = State(initialValue: AuthenticationViewModel(service: service))
+    init(service: any AuthenticationService, initialMode: AuthenticationViewModel.Mode = .login) {
+        let model = AuthenticationViewModel(service: service)
+        model.changeMode(initialMode)
+        _model = State(initialValue: model)
     }
 
     var body: some View {
         NavigationStack {
             ScrollView {
-                VStack(alignment: .leading, spacing: AppSpacing.lg) {
-                    Text(model.title).font(AppTypography.largeTitle)
-                    Text("Your next chapter starts here.")
-                        .font(AppTypography.body).foregroundStyle(Color.textSecondary)
-                    AuthenticationFields(model: model)
-                    AuthenticationFeedback(submission: model.submission)
-                    AuthenticationLinks(model: model)
+                VStack(spacing: AppSpacing.lg) {
+                    VStack(spacing: AppSpacing.sm) {
+                        Image("AppLogo")
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: AppLayout.authenticationLogoSize, height: AppLayout.authenticationLogoSize)
+                            .accessibilityHidden(true)
+                        Text("BOOK TRACKER")
+                            .font(AppTypography.caption)
+                            .foregroundStyle(Color.appAccent)
+                        Text(model.mode == .login ? "Welcome back" : model.mode == .signUp ? "Your next chapter starts here" : "Forgot your password?")
+                            .font(AppTypography.largeTitle)
+                            .multilineTextAlignment(.center)
+                        Text(model.mode == .login ? "Pick up where you left off." : model.mode == .signUp ? "A home for your books, notes and reading moments." : "We’ll help you get back to your books.")
+                            .font(AppTypography.body)
+                            .foregroundStyle(Color.textSecondary)
+                            .multilineTextAlignment(.center)
+                    }
+                    AppCard {
+                        VStack(alignment: .leading, spacing: AppSpacing.lg) {
+                            Text(model.title).font(AppTypography.title)
+                            AuthenticationFields(model: model)
+                            AuthenticationFeedback(submission: model.submission)
+                            Button {
+                                Task { await model.submit() }
+                            } label: {
+                                HStack(spacing: AppSpacing.sm) {
+                                    if model.isLoading { SwiftUI.ProgressView().tint(Color.surface) }
+                                    Text(model.actionTitle)
+                                    Image(systemName: "arrow.right").accessibilityHidden(true)
+                                }
+                                .padding(.vertical, AppSpacing.sm)
+                            }
+                            .buttonStyle(.appPrimary)
+                            .disabled(model.isLoading)
+                            .keyboardShortcut(.defaultAction)
+                            .accessibilityIdentifier("auth.submit")
+                            AuthenticationLinks(model: model)
+                        }
+                    }
                 }
                 .padding(AppSpacing.lg)
-                .frame(maxWidth: AppLayout.readableWidth)
+                .frame(maxWidth: AppLayout.authenticationWidth)
                 .frame(maxWidth: .infinity)
             }
             .scrollDismissesKeyboard(.interactively)
             .background(Color.surfaceSecondary)
-            .safeAreaInset(edge: .bottom) {
-                Button {
-                    Task { await model.submit() }
-                } label: {
-                    HStack {
-                        if model.isLoading { SwiftUI.ProgressView().tint(Color.surface) }
-                        Text(model.actionTitle)
-                    }
-                }
-                .buttonStyle(.appPrimary)
-                .disabled(model.isLoading)
-                .keyboardShortcut(.defaultAction)
-                .accessibilityIdentifier("auth.submit")
-                .padding(AppSpacing.md)
-                .frame(maxWidth: AppLayout.readableWidth)
-                .frame(maxWidth: .infinity)
-                .background(Color.surfaceSecondary)
-            }
         }
         .tint(Color.appAccent)
     }
@@ -106,7 +123,7 @@ private struct AuthenticationFields: View {
             }
         }
         .font(AppTypography.body)
-        .textFieldStyle(.roundedBorder)
+        .textFieldStyle(AuthenticationFieldStyle())
         .disabled(model.isLoading)
         .onChange(of: focus) { previous, _ in model.didLeave(previous) }
         .onChange(of: model.mode) { _, _ in showsPassword = false; focus = .email }
@@ -141,18 +158,57 @@ private struct AuthenticationFeedback: View {
 private struct AuthenticationLinks: View {
     let model: AuthenticationViewModel
     var body: some View {
-        VStack(alignment: .leading, spacing: AppSpacing.sm) {
+        VStack(spacing: AppSpacing.md) {
             if model.mode == .login {
                 Button("Forgot password?") { model.changeMode(.reset) }
+                    .frame(minHeight: AppLayout.minimumTapTarget)
                     .accessibilityIdentifier("auth.forgotPassword")
+                Divider()
+                Text("New to Book Tracker?")
+                    .font(AppTypography.caption).foregroundStyle(Color.textSecondary)
                 Button("Create an account") { model.changeMode(.signUp) }
+                    .buttonStyle(.appSecondary)
                     .accessibilityIdentifier("auth.createAccount")
             } else {
+                Divider()
                 Button("Back to log in") { model.changeMode(.login) }
+                    .frame(minHeight: AppLayout.minimumTapTarget)
                     .accessibilityIdentifier("auth.backToLogin")
             }
         }
-        .buttonStyle(.appSecondary)
+        .font(AppTypography.headline)
+        .frame(maxWidth: .infinity)
         .disabled(model.isLoading)
     }
 }
+
+private struct AuthenticationFieldStyle: TextFieldStyle {
+    func _body(configuration: TextField<Self._Label>) -> some View {
+        configuration
+            .padding(AppSpacing.md)
+            .frame(minHeight: AppLayout.minimumTapTarget)
+            .background(Color.surfaceSecondary, in: RoundedRectangle(cornerRadius: AppRadius.md))
+            .overlay {
+                RoundedRectangle(cornerRadius: AppRadius.md)
+                    .stroke(Color.border, lineWidth: 1)
+            }
+    }
+}
+
+#if DEBUG
+@MainActor private final class AuthenticationPreviewService: AuthenticationService, AuthenticationObservation {
+    func observeSession(_ onChange: @escaping @MainActor (AuthenticatedUser?) -> Void) -> any AuthenticationObservation { self }
+    func cancel() {}
+    func signUp(email: String, password: String) async throws {}
+    func signIn(email: String, password: String) async throws {}
+    func resetPassword(email: String) async throws {}
+    func signOut() throws {}
+}
+
+#Preview("Login") {
+    AuthenticationView(service: AuthenticationPreviewService())
+}
+#Preview("Sign up") {
+    AuthenticationView(service: AuthenticationPreviewService(), initialMode: .signUp)
+}
+#endif

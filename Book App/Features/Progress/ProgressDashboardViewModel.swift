@@ -65,40 +65,27 @@ final class ProgressDashboardViewModel {
     // MARK: - Books
 
     var completedBookCount: Int {
-        libraryStore.books
-            .filter {
-                $0.status == .completed
-            }
-            .count
+        libraryStore.books.reduce(0) { $0 + $1.completedReadCount }
     }
 
     // MARK: - Pages
 
-    var totalPagesRead: Int {
+    private(set) var totalPagesRead = 0
 
-        completedSessions.reduce(0) {
-            total,
-            session in
-
-            guard
-                let startPage =
-                    session
-                        .startProgress
-                        .page,
-                let endPage =
-                    session
-                        .endProgress?
-                        .page
-            else {
-                return total
-            }
-
-            return total +
-                max(
-                    0,
-                    endPage - startPage
-                )
+    func refreshRecordedPages() async {
+        let input = StatisticsInput(books: [], sessions: sessionStore.sessions, reviews: [])
+        let now = Date()
+        let calendar = Calendar.current
+        let task = Task.detached(priority: .userInitiated) {
+            ReadingStatisticsCalculator.calculate(input, selection: .init(from: now, to: now), calendar: calendar, now: now).pages
         }
+        let pages = await withTaskCancellationHandler {
+            await task.value
+        } onCancel: {
+            task.cancel()
+        }
+        guard !Task.isCancelled, libraryStore.accountScope?.isActive != false else { return }
+        totalPagesRead = pages
     }
 
     // MARK: - Average
@@ -129,72 +116,16 @@ final class ProgressDashboardViewModel {
     // MARK: - Streak
 
     var currentStreak: Int {
-
-        let calendar =
-            Calendar.current
-
-        let sessionDays =
-            Set(
-                completedSessions.map {
-                    calendar.startOfDay(
-                        for:
-                            $0.endedAt ??
-                            $0.startedAt
-                    )
-                }
-            )
-
-        guard !sessionDays.isEmpty
-        else {
-            return 0
+        let calendar = Calendar.current, now = Date()
+        let events = completedSessions.compactMap { session -> ReadingStatistics.SessionEvent? in
+            guard let end = session.endedAt, end <= now, end >= session.startedAt,
+                  session.totalPausedSeconds >= 0 else { return nil }
+            return .init(id: session.id, bookID: session.bookID, start: session.startedAt, end: end,
+                         seconds: session.elapsedSeconds(at: end), pages: nil)
         }
-
-        let today =
-            calendar.startOfDay(
-                for: Date()
-            )
-
-        let yesterday =
-            calendar.date(
-                byAdding: .day,
-                value: -1,
-                to: today
-            )!
-
-        var currentDay: Date
-
-        if sessionDays.contains(today) {
-            currentDay = today
-        } else if sessionDays.contains(
-            yesterday
-        ) {
-            currentDay = yesterday
-        } else {
-            return 0
-        }
-
-        var streak = 0
-
-        while sessionDays.contains(
-            currentDay
-        ) {
-            streak += 1
-
-            guard let previousDay =
-                calendar.date(
-                    byAdding: .day,
-                    value: -1,
-                    to: currentDay
-                )
-            else {
-                break
-            }
-
-            currentDay =
-                previousDay
-        }
-
-        return streak
+        return ReadingDayCalculator.currentStreak(
+            days: ReadingDayCalculator.days(events: events, checkIns: libraryStore.checkIns.entries, calendar: calendar, now: now),
+            calendar: calendar, now: now)
     }
 
     // MARK: - Weekly Activity

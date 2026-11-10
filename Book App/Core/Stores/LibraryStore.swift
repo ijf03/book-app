@@ -13,15 +13,17 @@ import Observation
 final class LibraryStore {
     /// Hydration never saves back to the repository, avoiding listener feedback.
     func reloadFromLocalSync() {
+        checkIns.reload()
         do {
             books = try localDataSource.loadBooks() ?? []
             persistenceError = nil
         } catch { persistenceError = SyncFailure.localStorage.message }
     }
 
-    func clearAccountMemory() { books = []; sampleRefreshError = nil; persistenceError = nil }
+    func clearAccountMemory() { checkIns.clear(); books = []; sampleRefreshError = nil; persistenceError = nil }
 
 
+    let checkIns: ReadingCheckInStore
     private(set) var books: [Book]
 
     private let localDataSource:
@@ -34,13 +36,10 @@ final class LibraryStore {
         books: [Book],
         localDataSource: LocalLibraryDataSource
     ) {
-        self.books = books.map { book in
-            var updated = book
-            if updated.status == .completed && updated.completedAt == nil { updated.completedAt = Date() }
-            return updated
-        }
+        // Loading history must not manufacture completion dates or upload inferred edits.
+        self.checkIns = ReadingCheckInStore(scope: localDataSource.scope)
+        self.books = books
         self.localDataSource = localDataSource
-        if self.books != books { save() }
     }
 
     var accountScope: AccountStorageScope? { localDataSource.scope }
@@ -84,6 +83,14 @@ final class LibraryStore {
         return false
     }
 
+    /// Editing a genre must not invent a completion date for an undated legacy book.
+    func updateGenre(bookID: String, genre: String?) {
+        guard let index = books.firstIndex(where: { $0.id == bookID }) else { return }
+        let previous = books[index]
+        books[index].genre = genre
+        if !save() { books[index] = previous }
+    }
+
     // MARK: - Update
 
     func updateBook(
@@ -103,9 +110,19 @@ final class LibraryStore {
         let oldBook =
             books[index]
 
+        // A stale progress editor must not overwrite a newer reading cycle.
+        guard updatedBook.currentReadID == oldBook.currentReadID else { return }
         var savedBook = updatedBook
+        savedBook.pastReads = oldBook.pastReads
+        savedBook.currentReadStartedAt = oldBook.currentReadStartedAt
+        if oldBook.status == .completed && savedBook.status == .reading {
+            savedBook = oldBook
+            savedBook.beginReread()
+        } else if oldBook.status == .toRead && savedBook.status == .reading {
+            savedBook.currentReadStartedAt = Date()
+        }
         savedBook.completedAt = savedBook.status == .completed
-            ? (oldBook.status == .completed ? oldBook.completedAt ?? Date() : Date())
+            ? (oldBook.status == .completed ? oldBook.completedAt : Date())
             : nil
         books[index] = savedBook
 
@@ -114,6 +131,24 @@ final class LibraryStore {
             books[index] =
                 oldBook
         }
+    }
+
+    /// Append to the latest book so an open sheet cannot overwrite newer progress.
+    /// The stable draft ID makes repeated save attempts idempotent.
+    func addPastRead(bookID: String, id: String, start: Date?, end: Date?) -> Bool {
+        guard PastRead.validation(start: start, end: end) == nil,
+              let index = books.firstIndex(where: { $0.id == bookID }) else { return false }
+        if books[index].pastReads?.contains(where: { $0.id == id }) == true { return true }
+        guard !id.isEmpty, id.count <= 100, id != (books[index].currentReadID ?? "initial"),
+              (books[index].pastReads?.count ?? 0) < 10000 else { return false }
+        let previous = books[index]
+        var history = previous.pastReads ?? []
+        history.append(PastRead(id: id, startedAt: start, completedAt: end,
+                                format: previous.format, progress: .empty))
+        books[index].pastReads = history
+        if save() { return true }
+        books[index] = previous
+        return false
     }
 
     // MARK: - Remove

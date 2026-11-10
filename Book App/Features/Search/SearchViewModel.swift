@@ -25,12 +25,15 @@ final class SearchViewModel {
     private(set) var state: State = .idle
 
     private let repository: any BookRepository
+    private var requestID = UUID()
 
     init(repository: any BookRepository) {
         self.repository = repository
     }
 
     func search() async {
+        let token = UUID()
+        requestID = token
 
         let query = searchText
             .trimmingCharacters(
@@ -53,12 +56,14 @@ final class SearchViewModel {
 
             try Task.checkCancellation()
 
+            guard requestID == token else { return }
             state = .loaded(results)
 
         } catch is CancellationError {
             return
 
         } catch {
+            guard !Task.isCancelled, requestID == token else { return }
             print("BOOK SEARCH ERROR:")
             print(error)
             print(String(describing: error))

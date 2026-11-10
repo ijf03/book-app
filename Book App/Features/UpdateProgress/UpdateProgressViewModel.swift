@@ -40,7 +40,7 @@ final class UpdateProgressViewModel {
         }
 
         switch book.format {
-        case .physical, .ebook:
+        case .physical, .ebook, .immersive:
             isPageEnabled = true
             isPercentageEnabled = true
             isTimestampEnabled = false

@@ -70,6 +70,26 @@ test('both ordering preference documents are owner scoped', async () => {
   }
 });
 
+test('insight goals and genres allow owners, reject foreign writes and malformed fields', async () => {
+  const owner = environment.authenticatedContext('A').firestore();
+  const other = environment.authenticatedContext('B').firestore();
+  for (const period of ['year', 'month', 'week']) {
+    for (const metric of ['books', 'pages', 'days']) {
+      const id = period === 'year' && metric === 'books' ? '2026' : `${period}-${metric}-2026-11-1`;
+      const value = { id, data: { year: 2026, target: 30, period, metric, periodKey: '2026-11-1' } };
+      await assertSucceeds(setDoc(reference(owner, 'goals', id), envelope(value)));
+      await assertFails(setDoc(reference(other, 'goals', id), envelope(value, 2)));
+    }
+  }
+  const invalid = { id: 'month-books-2026-11-1', data: { year: 2026, target: 30, period: 'day', metric: 'books', periodKey: '2026-11-1' } };
+  await assertFails(setDoc(reference(owner, 'goals', invalid.id), envelope(invalid, 2)));
+  const tagged = { ...fixtures.books, data: { ...fixtures.books.data, genre: 'Fantasy' } };
+  await assertSucceeds(setDoc(reference(owner, 'books', tagged.id), envelope(tagged)));
+  await assertFails(setDoc(reference(other, 'books', tagged.id), envelope(tagged, 2)));
+  await assertFails(setDoc(reference(owner, 'books', tagged.id), envelope({ ...tagged, data: { ...tagged.data, genre: 123 } }, 2)));
+  await assertFails(setDoc(reference(owner, 'books', tagged.id), envelope({ ...tagged, data: { ...tagged.data, genre: 'x'.repeat(101) } }, 2)));
+});
+
 test('unknown paths, nested collections, root user records, and invalid ranges are denied', async () => {
   const owner = environment.authenticatedContext('A').firestore();
   await assertFails(setDoc(doc(owner, 'users', 'A'), { admin: true }));
@@ -78,4 +98,42 @@ test('unknown paths, nested collections, root user records, and invalid ranges a
   await assertFails(setDoc(doc(owner, 'books', 'public'), { value: 'no' }));
   await assertFails(setDoc(reference(owner, 'preferences', 'reminders'), envelope({ id: 'reminders', data: { isEnabled: true, hour: 24, minute: 0 } })));
   await assertFails(setDoc(reference(owner, 'reviews', '/works/OL123/W'), envelope({ ...fixtures.reviews, data: { ...fixtures.reviews.data, rating: 6 } })));
+});
+
+test('statistics metadata and immersive format are owner-only and validated', async () => {
+  const owner = environment.authenticatedContext('A').firestore();
+  const other = environment.authenticatedContext('B').firestore();
+  const guest = environment.unauthenticatedContext().firestore();
+  const book = { ...fixtures.books, data: { ...fixtures.books.data, format: 'immersive', bookType: 'fiction', language: 'English' } };
+  const review = { ...fixtures.reviews, data: { ...fixtures.reviews.data, mood: 'Hopeful' } };
+  for (const [kind, fixture] of [['books', book], ['reviews', review]]) {
+    await assertSucceeds(setDoc(reference(owner, kind, fixture.id), envelope(fixture)));
+    for (const client of [other, guest]) {
+      await assertFails(getDoc(reference(client, kind, fixture.id)));
+      await assertFails(setDoc(reference(client, kind, fixture.id), envelope(fixture, 2)));
+    }
+  }
+  for (const invalid of [{ bookType: 'unknown' }, { language: 12 }, { language: 'x'.repeat(101) }, { format: 'video' }]) {
+    await assertFails(setDoc(reference(owner, 'books', book.id), envelope({ ...book, data: { ...book.data, ...invalid } }, 2)));
+  }
+  for (const mood of [12, 'x'.repeat(101)]) {
+    await assertFails(setDoc(reference(owner, 'reviews', review.id), envelope({ ...review, data: { ...review.data, mood } }, 2)));
+  }
+});
+
+test('daily check-ins are owner-scoped and validate date identity and boolean answer', async () => {
+  const owner = environment.authenticatedContext('A').firestore();
+  const other = environment.authenticatedContext('B').firestore();
+  const guest = environment.unauthenticatedContext().firestore();
+  const fixture = { id: 'checkIn-2026-11-10', data: { day: '2026-11-10', didRead: true, recordedAt: 800000000 } };
+  const own = reference(owner, 'preferences', fixture.id);
+  await assertSucceeds(setDoc(own, envelope(fixture)));
+  for (const client of [other, guest]) {
+    await assertFails(getDoc(reference(client, 'preferences', fixture.id)));
+    await assertFails(setDoc(reference(client, 'preferences', fixture.id), envelope(fixture, 2)));
+  }
+  for (const invalid of [{ didRead: 'yes' }, { day: '2026-11-11' }, { day: '2026-13-10' }, { recordedAt: 'today' }, { extra: true }]) {
+    await assertFails(setDoc(own, envelope({ ...fixture, data: { ...fixture.data, ...invalid } }, 2)));
+  }
+  await assertSucceeds(setDoc(own, envelope({ ...fixture, data: { ...fixture.data, didRead: false } }, 2)));
 });

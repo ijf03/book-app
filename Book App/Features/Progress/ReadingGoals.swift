@@ -29,7 +29,14 @@ struct LocalJSONRepository<Value: Codable> {
 struct ReadingGoal: Codable, Identifiable, Equatable {
     var year: Int
     var target: Int
-    var id: Int { year }
+    var period: String? = nil
+    var metric: String? = nil
+    var periodKey: String? = nil
+    var id: String {
+        guard let period, let metric, let periodKey else { return String(year) }
+        if period == "year" && metric == "books" { return String(year) }
+        return "\(period)-\(metric)-\(periodKey)"
+    }
 }
 
 @MainActor @Observable final class ReadingGoalsViewModel {
@@ -49,13 +56,15 @@ struct ReadingGoal: Codable, Identifiable, Equatable {
         guard let target = Int(text.trimmingCharacters(in: .whitespacesAndNewlines)), (1...10000).contains(target) else { return nil }
         return target
     }
-    func goal(for year: Int) -> ReadingGoal? { goals.first { $0.year == year } }
+    func goal(for year: Int) -> ReadingGoal? { goals.first { $0.id == String(year) } }
     func completedBooks(in year: Int, now: Date = Date(), calendar: Calendar = .current) -> Int {
-        library.books.filter { $0.status == .completed && calendar.component(.year, from: $0.completedAt ?? now) == year }.count
+        StatisticsInput(books: library.books, sessions: [], reviews: []).completedReads.filter {
+            $0.completedAt.map { $0 <= now && calendar.component(.year, from: $0) == year } ?? false
+        }.count
     }
     @discardableResult func save(year: Int, targetText: String) -> Bool {
         guard canSave, (1...9999).contains(year), let target = Self.validTarget(targetText) else { errorMessage = "Enter a valid year and a target from 1 to 10,000."; return false }
-        var updated = goals.filter { $0.year != year }; updated.append(ReadingGoal(year: year, target: target))
+        var updated = goals.filter { $0.id != String(year) }; updated.append(ReadingGoal(year: year, target: target))
         do { try repository.save(updated); goals = updated; errorMessage = nil; return true }
         catch { errorMessage = "Your goal couldn’t be saved. Your previous goal is unchanged."; return false }
     }

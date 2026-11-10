@@ -19,8 +19,10 @@ struct OpenLibraryBookDTO: Decodable, Sendable {
     let firstPublishYear: Int?
     let editionKey: [String]?
     let numberOfPagesMedian: Int?
+    var subjects: [String]? = nil
 
     enum CodingKeys: String, CodingKey {
+        case subjects = "subject"
         case key
         case title
         case authorName = "author_name"

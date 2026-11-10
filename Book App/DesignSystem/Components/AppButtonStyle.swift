@@ -13,6 +13,7 @@ struct AppButtonStyle: ButtonStyle {
         case primary
         case secondary
         case destructive
+        case onAccent
     }
 
     let kind: Kind
@@ -38,7 +39,7 @@ struct AppButtonStyle: ButtonStyle {
         switch kind {
         case .primary:
             return .white
-        case .secondary:
+        case .secondary, .onAccent:
             return .appAccent
         case .destructive:
             return .white
@@ -49,6 +50,8 @@ struct AppButtonStyle: ButtonStyle {
         switch kind {
         case .primary:
             return .appAccent
+        case .onAccent:
+            return .onAccent
         case .secondary:
             return .surfaceSecondary
         case .destructive:

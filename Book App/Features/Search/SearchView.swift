@@ -4,6 +4,7 @@ struct SearchView: View {
 
     @State
     private var viewModel: SearchViewModel
+    @State private var discovery: BookDiscoveryViewModel
 
     let libraryStore: LibraryStore
 
@@ -17,6 +18,7 @@ struct SearchView: View {
             )
         )
         
+        _discovery = State(initialValue: BookDiscoveryViewModel(repository: repository))
         self.libraryStore = libraryStore
     }
 
@@ -124,13 +126,7 @@ struct SearchView: View {
     // MARK: - Idle
 
     private var idleState: some View {
-        ContentUnavailableView(
-            "Find Books",
-            systemImage: "magnifyingglass",
-            description: Text(
-                "Search by title or author to find books."
-            )
-        )
+        BookDiscoveryView(model: discovery, library: libraryStore)
     }
 
     // MARK: - Loading

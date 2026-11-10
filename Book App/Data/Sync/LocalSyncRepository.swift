@@ -58,7 +58,7 @@ final class LocalSyncRepository {
                 if let record = entry.visible { try SyncEntityCodec.validate(record) }
             }
         } else {
-            for file in AccountLocalStorage.legacyFileNames {
+            for file in AccountLocalStorage.accountFileNames {
                 let url = directory.appendingPathComponent(file)
                 guard FileManager.default.fileExists(atPath: url.path) else { continue }
                 for entity in try SyncEntityCodec.entities(file: file, data: Data(contentsOf: url)) {
@@ -248,7 +248,7 @@ final class LocalSyncRepository {
     private func materialize() {
         do {
             try checkAccess()
-            for file in AccountLocalStorage.legacyFileNames {
+            for file in AccountLocalStorage.accountFileNames {
                 try data(for: file).write(to: directory.appendingPathComponent(file), options: .atomic)
             }
             projectionError = nil

@@ -16,6 +16,7 @@ struct BookReviewView: View {
     private var dismiss
 
     let book: Book
+    @State private var mood: String
 
     @State
     private var rating: Int
@@ -41,6 +42,7 @@ struct BookReviewView: View {
             BookReview?
     ) {
         self.book = book
+        _mood = State(initialValue: existingReview?.mood ?? "")
         self.originalReview =
             existingReview
 
@@ -78,6 +80,15 @@ struct BookReviewView: View {
 
                 ratingSection
 
+                AppCard {
+                    VStack(alignment: .leading, spacing: AppSpacing.sm) {
+                        Text("How did this book leave you feeling?").font(AppTypography.headline)
+                        TextField("Mood, for example Hopeful or Reflective", text: $mood)
+                            .textInputAutocapitalization(.words)
+                        Text("Optional. Record your feeling after finishing the book; this appears in your mood statistics.")
+                            .font(AppTypography.caption).foregroundStyle(Color.textSecondary)
+                    }
+                }
                 reviewSection
 
                 spoilerSection
@@ -119,7 +130,7 @@ struct BookReviewView: View {
                 )
             )
             .disabled(
-                rating == 0
+                rating == 0 || mood.count > 100
             )
             .padding(
                 AppSpacing.md
@@ -361,7 +372,8 @@ struct BookReviewView: View {
                         .createdAt ??
                     Date(),
                 updatedAt:
-                    Date()
+                    Date(),
+                mood: mood.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? nil : mood.trimmingCharacters(in: .whitespacesAndNewlines)
             )
 
         contentStore

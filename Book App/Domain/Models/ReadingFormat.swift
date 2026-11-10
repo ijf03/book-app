@@ -11,6 +11,7 @@ enum ReadingFormat: String, Codable, CaseIterable, Identifiable {
     case physical
     case ebook
     case audiobook
+    case immersive
 
     var id: Self { self }
 
@@ -22,6 +23,8 @@ enum ReadingFormat: String, Codable, CaseIterable, Identifiable {
             return "Ebook"
         case .audiobook:
             return "Audiobook"
+        case .immersive:
+            return String(localized: "Immersive reading")
         }
     }
 }

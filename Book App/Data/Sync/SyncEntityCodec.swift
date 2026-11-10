@@ -25,6 +25,10 @@ enum SyncEntityCodec {
             var result = try values.map { Entity(collection: .books, id: $0.id, payload: try encode($0)) }
             result.append(Entity(collection: .preferences, id: "bookOrder", payload: try encode(Order(ids: values.map(\.id)))))
             return result
+        case "reading-check-ins.json":
+            return try decoder.decode([ReadingCheckIn].self, from: data).map {
+                Entity(collection: .preferences, id: $0.id, payload: try encode($0))
+            }
         case "reading-sessions.json":
             return try decoder.decode([ReadingSession].self, from: data).map {
                 Entity(collection: .sessions, id: $0.id.uuidString, payload: try encode($0))
@@ -35,7 +39,7 @@ enum SyncEntityCodec {
                 content.reviews.map { Entity(collection: .reviews, id: $0.bookID, payload: try encode($0)) }
         case "reading-goals.json":
             return try decoder.decode([ReadingGoal].self, from: data).map {
-                Entity(collection: .goals, id: String($0.year), payload: try encode($0))
+                Entity(collection: .goals, id: $0.id, payload: try encode($0))
             }
         case "custom-book-lists.json":
             let values = try decoder.decode([CustomBookList].self, from: data)
@@ -57,7 +61,7 @@ enum SyncEntityCodec {
         case .goals: "reading-goals.json"
         case .lists: "custom-book-lists.json"
         case .preferences:
-            id == "bookOrder" ? "library.json" : id == "listOrder" ? "custom-book-lists.json" : "reading-reminders.json"
+            id.hasPrefix("checkIn-") ? "reading-check-ins.json" : id == "bookOrder" ? "library.json" : id == "listOrder" ? "custom-book-lists.json" : "reading-reminders.json"
         }
     }
 
@@ -72,11 +76,27 @@ enum SyncEntityCodec {
         switch record.collection {
         case .books:
             let value = try decoder.decode(Book.self, from: data)
+            guard value.genre.map({ $0.count <= 100 }) ?? true else { throw SyncFailure.malformed }
+            guard value.language.map({ $0.count <= 100 }) ?? true,
+                  value.bookType.map({ ["fiction", "nonfiction"].contains($0) }) ?? true else { throw SyncFailure.malformed }
+            guard value.currentReadID.map({ !$0.isEmpty && $0.count <= 100 }) ?? true,
+                  value.currentReadStartedAt.map({ $0.timeIntervalSinceReferenceDate.isFinite }) ?? true else { throw SyncFailure.malformed }
+            let reads = value.pastReads ?? []
+            guard reads.count <= 10000, Set(reads.map(\.id)).count == reads.count,
+                  !reads.contains(where: { $0.id == (value.currentReadID ?? "initial") }) else { throw SyncFailure.malformed }
+            for read in reads {
+                guard !read.id.isEmpty, read.id.count <= 100,
+                      read.startedAt.map({ $0.timeIntervalSinceReferenceDate.isFinite }) ?? true,
+                      read.completedAt.map({ $0.timeIntervalSinceReferenceDate.isFinite }) ?? true else { throw SyncFailure.malformed }
+                if let start = read.startedAt, let end = read.completedAt, start > end { throw SyncFailure.malformed }
+                try validateProgress(read.progress)
+            }
             identity = value.id
             try validateProgress(value.progress)
         case .sessions:
             let value = try decoder.decode(ReadingSession.self, from: data)
-            guard !value.bookID.isEmpty, value.totalPausedSeconds >= 0 else { throw SyncFailure.malformed }
+            guard !value.bookID.isEmpty, value.totalPausedSeconds >= 0,
+                  value.readID.map({ !$0.isEmpty && $0.count <= 100 }) ?? true else { throw SyncFailure.malformed }
             try validateProgress(value.startProgress)
             if let progress = value.endProgress { try validateProgress(progress) }
             identity = value.id.uuidString
@@ -86,16 +106,24 @@ enum SyncEntityCodec {
             identity = value.id.uuidString
         case .reviews:
             let value = try decoder.decode(BookReview.self, from: data)
-            guard (1...5).contains(value.rating) else { throw SyncFailure.malformed }
+            guard (1...5).contains(value.rating), value.mood.map({ $0.count <= 100 }) ?? true else { throw SyncFailure.malformed }
             identity = value.bookID
         case .goals:
             let value = try decoder.decode(ReadingGoal.self, from: data)
             guard (1...9999).contains(value.year), (1...10000).contains(value.target) else { throw SyncFailure.malformed }
-            identity = String(value.year)
+            guard (value.period == nil && value.metric == nil && value.periodKey == nil)
+                || (["year", "month", "week"].contains(value.period ?? "")
+                    && ["books", "pages", "days"].contains(value.metric ?? "")
+                    && !(value.periodKey ?? "").isEmpty) else { throw SyncFailure.malformed }
+            identity = value.id
         case .lists:
             identity = try decoder.decode(CustomBookList.self, from: data).id.uuidString
         case .preferences:
-            if record.entityID == "reminders" {
+            if record.entityID.hasPrefix("checkIn-") {
+                let value = try decoder.decode(ReadingCheckIn.self, from: data)
+                guard value.id == record.entityID, value.date(calendar: Calendar(identifier: .gregorian)) != nil,
+                      value.recordedAt.timeIntervalSinceReferenceDate.isFinite else { throw SyncFailure.malformed }
+            } else if record.entityID == "reminders" {
                 guard try decoder.decode(ReadingReminderPreferences.self, from: data).isValid else { throw SyncFailure.malformed }
             } else if ["bookOrder", "listOrder"].contains(record.entityID) {
                 _ = try decoder.decode(Order.self, from: data)
@@ -133,6 +161,10 @@ enum SyncEntityCodec {
         switch file {
         case "library.json":
             return try encode(ordered(values(.books, Book.self), orderID: "bookOrder", identity: { $0.id }))
+        case "reading-check-ins.json":
+            return try encode(live.filter { $0.collection == .preferences && $0.entityID.hasPrefix("checkIn-") }
+                .sorted { $0.entityID < $1.entityID }
+                .compactMap { try $0.payload.map { try JSONDecoder().decode(ReadingCheckIn.self, from: $0) } })
         case "reading-sessions.json": return try encode(values(.sessions, ReadingSession.self))
         case "book-content.json":
             return try encode(BookContentData(notes: values(.notes, ReadingNote.self), reviews: values(.reviews, BookReview.self)))

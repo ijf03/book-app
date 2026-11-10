@@ -29,6 +29,7 @@ enum BookFactory {
                 status,
             format:
                 format,
+            genre: result.genre,
             progress: .empty
         )
     }

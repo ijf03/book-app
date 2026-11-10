@@ -105,11 +105,13 @@ struct BookAppTests {
         #expect(restored.goal(for: year)?.target == 12)
         var changed = books[0]; changed.status = .reading
         library.updateBook(changed)
-        #expect(restored.completedBooks(in: year) == 2)
+        // Starting a reread preserves the previous completion toward the goal.
+        #expect(restored.completedBooks(in: year) == 3)
+        #expect(library.book(id: changed.id)?.pastReads?.count == 1)
         #expect(library.book(id: changed.id)?.completedAt == nil)
         let savedBooks = try dataSource.loadBooks()
         let reloadedLibrary = LibraryStore(books: try #require(savedBooks), localDataSource: dataSource)
-        #expect(ReadingGoalsViewModel(library: reloadedLibrary, repository: repository).completedBooks(in: year) == 2)
+        #expect(ReadingGoalsViewModel(library: reloadedLibrary, repository: repository).completedBooks(in: year) == 3)
         #expect(model.completedBooks(in: year - 1) == 0)
     }
 
