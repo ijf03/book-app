@@ -14,6 +14,10 @@ struct SearchBookDetailView: View {
         _model = State(initialValue: BookMetadataViewModel(book: book))
     }
 
+    private var existingBook: Book? {
+        libraryStore.books.first { $0.id == model.result.id || $0.sourceBookID == model.result.id }
+    }
+
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: AppSpacing.lg) {
@@ -27,6 +31,7 @@ struct SearchBookDetailView: View {
                         Text(model.result.title).font(AppTypography.title).fontDesign(.serif)
                             .accessibilityAddTraits(.isHeader)
                         Text(model.result.authorText).foregroundStyle(Color.textSecondary)
+                        GenreChips(genres: model.result.genreChips)
                     }
                 }
                 BookMetadataSection(book: model.result, isLoading: model.isLoading, error: model.error,
@@ -41,9 +46,11 @@ struct SearchBookDetailView: View {
         .navigationBarTitleDisplayMode(.inline)
         .safeAreaInset(edge: .bottom) {
             VStack(spacing: AppSpacing.sm) {
-                if libraryStore.contains(bookID: model.result.id) {
+                if existingBook != nil {
                     Label("Added to library", systemImage: "checkmark.circle.fill")
                         .frame(minHeight: AppLayout.minimumTapTarget)
+                    Button("Add to custom lists") { isShowingAddSheet = true }
+                        .buttonStyle(AppButtonStyle(kind: .secondary))
                 } else {
                     Button("Add to library") { isShowingAddSheet = true }
                         .buttonStyle(AppButtonStyle(kind: .primary))
@@ -59,9 +66,7 @@ struct SearchBookDetailView: View {
             BookEditionPicker(model: model, scope: libraryStore.accountScope, onSelect: { _ in })
         }
         .sheet(isPresented: $isShowingAddSheet) {
-            AddBookSheet(book: model.result) { status, format in
-                libraryStore.addBook(BookFactory.makeBook(from: model.result, status: status, format: format))
-            }
+            AddBookSheet(book: model.result, library: libraryStore, existingBook: existingBook)
         }
     }
 }

@@ -155,14 +155,19 @@ struct ReadingRemindersSettingsView: View {
                 }), displayedComponents: .hourAndMinute)
                 Text("Reminder preferences sync across devices. Each device needs notification permission and may notify separately. Focus settings can affect delivery.")
                     .font(AppTypography.caption).foregroundStyle(Color.textSecondary)
-            }.disabled(model.isSaving || !model.canSave)
-            if model.isSaving { SwiftUI.ProgressView("Updating reminder…") }
+            }
+            .listRowBackground(Color.surface)
+            .disabled(model.isSaving || !model.canSave)
+            if model.isSaving {
+                SwiftUI.ProgressView("Updating reminder…").listRowBackground(Color.surface)
+            }
             if model.permissionDenied {
                 Section {
                     Text("Notifications are disabled. Allow notifications for this app in System Settings, then enable your reminder.")
                         .font(AppTypography.body)
                     Button("Open System Settings") { if let url = URL(string: UIApplication.openSettingsURLString) { openURL(url) } }
                 }
+                .listRowBackground(Color.surface)
             }
         }
         .scrollContentBackground(.hidden).background(Color.surfaceSecondary)

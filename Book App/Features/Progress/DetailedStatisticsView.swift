@@ -33,11 +33,6 @@ struct DetailedStatisticsView: View {
                 .accessibilityLabel("Choose statistics period")
                 .accessibilityValue(Text(model.selection.period.title))
                 .accessibilityIdentifier("stats.choosePeriod")
-                Menu {
-                    ForEach(model.years, id: \.self) { year in
-                        Button(String(year)) { model.selectYear(year) }
-                    }
-                } label: { Label("Explore a year", systemImage: "calendar") }
                 if let interval = model.statistics.interval {
                     Text("\(interval.start.formatted(date: .abbreviated, time: .omitted)) – \(interval.end.addingTimeInterval(-1).formatted(date: .abbreviated, time: .omitted))")
                         .font(AppTypography.caption).foregroundStyle(Color.textSecondary)
@@ -111,7 +106,7 @@ struct DetailedStatisticsView: View {
         .sheet(isPresented: $showsShare) { StatisticsShareView(statistics: model.statistics) }
         .sheet(isPresented: $showsGenres) { InsightGenreEditor(library: model.library) }
         .sheet(isPresented: $showsPeriod) {
-            StatisticsPeriodSheet(selection: model.selection, onApply: model.apply)
+            StatisticsPeriodSheet(selection: model.selection, years: model.years, onApply: model.apply)
         }
         .task { model.start() }
         .task(id: genreRequest) {

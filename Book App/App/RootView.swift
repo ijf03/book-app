@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct RootView: View {
+    @Environment(AppRouter.self) private var router: AppRouter?
 
     private enum AppTab:
         Hashable
@@ -82,8 +83,10 @@ struct RootView: View {
                 repository:
                     bookRepository,
                 libraryStore:
-                    libraryStore
+                    libraryStore,
+                initialSearch: router?.searchRequest
             )
+            .id(router?.searchRequest?.id)
             .tag(
                 AppTab.search
             )
@@ -120,6 +123,9 @@ struct RootView: View {
                 .tabItem { Label("Account", systemImage: "person.crop.circle") }
         }
         .environment(\.bookCatalogue, bookRepository)
+        .onChange(of: router?.searchRequest) { _, request in
+            if request != nil { selectedTab = .search }
+        }
         .task {
             await reminders.reconcile()
             await libraryStore.refreshSampleBooks(using: bookRepository)

@@ -75,6 +75,34 @@ struct CustomBookList: Codable, Identifiable, Equatable {
         return true
     }
 
+    /// Reload before merging so adding a book never replaces other list members.
+    @discardableResult func add(_ draft: Book, to listIDs: Set<UUID>, newListName: String = "") -> Bool {
+        reload()
+        guard canSave, library.accountScope?.isActive != false else { return false }
+        guard listIDs.isSubset(of: Set(lists.map(\.id))) else {
+            errorMessage = "A selected list no longer exists. Reopen this sheet and try again."
+            return false
+        }
+        let existing = library.books.first { $0.id == draft.id || $0.sourceBookID == draft.id }
+        let book = existing ?? draft
+        if existing == nil, !library.addBook(book) {
+            errorMessage = "The book couldn’t be saved. Please try again."
+            return false
+        }
+        var updated = lists
+        for index in updated.indices where listIDs.contains(updated[index].id) {
+            if !updated[index].bookIDs.contains(book.id) { updated[index].bookIDs.append(book.id) }
+        }
+        let name = newListName.trimmingCharacters(in: .whitespacesAndNewlines)
+        if !name.isEmpty { updated.append(CustomBookList(name: name, description: "", bookIDs: [book.id])) }
+        guard !listIDs.isEmpty || !name.isEmpty else { return true }
+        guard persist(updated) else {
+            errorMessage = "The book is in your library, but the lists couldn’t be saved. Please retry."
+            return false
+        }
+        return true
+    }
+
     @discardableResult func delete(ids: Set<UUID>) -> Bool { persist(lists.filter { !ids.contains($0.id) }) }
     func move(from offsets: IndexSet, to destination: Int) {
         var updated = lists; updated.move(fromOffsets: offsets, toOffset: destination); persist(updated)
@@ -104,6 +132,7 @@ struct CustomBookListsView: View {
     @State private var model: CustomListsViewModel
     @State private var isCreating = false
     @State private var pendingDelete = Set<UUID>()
+    @State private var editMode: EditMode = .inactive
     private let isEmbedded: Bool
     private let onSelectShelf: ((ReadingStatus?) -> Void)?
 
@@ -125,6 +154,7 @@ struct CustomBookListsView: View {
                     shelf("Completed", symbol: "checkmark.circle", count: model.library.books.filter { $0.status == .completed }.count) { onSelectShelf(.completed) }
                     shelf("Did not finish", symbol: "book.closed", count: model.library.books.filter { $0.status == .abandoned }.count) { onSelectShelf(.abandoned) }
                 }
+                .listRowBackground(Color.surface)
             }
             Section {
                 if model.lists.isEmpty {
@@ -166,17 +196,18 @@ struct CustomBookListsView: View {
                     Text("My Lists").font(AppTypography.title).accessibilityAddTraits(.isHeader).foregroundStyle(Color.textPrimary)
                     Spacer()
                     Button { isCreating = true } label: {
-                        Image(systemName: "plus.circle.fill")
-                            .font(AppTypography.title)
-                            .frame(minWidth: AppLayout.minimumTapTarget, minHeight: AppLayout.minimumTapTarget)
+                        Text("+ New")
                     }
                     .disabled(!model.canSave)
+                    .buttonStyle(AppCompactPillButtonStyle())
                     .accessibilityLabel("Create a list")
                     .accessibilityIdentifier("library.createList")
                 }
                 .textCase(nil)
             }
+            .listRowBackground(Color.surface)
         }
+        .environment(\.editMode, $editMode)
         .onChange(of: model.library.accountScope?.cloudRevision) { _, _ in model.reload() }
         .scrollContentBackground(.hidden).background(Color.surfaceSecondary)
         .navigationBarTitleDisplayMode(.inline)
@@ -184,7 +215,17 @@ struct CustomBookListsView: View {
         .onAppear { model.reload() }
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
-                EditButton().disabled(!model.canSave || model.lists.isEmpty)
+                Button {
+                    editMode = editMode.isEditing ? .inactive : .active
+                } label: {
+                    HStack(spacing: AppSpacing.xs) {
+                        Image(systemName: editMode.isEditing ? "checkmark" : "pencil")
+                            .accessibilityHidden(true)
+                        Text(editMode.isEditing ? "Done" : "Edit")
+                    }
+                    .fixedSize(horizontal: true, vertical: false)
+                }
+                .disabled(!model.canSave || model.lists.isEmpty)
             }
         }
         .sheet(isPresented: $isCreating) { CustomBookListEditor(model: model, list: nil) }
@@ -384,6 +425,7 @@ private struct CustomBookListDetailView: View {
                     .sheet(isPresented: $isEditing) { CustomBookListEditor(model: model, list: model.list(id: listID)) }
             } else { ContentUnavailableView("List Unavailable", systemImage: "folder") }
         }
+        .onAppear { model.reload() }
         .alert("Couldn’t Save List", isPresented: Binding(get: { !isEditing && model.errorMessage != nil }, set: { if !$0 { model.errorMessage = nil } })) { Button("OK", role: .cancel) {} } message: { Text(model.errorMessage ?? "Please try again.") }
     }
 }

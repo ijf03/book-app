@@ -28,6 +28,8 @@ struct BookDetailHeader: View {
                     .foregroundStyle(Color.textSecondary)
                     .multilineTextAlignment(.center)
 
+                GenreChips(genres: book.genreChips)
+
                 HStack(spacing: AppSpacing.sm) {
                     Text(book.status.displayName)
 

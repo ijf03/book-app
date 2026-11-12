@@ -33,6 +33,33 @@ struct ListSearchTests {
         #expect(model.list(id: id)?.bookIDs == ["/works/new", "legacy"])
     }
 
+    @Test func bookDetailsCanAddToMultipleListsWithoutChangingExistingBook() throws {
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let scope = AccountStorageScope(directory: directory)
+        let store = LibraryStore(books: [], localDataSource: LocalLibraryDataSource(scope: scope))
+        let model = CustomListsViewModel(library: store)
+        var existing = Book(id: "legacy", title: "Existing", authors: [], status: .reading, format: .ebook)
+        existing.sourceBookID = "/works/existing"
+        existing.progress.page = 25
+        #expect(store.addBook(existing))
+        #expect(model.save(id: nil, name: "First", description: "Keep this", bookIDs: []))
+        #expect(model.save(id: nil, name: "Second", description: "", bookIDs: []))
+        let ids = Set(model.lists.map(\.id))
+        let draft = Book(id: "/works/existing", title: "Remote", authors: [], status: .toRead, format: .physical)
+        #expect(model.add(draft, to: ids, newListName: "New list"))
+        #expect(store.books.count == 1)
+        #expect(store.book(id: "legacy")?.progress.page == 25)
+        #expect(store.book(id: "legacy")?.status == .reading)
+        #expect(model.lists.count == 3)
+        #expect(model.lists.allSatisfy { $0.bookIDs == ["legacy"] })
+        #expect(model.lists.first?.description == "Keep this")
+        #expect(model.add(draft, to: ids))
+        #expect(model.lists.allSatisfy { $0.bookIDs == ["legacy"] })
+        scope.invalidate()
+        #expect(!model.add(draft, to: ids))
+    }
+
     @Test func revokedAccountCannotSaveSelectedSearchBooks() {
         let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         defer { try? FileManager.default.removeItem(at: directory) }

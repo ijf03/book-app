@@ -28,6 +28,7 @@ final class AppContainer {
     }
 
     private func changeAccount(_ user: AuthenticatedUser?) {
+        ReadingStreakWidgetStore.clear()
         account?.invalidate()
         account = nil
         LocalReadingNotificationService().cancel()

@@ -11,6 +11,7 @@ extension EnvironmentValues {
 }
 
 struct BookMetadataSection: View {
+    @Environment(AppRouter.self) private var router: AppRouter?
     let book: BookSearchResult
     let isLoading: Bool
     let error: String?
@@ -19,7 +20,6 @@ struct BookMetadataSection: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: AppSpacing.lg) {
-            GenreChips(genres: book.genreChips)
             AppCard {
                 VStack(alignment: .leading, spacing: AppSpacing.sm) {
                     Text("Synopsis").font(AppTypography.headline).accessibilityAddTraits(.isHeader)
@@ -73,26 +73,20 @@ struct BookMetadataSection: View {
                             .frame(minHeight: AppLayout.minimumTapTarget)
                     }
                     ForEach(book.authors, id: \.self) { author in
-                        if let url = catalogueSearchURL(author: author) {
-                            Link("More by \(author)", destination: url).frame(minHeight: AppLayout.minimumTapTarget)
-                        }
+                        Button("More by \(author)") { router?.explore(author: author) }
+                            .frame(minHeight: AppLayout.minimumTapTarget)
+                            .accessibilityHint("Searches for this author in the app.")
                     }
                     ForEach(book.genreChips, id: \.self) { genre in
-                        if let url = catalogueSearchURL(subject: genre) {
-                            Link("Explore \(genre)", destination: url).frame(minHeight: AppLayout.minimumTapTarget)
-                        }
+                        Button("Explore \(genre)") { router?.explore(genre: genre) }
+                            .frame(minHeight: AppLayout.minimumTapTarget)
+                            .accessibilityHint("Searches for this genre in the app.")
                     }
-                    Text("Links open Open Library. Reading access depends on availability and lending restrictions.")
+                    Text("Author and genre searches open Find Books. The Open Library availability link opens its website.")
                         .font(AppTypography.caption).foregroundStyle(Color.textSecondary)
                 }
             }
         }
-    }
-
-    private func catalogueSearchURL(author: String? = nil, subject: String? = nil) -> URL? {
-        var components = URLComponents(string: "https://openlibrary.org/search")
-        components?.queryItems = [URLQueryItem(name: author == nil ? "subject" : "author", value: author ?? subject)]
-        return components?.url
     }
 }
 

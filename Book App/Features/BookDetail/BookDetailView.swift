@@ -12,6 +12,7 @@ struct BookDetailView: View {
     @State private var metadataModel: BookMetadataViewModel
     @State private var metadataRequest = 0
     @State private var showingEditions = false
+    @State private var showingLists = false
 
 
     @Environment(\.dismiss)
@@ -161,6 +162,11 @@ struct BookDetailView: View {
             .inline
         )
 
+        .sheet(isPresented: $showingLists) {
+            if let libraryStore {
+                AddBookSheet(book: BookSearchResult(book: viewModel.book), library: libraryStore, existingBook: viewModel.book)
+            }
+        }
         .task(id: metadataRequest) {
             guard let repository, let libraryStore else { return }
             await metadataModel.load(using: repository, scope: libraryStore.accountScope)
@@ -307,7 +313,7 @@ struct BookDetailView: View {
         // MARK: Remove
 
         .alert(
-            "Remove From Library?",
+            "Remove from \(viewModel.book.status.displayName)?",
             isPresented:
                 $isShowingRemoveAlert
         ) {
@@ -327,7 +333,7 @@ struct BookDetailView: View {
 
             Text(
                 """
-                "\(viewModel.book.title)" will be removed from your library.
+                "\(viewModel.book.title)" is on your \(viewModel.book.status.displayName) shelf. Removing it deletes it from your library, rather than moving it to another shelf. To move it, choose Change Reading Status.
                 """
             )
         }
@@ -531,13 +537,23 @@ struct BookDetailView: View {
                             38 + AppSpacing.md
                         )
 
+                    if libraryStore != nil {
+                        BookDetailActionRow(
+                            title: "Add to Custom Lists",
+                            systemImage: "folder.badge.plus",
+                            subtitle: "Choose lists for this book",
+                            action: { showingLists = true }
+                        )
+                        Divider().padding(.leading, 38 + AppSpacing.md)
+                    }
+
                     BookDetailActionRow(
                         title:
-                            "Remove From Library",
+                            "Remove from \(viewModel.book.status.displayName)",
                         systemImage:
                             "trash",
                         subtitle:
-                            "Delete this book from your library",
+                            "Delete from your library · \(viewModel.book.status.displayName) shelf",
                         action: {
                             removeBookTapped()
                         }

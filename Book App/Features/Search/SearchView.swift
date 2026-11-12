@@ -13,15 +13,18 @@ struct SearchView: View {
 
     init(
         repository: any BookRepository,
-        libraryStore: LibraryStore
+        libraryStore: LibraryStore,
+        initialSearch: AppRouter.SearchRequest? = nil
     ) {
-        _viewModel = State(
-            initialValue: SearchViewModel(
-                repository: repository
-            )
-        )
-        
-        _discovery = State(initialValue: BookDiscoveryViewModel(repository: repository))
+        let search = SearchViewModel(repository: repository)
+        let discoveryModel = BookDiscoveryViewModel(repository: repository)
+        if let initialSearch {
+            search.apply(initialSearch)
+            discoveryModel.topic = search.selectedGenre
+        }
+        _viewModel = State(initialValue: search)
+        _discovery = State(initialValue: discoveryModel)
+        _searchRequest = State(initialValue: initialSearch == nil ? 0 : 1)
         self.libraryStore = libraryStore
     }
 
@@ -71,14 +74,16 @@ struct SearchView: View {
             .navigationTitle("Find Books")
             .onChange(of: discovery.topic) { _, genre in
                 viewModel.selectedGenre = genre
-                if !viewModel.searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                    searchRequest += 1
-                }
+                searchRequest += 1
+            }
+            .onChange(of: viewModel.selectedFilter) { _, _ in
+                if !viewModel.searchText.isEmpty { searchRequest += 1 }
             }
             .onChange(of: viewModel.searchText) { _, text in
                 if text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
                     searchRequest += 1
-                    viewModel.clear()
+                    viewModel.selectedFilter = .all
+                    if viewModel.selectedGenre == "All" { viewModel.clear() }
                 }
             }
             .task(id: searchRequest) {
@@ -110,17 +115,27 @@ struct SearchView: View {
 
     // MARK: - Filters
 
+    private var genreOptions: [String] {
+        BookDiscoveryViewModel.topics.contains(discovery.topic)
+            ? BookDiscoveryViewModel.topics : BookDiscoveryViewModel.topics + [discovery.topic]
+    }
+
     private var filterPicker: some View {
         Menu {
+            Picker("Search by", selection: $viewModel.selectedFilter) {
+                ForEach(BookSearchFilter.allCases) { filter in
+                    Text(filter.displayName).tag(filter)
+                }
+            }
             Picker("Genre", selection: $discovery.topic) {
-                ForEach(BookDiscoveryViewModel.topics, id: \.self) { topic in
+                ForEach(genreOptions, id: \.self) { topic in
                     Text(topic).tag(topic)
                 }
             }
         } label: {
             // Measure every option so changing genres never resizes the search field.
             ZStack(alignment: .leading) {
-                ForEach(BookDiscoveryViewModel.topics, id: \.self) { topic in
+                ForEach(genreOptions, id: \.self) { topic in
                     Label(topic, systemImage: "line.3.horizontal.decrease")
                         .hidden()
                         .accessibilityHidden(true)
@@ -134,8 +149,8 @@ struct SearchView: View {
             .background(Color.surfaceSecondary, in: RoundedRectangle(cornerRadius: AppRadius.md))
         }
         .fixedSize(horizontal: true, vertical: false)
-        .accessibilityLabel("Genre")
-        .accessibilityValue(discovery.topic)
+        .accessibilityLabel("Search filters")
+        .accessibilityValue("\(viewModel.selectedFilter.displayName), \(discovery.topic)")
         .accessibilityIdentifier("search.discovery.genre")
     }
 

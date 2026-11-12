@@ -12,6 +12,18 @@ final class AppRouter {
         case review(bookID: String)
     }
     
+    struct SearchRequest: Equatable {
+        let id = UUID()
+        let author: String?
+        let genre: String?
+    }
+
+    var searchRequest: SearchRequest?
+
+    func explore(author: String? = nil, genre: String? = nil) {
+        searchRequest = SearchRequest(author: author, genre: genre)
+    }
+
     var path: [Route] = []
     
     func navigate(to route: Route) {

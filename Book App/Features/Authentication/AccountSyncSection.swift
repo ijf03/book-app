@@ -16,6 +16,8 @@ struct AccountSyncSection: View {
                     Text("Initial upload is not yet confirmed. Keep this device’s local data until sync completes.")
                         .font(AppTypography.body)
                 }
+                Text("Your reading data is saved locally and syncs to your account when connected. A new device needs internet access to download your library.")
+                    .font(AppTypography.body).foregroundStyle(Color.textSecondary)
                 Button("Sync now", action: coordinator.syncNow)
                     .buttonStyle(.appSecondary).accessibilityIdentifier("account.syncNow")
                 if !coordinator.local.conflicts.isEmpty {

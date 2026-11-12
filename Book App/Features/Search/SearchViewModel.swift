@@ -32,6 +32,13 @@ final class SearchViewModel {
         self.repository = repository
     }
 
+    func apply(_ request: AppRouter.SearchRequest) {
+        searchText = request.author ?? ""
+        selectedFilter = request.author == nil ? .all : .author
+        selectedGenre = request.genre ?? "All"
+        clear()
+    }
+
     func clear() {
         requestID = UUID()
         state = .idle
@@ -46,7 +53,7 @@ final class SearchViewModel {
                 in: .whitespacesAndNewlines
             )
 
-        guard !query.isEmpty else {
+        guard !query.isEmpty || selectedGenre != "All" else {
             state = .idle
             return
         }
@@ -54,11 +61,20 @@ final class SearchViewModel {
         state = .loading
 
         do {
-            let results =
-                try await repository.searchBooks(
-                    query: selectedGenre == "All" ? query : "(\(query)) AND \(BookDiscoveryViewModel.subjectQuery(selectedGenre))",
-                    filter: selectedFilter
-                )
+            let subject = BookDiscoveryViewModel.subjectQuery(selectedGenre)
+            let requestQuery: String
+            let requestFilter: BookSearchFilter
+            if selectedGenre == "All" {
+                requestQuery = query
+                requestFilter = selectedFilter
+            } else {
+                let escaped = query.replacingOccurrences(of: "\\", with: "\\\\")
+                    .replacingOccurrences(of: "\"", with: "\\\"")
+                let textQuery = selectedFilter == .all ? query : "\(selectedFilter.rawValue):\"\(escaped)\""
+                requestQuery = query.isEmpty ? subject : "(\(textQuery)) AND \(subject)"
+                requestFilter = .all
+            }
+            let results = try await repository.searchBooks(query: requestQuery, filter: requestFilter)
 
             try Task.checkCancellation()
 

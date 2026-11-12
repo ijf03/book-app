@@ -69,3 +69,15 @@ extension ButtonStyle where Self == AppButtonStyle {
         AppButtonStyle(kind: .secondary)
     }
 }
+
+struct AppCompactPillButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .font(AppTypography.headline)
+            .foregroundStyle(Color.appAccent)
+            .padding(.horizontal, AppSpacing.md)
+            .frame(minHeight: AppLayout.minimumTapTarget)
+            .background(Color.accentTint, in: Capsule())
+            .opacity(configuration.isPressed ? 0.7 : 1)
+    }
+}

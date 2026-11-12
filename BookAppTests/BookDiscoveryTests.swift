@@ -12,7 +12,7 @@ struct BookDiscoveryTests {
         let repository = DiscoveryRepository(results: [])
         let discovery = BookDiscoveryViewModel(repository: repository)
         #expect(discovery.topic == "All")
-        #expect(BookDiscoveryViewModel.seeds(books: [], topic: "All").first?.query == "*")
+        #expect(BookDiscoveryViewModel.seeds(books: [], topic: "All").first?.query == BookDiscoveryViewModel.subjectQuery("Classics"))
         discovery.topic = "Mystery"
         await discovery.load(books: [Book.mockFourthWing], scope: nil)
         #expect(repository.queries == ["subject:\"Mystery\""])
@@ -98,6 +98,44 @@ struct BookDiscoveryTests {
         #expect(fallback.featured.count == 2 && fallback.moreToExplore.count == 2)
     }
 
+    @Test func refreshRotatesBeyondFirstSixAndCyclesAfterExhaustion() async {
+        let repository = DiscoveryRepository(results: (0..<12).map { result("book-\($0)") })
+        let model = BookDiscoveryViewModel(repository: repository)
+        await model.load(books: [], scope: nil)
+        let first = Set(model.shelves.flatMap(\.books).map(\.id))
+        await model.load(books: [], scope: nil, force: true)
+        let second = Set(model.shelves.flatMap(\.books).map(\.id))
+        #expect(first.count == 6 && second.count == 6)
+        #expect(first.isDisjoint(with: second))
+        #expect(Set(model.featured.map(\.id)).isSubset(of: second))
+        await model.load(books: [], scope: nil, force: true)
+        #expect(Set(model.shelves.flatMap(\.books).map(\.id)) == first)
+        #expect(repository.detailCalls == 6)
+    }
+
+    @Test func smallPoolRotatesFeaturedBooksAndGenreChangeResetsRotation() async {
+        let repository = DiscoveryRepository(results: (0..<4).map { result("book-\($0)") })
+        let model = BookDiscoveryViewModel(repository: repository)
+        await model.load(books: [], scope: nil)
+        let first = Set(model.featured.map(\.id))
+        await model.load(books: [], scope: nil, force: true)
+        #expect(first.isDisjoint(with: Set(model.featured.map(\.id))))
+        model.topic = "Mystery"
+        await model.load(books: [], scope: nil)
+        #expect(Set(model.featured.map(\.id)) == first)
+    }
+
+    @Test func emptyPersonalisedResultsFallBackToClassics() async {
+        var owned = Book.mockFourthWing
+        owned.status = .reading
+        let repository = ClassicsFallbackRepository()
+        let model = BookDiscoveryViewModel(repository: repository)
+        await model.load(books: [owned], scope: nil)
+        #expect(repository.queries.last == BookDiscoveryViewModel.subjectQuery("Classics"))
+        #expect(model.shelves.first?.books.first?.id == "classic")
+        #expect(model.featured.first?.id == "classic")
+    }
+
     @Test func revokedAccountDiscardsInFlightResults() async {
         let repository = SuspendedDiscoveryRepository()
         let model = BookDiscoveryViewModel(repository: repository)
@@ -138,4 +176,13 @@ struct BookDiscoveryTests {
         await withCheckedContinuation { continuation = $0 }
     }
     func finish(_ results: [BookSearchResult]) { continuation?.resume(returning: results); continuation = nil }
+}
+
+@MainActor private final class ClassicsFallbackRepository: BookRepository {
+    var queries: [String] = []
+    func searchBooks(query: String, filter: BookSearchFilter) async throws -> [BookSearchResult] {
+        queries.append(query)
+        guard query == BookDiscoveryViewModel.subjectQuery("Classics") else { return [] }
+        return [.init(id: "classic", title: "Classic", authors: [], description: nil, coverURL: nil, pageCount: nil)]
+    }
 }

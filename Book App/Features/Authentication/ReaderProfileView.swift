@@ -77,24 +77,59 @@ struct ReaderProfileView: View {
 
 struct ReaderProfileCard: View {
     let store: ReaderProfileStore
+    let email: String
     @State private var showsEditor = false
+    private var profileName: some View {
+        Text(store.profile?.displayName ?? String(localized: "Make yourself at home"))
+            .font(AppTypography.title)
+            .accessibilityAddTraits(.isHeader)
+    }
+
+    @ViewBuilder private var profileUsername: some View {
+        if let profile = store.profile {
+            Text("@\(profile.username)")
+                .font(AppTypography.body).foregroundStyle(Color.textSecondary)
+        }
+    }
+
     var body: some View {
         AppCard {
             VStack(alignment: .leading, spacing: AppSpacing.md) {
-                Image(systemName: "person.crop.circle.fill")
-                    .font(AppTypography.largeTitle).foregroundStyle(Color.appAccent)
-                    .accessibilityHidden(true)
-                Text(store.profile?.displayName ?? String(localized: "Make yourself at home"))
-                    .font(AppTypography.title)
-                    .accessibilityAddTraits(.isHeader)
+                HStack(alignment: .top, spacing: AppSpacing.md) {
+                    Image(systemName: "person.crop.circle.fill")
+                        .font(AppTypography.largeTitle).foregroundStyle(Color.appAccent)
+                        .accessibilityHidden(true)
+                    VStack(alignment: .leading, spacing: AppSpacing.xs) {
+                        ViewThatFits(in: .horizontal) {
+                            HStack(alignment: .firstTextBaseline, spacing: AppSpacing.sm) {
+                                profileName
+                                profileUsername
+                            }
+                            VStack(alignment: .leading, spacing: AppSpacing.xs) {
+                                profileName
+                                profileUsername
+                            }
+                        }
+                        Text(email)
+                            .font(AppTypography.body)
+                            .foregroundStyle(Color.textSecondary)
+                            .textSelection(.enabled)
+                            .fixedSize(horizontal: false, vertical: true)
+                            .accessibilityLabel("Signed in as \(email)")
+                            .accessibilityIdentifier("account.email")
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                }
                 if let profile = store.profile {
-                    Text("@\(profile.username)").font(AppTypography.body).foregroundStyle(Color.textSecondary)
                     if let bio = profile.bio { Text(bio).font(AppTypography.body) }
                 } else {
                     Text("Choose a username and tell us what you like to be called.")
                         .foregroundStyle(Color.textSecondary)
                 }
-                Button(store.profile == nil ? "Set up profile" : "Edit profile") { showsEditor = true }
+                Button { showsEditor = true } label: {
+                    Label(store.profile == nil ? "Set up profile" : "Edit profile", systemImage: "pencil")
+                        .labelStyle(.titleAndIcon)
+                }
                     .buttonStyle(.appSecondary)
                 if let error = store.error {
                     Text(error).font(AppTypography.caption)

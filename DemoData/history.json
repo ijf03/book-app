@@ -1,0 +1,1918 @@
+{
+  "version": 1,
+  "account": "dev@test.com",
+  "generatedAt": "2026-11-12T20:59:49.470970+11:00",
+  "records": [
+    {
+      "collection": "sessions",
+      "id": "5343E7AB-0B03-534A-ADCA-F4DA1E0EAF0B",
+      "data": {
+        "id": "5343E7AB-0B03-534A-ADCA-F4DA1E0EAF0B",
+        "bookID": "demo-history-v1-book-01",
+        "startedAt": 802908000.0,
+        "endedAt": 802909800.0,
+        "totalPausedSeconds": 0,
+        "startProgress": {
+          "percentage": 0.0,
+          "page": 0
+        },
+        "endProgress": {
+          "percentage": 16.6667,
+          "page": 40
+        },
+        "formats": [
+          "physical"
+        ]
+      }
+    },
+    {
+      "collection": "sessions",
+      "id": "8A1C42FE-7B1D-5574-AF79-7EF4B7C6CBF6",
+      "data": {
+        "id": "8A1C42FE-7B1D-5574-AF79-7EF4B7C6CBF6",
+        "bookID": "demo-history-v1-book-01",
+        "startedAt": 802994400.0,
+        "endedAt": 802996440.0,
+        "totalPausedSeconds": 120,
+        "startProgress": {
+          "percentage": 16.6667,
+          "page": 40
+        },
+        "endProgress": {
+          "percentage": 33.3333,
+          "page": 80
+        },
+        "formats": [
+          "physical"
+        ]
+      }
+    },
+    {
+      "collection": "sessions",
+      "id": "400ADA65-51E1-5D76-8110-BD8E7C3F37E3",
+      "data": {
+        "id": "400ADA65-51E1-5D76-8110-BD8E7C3F37E3",
+        "bookID": "demo-history-v1-book-01",
+        "startedAt": 803080800.0,
+        "endedAt": 803082840.0,
+        "totalPausedSeconds": 0,
+        "startProgress": {
+          "percentage": 33.3333,
+          "page": 80
+        },
+        "endProgress": {
+          "percentage": 50.0,
+          "page": 120
+        },
+        "formats": [
+          "physical"
+        ]
+      }
+    },
+    {
+      "collection": "sessions",
+      "id": "5DB3E6FB-5D58-5909-AF64-0176D492A5F2",
+      "data": {
+        "id": "5DB3E6FB-5D58-5909-AF64-0176D492A5F2",
+        "bookID": "demo-history-v1-book-01",
+        "startedAt": 803167200.0,
+        "endedAt": 803169360.0,
+        "totalPausedSeconds": 0,
+        "startProgress": {
+          "percentage": 50.0,
+          "page": 120
+        },
+        "endProgress": {
+          "percentage": 66.6667,
+          "page": 160
+        },
+        "formats": [
+          "physical"
+        ]
+      }
+    },
+    {
+      "collection": "sessions",
+      "id": "F3B1BB6B-A611-5FC7-B693-461D4AAA0038",
+      "data": {
+        "id": "F3B1BB6B-A611-5FC7-B693-461D4AAA0038",
+        "bookID": "demo-history-v1-book-01",
+        "startedAt": 803253600.0,
+        "endedAt": 803256000.0,
+        "totalPausedSeconds": 120,
+        "startProgress": {
+          "percentage": 66.6667,
+          "page": 160
+        },
+        "endProgress": {
+          "percentage": 83.3333,
+          "page": 200
+        },
+        "formats": [
+          "physical"
+        ]
+      }
+    },
+    {
+      "collection": "sessions",
+      "id": "67DD62BB-73AC-5818-A510-577C106DF63A",
+      "data": {
+        "id": "67DD62BB-73AC-5818-A510-577C106DF63A",
+        "bookID": "demo-history-v1-book-01",
+        "startedAt": 803340000.0,
+        "endedAt": 803342400.0,
+        "totalPausedSeconds": 0,
+        "startProgress": {
+          "percentage": 83.3333,
+          "page": 200
+        },
+        "endProgress": {
+          "percentage": 100.0,
+          "page": 240
+        },
+        "formats": [
+          "physical"
+        ]
+      }
+    },
+    {
+      "collection": "books",
+      "id": "demo-history-v1-book-01",
+      "data": {
+        "id": "demo-history-v1-book-01",
+        "title": "[Demo] The Lantern Coast",
+        "authors": [
+          "Demo Author 1"
+        ],
+        "description": "Synthetic book and reading history for demonstrating Book Tracker. This is not a real publication.",
+        "pageCount": 240,
+        "status": "completed",
+        "format": "physical",
+        "formatsUsed": [
+          "physical"
+        ],
+        "genre": "Fantasy",
+        "genres": [
+          "Fantasy"
+        ],
+        "bookType": "fiction",
+        "language": "English",
+        "progress": {
+          "percentage": 100.0,
+          "page": 240
+        },
+        "currentReadStartedAt": 802908000.0,
+        "completedAt": 803342400.0
+      }
+    },
+    {
+      "collection": "reviews",
+      "id": "demo-history-v1-book-01",
+      "data": {
+        "id": "A67166C1-A179-597F-A79C-423FCDEB1C7C",
+        "bookID": "demo-history-v1-book-01",
+        "rating": 5,
+        "text": "Synthetic demo review: an engaging read with memorable ideas and a thoughtful ending.",
+        "containsSpoilers": false,
+        "createdAt": 803342400.0,
+        "updatedAt": 803342400.0,
+        "mood": "Hopeful"
+      }
+    },
+    {
+      "collection": "notes",
+      "id": "DFF2C8F1-AE4C-54C7-8503-30882AC0C1FC",
+      "data": {
+        "id": "DFF2C8F1-AE4C-54C7-8503-30882AC0C1FC",
+        "bookID": "demo-history-v1-book-01",
+        "text": "Demo reading note: revisit the central idea and discuss it at the next book club.",
+        "containsSpoilers": false,
+        "createdAt": 802908900.0,
+        "updatedAt": 802908900.0,
+        "page": 12
+      }
+    },
+    {
+      "collection": "sessions",
+      "id": "B447B503-561F-5A73-A2CD-90B5CC362DFD",
+      "data": {
+        "id": "B447B503-561F-5A73-A2CD-90B5CC362DFD",
+        "bookID": "demo-history-v1-book-02",
+        "startedAt": 805330800.0,
+        "endedAt": 805332690.0,
+        "totalPausedSeconds": 0,
+        "startProgress": {
+          "percentage": 0.0,
+          "page": 0
+        },
+        "endProgress": {
+          "percentage": 16.6667,
+          "page": 43
+        },
+        "formats": [
+          "ebook"
+        ]
+      }
+    },
+    {
+      "collection": "sessions",
+      "id": "B7932FD7-C1D7-520D-BA75-D0F7E10191CF",
+      "data": {
+        "id": "B7932FD7-C1D7-520D-BA75-D0F7E10191CF",
+        "bookID": "demo-history-v1-book-02",
+        "startedAt": 805417200.0,
+        "endedAt": 805419330.0,
+        "totalPausedSeconds": 120,
+        "startProgress": {
+          "percentage": 16.6667,
+          "page": 43
+        },
+        "endProgress": {
+          "percentage": 33.3333,
+          "page": 87
+        },
+        "formats": [
+          "ebook"
+        ]
+      }
+    },
+    {
+      "collection": "sessions",
+      "id": "316CC451-8C31-5449-AE3D-FF337D8BCF2F",
+      "data": {
+        "id": "316CC451-8C31-5449-AE3D-FF337D8BCF2F",
+        "bookID": "demo-history-v1-book-02",
+        "startedAt": 805503600.0,
+        "endedAt": 805505730.0,
+        "totalPausedSeconds": 0,
+        "startProgress": {
+          "percentage": 33.3333,
+          "page": 87
+        },
+        "endProgress": {
+          "percentage": 50.0,
+          "page": 130
+        },
+        "formats": [
+          "ebook"
+        ]
+      }
+    },
+    {
+      "collection": "sessions",
+      "id": "FCF6BAF3-D76E-5EF9-9467-D56CE646CC43",
+      "data": {
+        "id": "FCF6BAF3-D76E-5EF9-9467-D56CE646CC43",
+        "bookID": "demo-history-v1-book-02",
+        "startedAt": 805590000.0,
+        "endedAt": 805592250.0,
+        "totalPausedSeconds": 0,
+        "startProgress": {
+          "percentage": 50.0,
+          "page": 130
+        },
+        "endProgress": {
+          "percentage": 66.6667,
+          "page": 173
+        },
+        "formats": [
+          "ebook"
+        ]
+      }
+    },
+    {
+      "collection": "sessions",
+      "id": "4F0481BD-3ED8-56F3-B1BC-87F77638B594",
+      "data": {
+        "id": "4F0481BD-3ED8-56F3-B1BC-87F77638B594",
+        "bookID": "demo-history-v1-book-02",
+        "startedAt": 805676400.0,
+        "endedAt": 805678890.0,
+        "totalPausedSeconds": 120,
+        "startProgress": {
+          "percentage": 66.6667,
+          "page": 173
+        },
+        "endProgress": {
+          "percentage": 83.3333,
+          "page": 217
+        },
+        "formats": [
+          "ebook"
+        ]
+      }
+    },
+    {
+      "collection": "sessions",
+      "id": "66B8C96E-C095-5829-970A-361947ED4211",
+      "data": {
+        "id": "66B8C96E-C095-5829-970A-361947ED4211",
+        "bookID": "demo-history-v1-book-02",
+        "startedAt": 805762800.0,
+        "endedAt": 805765290.0,
+        "totalPausedSeconds": 0,
+        "startProgress": {
+          "percentage": 83.3333,
+          "page": 217
+        },
+        "endProgress": {
+          "percentage": 100.0,
+          "page": 260
+        },
+        "formats": [
+          "ebook"
+        ]
+      }
+    },
+    {
+      "collection": "books",
+      "id": "demo-history-v1-book-02",
+      "data": {
+        "id": "demo-history-v1-book-02",
+        "title": "[Demo] Small Daily Discoveries",
+        "authors": [
+          "Demo Author 2"
+        ],
+        "description": "Synthetic book and reading history for demonstrating Book Tracker. This is not a real publication.",
+        "pageCount": 260,
+        "status": "completed",
+        "format": "ebook",
+        "formatsUsed": [
+          "ebook"
+        ],
+        "genre": "Personal development",
+        "genres": [
+          "Personal development"
+        ],
+        "bookType": "nonfiction",
+        "language": "English",
+        "progress": {
+          "percentage": 100.0,
+          "page": 260
+        },
+        "currentReadStartedAt": 805330800.0,
+        "completedAt": 805765290.0
+      }
+    },
+    {
+      "collection": "reviews",
+      "id": "demo-history-v1-book-02",
+      "data": {
+        "id": "35046F50-6337-5A8F-9888-B8204187FE57",
+        "bookID": "demo-history-v1-book-02",
+        "rating": 4,
+        "text": "Synthetic demo review: an engaging read with memorable ideas and a thoughtful ending.",
+        "containsSpoilers": false,
+        "createdAt": 805765290.0,
+        "updatedAt": 805765290.0,
+        "mood": "Reflective"
+      }
+    },
+    {
+      "collection": "sessions",
+      "id": "C604F39A-7572-5C59-9E65-8F5737CCE2ED",
+      "data": {
+        "id": "C604F39A-7572-5C59-9E65-8F5737CCE2ED",
+        "bookID": "demo-history-v1-book-03",
+        "startedAt": 807832800.0,
+        "endedAt": 807838000.0,
+        "totalPausedSeconds": 0,
+        "startProgress": {
+          "percentage": 0.0,
+          "timestampSeconds": 0
+        },
+        "endProgress": {
+          "percentage": 16.6667,
+          "timestampSeconds": 5200
+        },
+        "formats": [
+          "audiobook"
+        ]
+      }
+    },
+    {
+      "collection": "sessions",
+      "id": "7A9AA3C6-FAD4-5CA8-B623-EDD6E62CAEDD",
+      "data": {
+        "id": "7A9AA3C6-FAD4-5CA8-B623-EDD6E62CAEDD",
+        "bookID": "demo-history-v1-book-03",
+        "startedAt": 807919200.0,
+        "endedAt": 807924520.0,
+        "totalPausedSeconds": 120,
+        "startProgress": {
+          "percentage": 16.6667,
+          "timestampSeconds": 5200
+        },
+        "endProgress": {
+          "percentage": 33.3333,
+          "timestampSeconds": 10400
+        },
+        "formats": [
+          "audiobook"
+        ]
+      }
+    },
+    {
+      "collection": "sessions",
+      "id": "AE9139EB-9729-572F-BACB-4CCAF3553510",
+      "data": {
+        "id": "AE9139EB-9729-572F-BACB-4CCAF3553510",
+        "bookID": "demo-history-v1-book-03",
+        "startedAt": 808005600.0,
+        "endedAt": 808010800.0,
+        "totalPausedSeconds": 0,
+        "startProgress": {
+          "percentage": 33.3333,
+          "timestampSeconds": 10400
+        },
+        "endProgress": {
+          "percentage": 50.0,
+          "timestampSeconds": 15600
+        },
+        "formats": [
+          "audiobook"
+        ]
+      }
+    },
+    {
+      "collection": "sessions",
+      "id": "B10E2A8D-4C80-5735-8201-935782102EF4",
+      "data": {
+        "id": "B10E2A8D-4C80-5735-8201-935782102EF4",
+        "bookID": "demo-history-v1-book-03",
+        "startedAt": 808092000.0,
+        "endedAt": 808097200.0,
+        "totalPausedSeconds": 0,
+        "startProgress": {
+          "percentage": 50.0,
+          "timestampSeconds": 15600
+        },
+        "endProgress": {
+          "percentage": 66.6667,
+          "timestampSeconds": 20800
+        },
+        "formats": [
+          "audiobook"
+        ]
+      }
+    },
+    {
+      "collection": "sessions",
+      "id": "346CA080-3B01-5B16-BD25-E84ABECEF402",
+      "data": {
+        "id": "346CA080-3B01-5B16-BD25-E84ABECEF402",
+        "bookID": "demo-history-v1-book-03",
+        "startedAt": 808178400.0,
+        "endedAt": 808183720.0,
+        "totalPausedSeconds": 120,
+        "startProgress": {
+          "percentage": 66.6667,
+          "timestampSeconds": 20800
+        },
+        "endProgress": {
+          "percentage": 83.3333,
+          "timestampSeconds": 26000
+        },
+        "formats": [
+          "audiobook"
+        ]
+      }
+    },
+    {
+      "collection": "sessions",
+      "id": "FC1C6441-7A1A-58C1-A30D-C830A1F5C94B",
+      "data": {
+        "id": "FC1C6441-7A1A-58C1-A30D-C830A1F5C94B",
+        "bookID": "demo-history-v1-book-03",
+        "startedAt": 808264800.0,
+        "endedAt": 808270000.0,
+        "totalPausedSeconds": 0,
+        "startProgress": {
+          "percentage": 83.3333,
+          "timestampSeconds": 26000
+        },
+        "endProgress": {
+          "percentage": 100.0,
+          "timestampSeconds": 31200
+        },
+        "formats": [
+          "audiobook"
+        ]
+      }
+    },
+    {
+      "collection": "books",
+      "id": "demo-history-v1-book-03",
+      "data": {
+        "id": "demo-history-v1-book-03",
+        "title": "[Demo] Letters from Orbit",
+        "authors": [
+          "Demo Author 3"
+        ],
+        "description": "Synthetic book and reading history for demonstrating Book Tracker. This is not a real publication.",
+        "pageCount": 280,
+        "status": "completed",
+        "format": "audiobook",
+        "formatsUsed": [
+          "audiobook"
+        ],
+        "genre": "Science fiction",
+        "genres": [
+          "Science fiction"
+        ],
+        "bookType": "fiction",
+        "language": "English",
+        "progress": {
+          "percentage": 100.0,
+          "timestampSeconds": 31200
+        },
+        "audioDurationSeconds": 31200,
+        "currentReadStartedAt": 807832800.0,
+        "completedAt": 808270000.0
+      }
+    },
+    {
+      "collection": "reviews",
+      "id": "demo-history-v1-book-03",
+      "data": {
+        "id": "77138525-48A6-5D3B-944A-6635FE0015FA",
+        "bookID": "demo-history-v1-book-03",
+        "rating": 3,
+        "text": "Synthetic demo review: an engaging read with memorable ideas and a thoughtful ending.",
+        "containsSpoilers": false,
+        "createdAt": 808270000.0,
+        "updatedAt": 808270000.0,
+        "mood": "Excited"
+      }
+    },
+    {
+      "collection": "notes",
+      "id": "985815BC-F775-5D76-9553-211EB274B12D",
+      "data": {
+        "id": "985815BC-F775-5D76-9553-211EB274B12D",
+        "bookID": "demo-history-v1-book-03",
+        "text": "Demo reading note: revisit the central idea and discuss it at the next book club.",
+        "containsSpoilers": false,
+        "createdAt": 807833700.0,
+        "updatedAt": 807833700.0
+      }
+    },
+    {
+      "collection": "sessions",
+      "id": "666750AA-A47E-5199-A0FB-8FE71BDE45B2",
+      "data": {
+        "id": "666750AA-A47E-5199-A0FB-8FE71BDE45B2",
+        "bookID": "demo-history-v1-book-04",
+        "startedAt": 810342000.0,
+        "endedAt": 810347400.0,
+        "totalPausedSeconds": 0,
+        "startProgress": {
+          "percentage": 0.0,
+          "page": 0,
+          "timestampSeconds": 0
+        },
+        "endProgress": {
+          "percentage": 16.6667,
+          "page": 50,
+          "timestampSeconds": 5400
+        },
+        "formats": [
+          "immersive"
+        ]
+      }
+    },
+    {
+      "collection": "sessions",
+      "id": "6525773B-DE6D-5629-BF48-AB166DEE8CF9",
+      "data": {
+        "id": "6525773B-DE6D-5629-BF48-AB166DEE8CF9",
+        "bookID": "demo-history-v1-book-04",
+        "startedAt": 810428400.0,
+        "endedAt": 810433920.0,
+        "totalPausedSeconds": 120,
+        "startProgress": {
+          "percentage": 16.6667,
+          "page": 50,
+          "timestampSeconds": 5400
+        },
+        "endProgress": {
+          "percentage": 33.3333,
+          "page": 100,
+          "timestampSeconds": 10800
+        },
+        "formats": [
+          "immersive"
+        ]
+      }
+    },
+    {
+      "collection": "sessions",
+      "id": "50C18332-E23B-5E83-8E2F-C376025FF54D",
+      "data": {
+        "id": "50C18332-E23B-5E83-8E2F-C376025FF54D",
+        "bookID": "demo-history-v1-book-04",
+        "startedAt": 810514800.0,
+        "endedAt": 810520200.0,
+        "totalPausedSeconds": 0,
+        "startProgress": {
+          "percentage": 33.3333,
+          "page": 100,
+          "timestampSeconds": 10800
+        },
+        "endProgress": {
+          "percentage": 50.0,
+          "page": 150,
+          "timestampSeconds": 16200
+        },
+        "formats": [
+          "immersive"
+        ]
+      }
+    },
+    {
+      "collection": "sessions",
+      "id": "71AC10F3-CCF6-5031-A8C3-5CB2C5E292FE",
+      "data": {
+        "id": "71AC10F3-CCF6-5031-A8C3-5CB2C5E292FE",
+        "bookID": "demo-history-v1-book-04",
+        "startedAt": 810601200.0,
+        "endedAt": 810606600.0,
+        "totalPausedSeconds": 0,
+        "startProgress": {
+          "percentage": 50.0,
+          "page": 150,
+          "timestampSeconds": 16200
+        },
+        "endProgress": {
+          "percentage": 66.6667,
+          "page": 200,
+          "timestampSeconds": 21600
+        },
+        "formats": [
+          "immersive"
+        ]
+      }
+    },
+    {
+      "collection": "sessions",
+      "id": "E956AC5B-A5B1-587A-B124-E5A89711A710",
+      "data": {
+        "id": "E956AC5B-A5B1-587A-B124-E5A89711A710",
+        "bookID": "demo-history-v1-book-04",
+        "startedAt": 810687600.0,
+        "endedAt": 810693120.0,
+        "totalPausedSeconds": 120,
+        "startProgress": {
+          "percentage": 66.6667,
+          "page": 200,
+          "timestampSeconds": 21600
+        },
+        "endProgress": {
+          "percentage": 83.3333,
+          "page": 250,
+          "timestampSeconds": 27000
+        },
+        "formats": [
+          "immersive"
+        ]
+      }
+    },
+    {
+      "collection": "sessions",
+      "id": "37DF43F2-FD0A-50D9-A108-BEF57E8DC95B",
+      "data": {
+        "id": "37DF43F2-FD0A-50D9-A108-BEF57E8DC95B",
+        "bookID": "demo-history-v1-book-04",
+        "startedAt": 810774000.0,
+        "endedAt": 810779400.0,
+        "totalPausedSeconds": 0,
+        "startProgress": {
+          "percentage": 83.3333,
+          "page": 250,
+          "timestampSeconds": 27000
+        },
+        "endProgress": {
+          "percentage": 100.0,
+          "page": 300,
+          "timestampSeconds": 32400
+        },
+        "formats": [
+          "immersive"
+        ]
+      }
+    },
+    {
+      "collection": "books",
+      "id": "demo-history-v1-book-04",
+      "data": {
+        "id": "demo-history-v1-book-04",
+        "title": "[Demo] The Quiet Garden",
+        "authors": [
+          "Demo Author 4"
+        ],
+        "description": "Synthetic book and reading history for demonstrating Book Tracker. This is not a real publication.",
+        "pageCount": 300,
+        "status": "completed",
+        "format": "immersive",
+        "formatsUsed": [
+          "immersive"
+        ],
+        "genre": "Contemporary",
+        "genres": [
+          "Contemporary"
+        ],
+        "bookType": "fiction",
+        "language": "English",
+        "progress": {
+          "percentage": 100.0,
+          "page": 300,
+          "timestampSeconds": 32400
+        },
+        "audioDurationSeconds": 32400,
+        "immersiveCompanion": "ebook",
+        "immersiveReadingPercentage": 100.0,
+        "currentReadStartedAt": 810342000.0,
+        "completedAt": 810779400.0
+      }
+    },
+    {
+      "collection": "reviews",
+      "id": "demo-history-v1-book-04",
+      "data": {
+        "id": "46F5EC51-E8FF-57D2-88D2-60A3C33B61D7",
+        "bookID": "demo-history-v1-book-04",
+        "rating": 5,
+        "text": "Synthetic demo review: an engaging read with memorable ideas and a thoughtful ending.",
+        "containsSpoilers": false,
+        "createdAt": 810779400.0,
+        "updatedAt": 810779400.0,
+        "mood": "Hopeful"
+      }
+    },
+    {
+      "collection": "sessions",
+      "id": "102AEC37-80D7-53E9-9DC6-B2B5A790A7F5",
+      "data": {
+        "id": "102AEC37-80D7-53E9-9DC6-B2B5A790A7F5",
+        "bookID": "demo-history-v1-book-05",
+        "startedAt": 812584800.0,
+        "endedAt": 812586960.0,
+        "totalPausedSeconds": 0,
+        "startProgress": {
+          "percentage": 0.0,
+          "page": 0
+        },
+        "endProgress": {
+          "percentage": 16.6667,
+          "page": 53
+        },
+        "formats": [
+          "physical"
+        ]
+      }
+    },
+    {
+      "collection": "sessions",
+      "id": "BCE08716-73DB-567E-90DA-EC6347E5C124",
+      "data": {
+        "id": "BCE08716-73DB-567E-90DA-EC6347E5C124",
+        "bookID": "demo-history-v1-book-05",
+        "startedAt": 812671200.0,
+        "endedAt": 812673600.0,
+        "totalPausedSeconds": 120,
+        "startProgress": {
+          "percentage": 16.6667,
+          "page": 53
+        },
+        "endProgress": {
+          "percentage": 33.3333,
+          "page": 107
+        },
+        "formats": [
+          "physical"
+        ]
+      }
+    },
+    {
+      "collection": "sessions",
+      "id": "1A6F6006-834D-58F8-87F3-B49F16EEEF8D",
+      "data": {
+        "id": "1A6F6006-834D-58F8-87F3-B49F16EEEF8D",
+        "bookID": "demo-history-v1-book-05",
+        "startedAt": 812754000.0,
+        "endedAt": 812756400.0,
+        "totalPausedSeconds": 0,
+        "startProgress": {
+          "percentage": 33.3333,
+          "page": 107
+        },
+        "endProgress": {
+          "percentage": 50.0,
+          "page": 160
+        },
+        "formats": [
+          "physical"
+        ]
+      }
+    },
+    {
+      "collection": "sessions",
+      "id": "7781C540-6D58-5D93-BFAB-D01DA8E4308B",
+      "data": {
+        "id": "7781C540-6D58-5D93-BFAB-D01DA8E4308B",
+        "bookID": "demo-history-v1-book-05",
+        "startedAt": 812840400.0,
+        "endedAt": 812842920.0,
+        "totalPausedSeconds": 0,
+        "startProgress": {
+          "percentage": 50.0,
+          "page": 160
+        },
+        "endProgress": {
+          "percentage": 66.6667,
+          "page": 213
+        },
+        "formats": [
+          "physical"
+        ]
+      }
+    },
+    {
+      "collection": "sessions",
+      "id": "4A44088A-6FC9-5444-B0D3-A3C1BBAC40F0",
+      "data": {
+        "id": "4A44088A-6FC9-5444-B0D3-A3C1BBAC40F0",
+        "bookID": "demo-history-v1-book-05",
+        "startedAt": 812926800.0,
+        "endedAt": 812929560.0,
+        "totalPausedSeconds": 120,
+        "startProgress": {
+          "percentage": 66.6667,
+          "page": 213
+        },
+        "endProgress": {
+          "percentage": 83.3333,
+          "page": 267
+        },
+        "formats": [
+          "physical"
+        ]
+      }
+    },
+    {
+      "collection": "sessions",
+      "id": "9AF1344B-3C62-534B-84BE-7EB661F91C00",
+      "data": {
+        "id": "9AF1344B-3C62-534B-84BE-7EB661F91C00",
+        "bookID": "demo-history-v1-book-05",
+        "startedAt": 813013200.0,
+        "endedAt": 813015960.0,
+        "totalPausedSeconds": 0,
+        "startProgress": {
+          "percentage": 83.3333,
+          "page": 267
+        },
+        "endProgress": {
+          "percentage": 100.0,
+          "page": 320
+        },
+        "formats": [
+          "physical"
+        ]
+      }
+    },
+    {
+      "collection": "books",
+      "id": "demo-history-v1-book-05",
+      "data": {
+        "id": "demo-history-v1-book-05",
+        "title": "[Demo] Maps of Tomorrow",
+        "authors": [
+          "Demo Author 1"
+        ],
+        "description": "Synthetic book and reading history for demonstrating Book Tracker. This is not a real publication.",
+        "pageCount": 320,
+        "status": "completed",
+        "format": "physical",
+        "formatsUsed": [
+          "physical"
+        ],
+        "genre": "Adventure",
+        "genres": [
+          "Adventure"
+        ],
+        "bookType": "fiction",
+        "language": "English",
+        "progress": {
+          "percentage": 100.0,
+          "page": 320
+        },
+        "currentReadStartedAt": 812584800.0,
+        "completedAt": 813015960.0
+      }
+    },
+    {
+      "collection": "reviews",
+      "id": "demo-history-v1-book-05",
+      "data": {
+        "id": "7A3C7949-C4CB-57D6-B556-FE246F0211D6",
+        "bookID": "demo-history-v1-book-05",
+        "rating": 4,
+        "text": "Synthetic demo review: an engaging read with memorable ideas and a thoughtful ending.",
+        "containsSpoilers": false,
+        "createdAt": 813015960.0,
+        "updatedAt": 813015960.0,
+        "mood": "Reflective"
+      }
+    },
+    {
+      "collection": "notes",
+      "id": "BA10DE35-C1ED-57D2-8346-D3AA4DF3AE8A",
+      "data": {
+        "id": "BA10DE35-C1ED-57D2-8346-D3AA4DF3AE8A",
+        "bookID": "demo-history-v1-book-05",
+        "text": "Demo reading note: revisit the central idea and discuss it at the next book club.",
+        "containsSpoilers": false,
+        "createdAt": 812585700.0,
+        "updatedAt": 812585700.0,
+        "page": 12
+      }
+    },
+    {
+      "collection": "sessions",
+      "id": "365940C2-5632-5BD2-A655-C260519A26D7",
+      "data": {
+        "id": "365940C2-5632-5BD2-A655-C260519A26D7",
+        "bookID": "demo-history-v1-book-06",
+        "startedAt": 813621600.0,
+        "endedAt": 813623850.0,
+        "totalPausedSeconds": 0,
+        "startProgress": {
+          "percentage": 0.0,
+          "page": 0
+        },
+        "endProgress": {
+          "percentage": 16.6667,
+          "page": 57
+        },
+        "formats": [
+          "ebook"
+        ]
+      }
+    },
+    {
+      "collection": "sessions",
+      "id": "A4C9553E-05C3-56C0-A4F2-6A526589CF67",
+      "data": {
+        "id": "A4C9553E-05C3-56C0-A4F2-6A526589CF67",
+        "bookID": "demo-history-v1-book-06",
+        "startedAt": 813708000.0,
+        "endedAt": 813710490.0,
+        "totalPausedSeconds": 120,
+        "startProgress": {
+          "percentage": 16.6667,
+          "page": 57
+        },
+        "endProgress": {
+          "percentage": 33.3333,
+          "page": 113
+        },
+        "formats": [
+          "ebook"
+        ]
+      }
+    },
+    {
+      "collection": "sessions",
+      "id": "B88D0185-A28F-5643-9F5D-0A85A28BCE4F",
+      "data": {
+        "id": "B88D0185-A28F-5643-9F5D-0A85A28BCE4F",
+        "bookID": "demo-history-v1-book-06",
+        "startedAt": 813794400.0,
+        "endedAt": 813796890.0,
+        "totalPausedSeconds": 0,
+        "startProgress": {
+          "percentage": 33.3333,
+          "page": 113
+        },
+        "endProgress": {
+          "percentage": 50.0,
+          "page": 170
+        },
+        "formats": [
+          "ebook"
+        ]
+      }
+    },
+    {
+      "collection": "sessions",
+      "id": "5AB94D5F-3D36-5638-A3E3-1AAFB56B41F2",
+      "data": {
+        "id": "5AB94D5F-3D36-5638-A3E3-1AAFB56B41F2",
+        "bookID": "demo-history-v1-book-06",
+        "startedAt": 813880800.0,
+        "endedAt": 813883410.0,
+        "totalPausedSeconds": 0,
+        "startProgress": {
+          "percentage": 50.0,
+          "page": 170
+        },
+        "endProgress": {
+          "percentage": 66.6667,
+          "page": 227
+        },
+        "formats": [
+          "ebook"
+        ]
+      }
+    },
+    {
+      "collection": "sessions",
+      "id": "C3AF71E1-8464-5456-BE2C-96CACB490FC4",
+      "data": {
+        "id": "C3AF71E1-8464-5456-BE2C-96CACB490FC4",
+        "bookID": "demo-history-v1-book-06",
+        "startedAt": 813967200.0,
+        "endedAt": 813970050.0,
+        "totalPausedSeconds": 120,
+        "startProgress": {
+          "percentage": 66.6667,
+          "page": 227
+        },
+        "endProgress": {
+          "percentage": 83.3333,
+          "page": 283
+        },
+        "formats": [
+          "ebook"
+        ]
+      }
+    },
+    {
+      "collection": "sessions",
+      "id": "F31DACA5-4290-525F-A7FF-83F4E4BD4F9E",
+      "data": {
+        "id": "F31DACA5-4290-525F-A7FF-83F4E4BD4F9E",
+        "bookID": "demo-history-v1-book-06",
+        "startedAt": 814053600.0,
+        "endedAt": 814056450.0,
+        "totalPausedSeconds": 0,
+        "startProgress": {
+          "percentage": 83.3333,
+          "page": 283
+        },
+        "endProgress": {
+          "percentage": 100.0,
+          "page": 340
+        },
+        "formats": [
+          "ebook"
+        ]
+      }
+    },
+    {
+      "collection": "books",
+      "id": "demo-history-v1-book-06",
+      "data": {
+        "id": "demo-history-v1-book-06",
+        "title": "[Demo] A Curious Mind",
+        "authors": [
+          "Demo Author 2"
+        ],
+        "description": "Synthetic book and reading history for demonstrating Book Tracker. This is not a real publication.",
+        "pageCount": 340,
+        "status": "completed",
+        "format": "ebook",
+        "formatsUsed": [
+          "ebook"
+        ],
+        "genre": "Science",
+        "genres": [
+          "Science"
+        ],
+        "bookType": "nonfiction",
+        "language": "English",
+        "progress": {
+          "percentage": 100.0,
+          "page": 340
+        },
+        "currentReadStartedAt": 813621600.0,
+        "completedAt": 814056450.0
+      }
+    },
+    {
+      "collection": "reviews",
+      "id": "demo-history-v1-book-06",
+      "data": {
+        "id": "1DBD11D4-63A4-518D-B02D-1FFF0726EB21",
+        "bookID": "demo-history-v1-book-06",
+        "rating": 2,
+        "text": "Synthetic demo review: an engaging read with memorable ideas and a thoughtful ending.",
+        "containsSpoilers": false,
+        "createdAt": 814056450.0,
+        "updatedAt": 814056450.0,
+        "mood": "Excited"
+      }
+    },
+    {
+      "collection": "sessions",
+      "id": "C2B3DD27-FC09-5A8D-8515-4AF14EAD89DA",
+      "data": {
+        "id": "C2B3DD27-FC09-5A8D-8515-4AF14EAD89DA",
+        "bookID": "demo-history-v1-book-07",
+        "startedAt": 814309200.0,
+        "endedAt": 814315200.0,
+        "totalPausedSeconds": 0,
+        "startProgress": {
+          "percentage": 0.0,
+          "timestampSeconds": 0
+        },
+        "endProgress": {
+          "percentage": 16.6667,
+          "timestampSeconds": 6000
+        },
+        "formats": [
+          "audiobook"
+        ]
+      }
+    },
+    {
+      "collection": "sessions",
+      "id": "D3E4DC69-24E7-59B3-AA49-BC61C12D0D07",
+      "data": {
+        "id": "D3E4DC69-24E7-59B3-AA49-BC61C12D0D07",
+        "bookID": "demo-history-v1-book-07",
+        "startedAt": 814395600.0,
+        "endedAt": 814401720.0,
+        "totalPausedSeconds": 120,
+        "startProgress": {
+          "percentage": 16.6667,
+          "timestampSeconds": 6000
+        },
+        "endProgress": {
+          "percentage": 33.3333,
+          "timestampSeconds": 12000
+        },
+        "formats": [
+          "audiobook"
+        ]
+      }
+    },
+    {
+      "collection": "sessions",
+      "id": "F60C326F-95FB-56D8-9570-ABB0FFF5FD13",
+      "data": {
+        "id": "F60C326F-95FB-56D8-9570-ABB0FFF5FD13",
+        "bookID": "demo-history-v1-book-07",
+        "startedAt": 814482000.0,
+        "endedAt": 814488000.0,
+        "totalPausedSeconds": 0,
+        "startProgress": {
+          "percentage": 33.3333,
+          "timestampSeconds": 12000
+        },
+        "endProgress": {
+          "percentage": 50.0,
+          "timestampSeconds": 18000
+        },
+        "formats": [
+          "audiobook"
+        ]
+      }
+    },
+    {
+      "collection": "sessions",
+      "id": "25790AAF-E856-5B17-ADD8-50E3DC76E79E",
+      "data": {
+        "id": "25790AAF-E856-5B17-ADD8-50E3DC76E79E",
+        "bookID": "demo-history-v1-book-07",
+        "startedAt": 814568400.0,
+        "endedAt": 814574400.0,
+        "totalPausedSeconds": 0,
+        "startProgress": {
+          "percentage": 50.0,
+          "timestampSeconds": 18000
+        },
+        "endProgress": {
+          "percentage": 66.6667,
+          "timestampSeconds": 24000
+        },
+        "formats": [
+          "audiobook"
+        ]
+      }
+    },
+    {
+      "collection": "sessions",
+      "id": "8ADC26F3-CA61-5E4E-8AA5-FBE047498BB9",
+      "data": {
+        "id": "8ADC26F3-CA61-5E4E-8AA5-FBE047498BB9",
+        "bookID": "demo-history-v1-book-07",
+        "startedAt": 814654800.0,
+        "endedAt": 814660920.0,
+        "totalPausedSeconds": 120,
+        "startProgress": {
+          "percentage": 66.6667,
+          "timestampSeconds": 24000
+        },
+        "endProgress": {
+          "percentage": 83.3333,
+          "timestampSeconds": 30000
+        },
+        "formats": [
+          "audiobook"
+        ]
+      }
+    },
+    {
+      "collection": "sessions",
+      "id": "A0309ED6-A9B4-5E38-B852-314A3DBC5CB9",
+      "data": {
+        "id": "A0309ED6-A9B4-5E38-B852-314A3DBC5CB9",
+        "bookID": "demo-history-v1-book-07",
+        "startedAt": 814741200.0,
+        "endedAt": 814747200.0,
+        "totalPausedSeconds": 0,
+        "startProgress": {
+          "percentage": 83.3333,
+          "timestampSeconds": 30000
+        },
+        "endProgress": {
+          "percentage": 100.0,
+          "timestampSeconds": 36000
+        },
+        "formats": [
+          "audiobook"
+        ]
+      }
+    },
+    {
+      "collection": "books",
+      "id": "demo-history-v1-book-07",
+      "data": {
+        "id": "demo-history-v1-book-07",
+        "title": "[Demo] The Last Observatory",
+        "authors": [
+          "Demo Author 3"
+        ],
+        "description": "Synthetic book and reading history for demonstrating Book Tracker. This is not a real publication.",
+        "pageCount": 360,
+        "status": "completed",
+        "format": "audiobook",
+        "formatsUsed": [
+          "audiobook"
+        ],
+        "genre": "Mystery",
+        "genres": [
+          "Mystery"
+        ],
+        "bookType": "fiction",
+        "language": "English",
+        "progress": {
+          "percentage": 100.0,
+          "timestampSeconds": 36000
+        },
+        "audioDurationSeconds": 36000,
+        "currentReadStartedAt": 814309200.0,
+        "completedAt": 814747200.0
+      }
+    },
+    {
+      "collection": "reviews",
+      "id": "demo-history-v1-book-07",
+      "data": {
+        "id": "1AB48B3F-F038-5D5F-98FE-DD2B41F9EA75",
+        "bookID": "demo-history-v1-book-07",
+        "rating": 5,
+        "text": "Synthetic demo review: an engaging read with memorable ideas and a thoughtful ending.",
+        "containsSpoilers": false,
+        "createdAt": 814747200.0,
+        "updatedAt": 814747200.0,
+        "mood": "Hopeful"
+      }
+    },
+    {
+      "collection": "sessions",
+      "id": "86D2B12D-1534-5CCA-8590-09B6E866A72B",
+      "data": {
+        "id": "86D2B12D-1534-5CCA-8590-09B6E866A72B",
+        "bookID": "demo-history-v1-book-08",
+        "startedAt": 815004000.0,
+        "endedAt": 815010200.0,
+        "totalPausedSeconds": 0,
+        "startProgress": {
+          "percentage": 0.0,
+          "page": 0,
+          "timestampSeconds": 0
+        },
+        "endProgress": {
+          "percentage": 16.6667,
+          "page": 63,
+          "timestampSeconds": 6200
+        },
+        "formats": [
+          "immersive"
+        ]
+      }
+    },
+    {
+      "collection": "sessions",
+      "id": "4166DB8B-1B79-5A49-9700-28D4401A6CD1",
+      "data": {
+        "id": "4166DB8B-1B79-5A49-9700-28D4401A6CD1",
+        "bookID": "demo-history-v1-book-08",
+        "startedAt": 815090400.0,
+        "endedAt": 815096720.0,
+        "totalPausedSeconds": 120,
+        "startProgress": {
+          "percentage": 16.6667,
+          "page": 63,
+          "timestampSeconds": 6200
+        },
+        "endProgress": {
+          "percentage": 33.3333,
+          "page": 127,
+          "timestampSeconds": 12400
+        },
+        "formats": [
+          "immersive"
+        ]
+      }
+    },
+    {
+      "collection": "sessions",
+      "id": "810B9D54-EB10-5942-BC06-32CF8E5033D2",
+      "data": {
+        "id": "810B9D54-EB10-5942-BC06-32CF8E5033D2",
+        "bookID": "demo-history-v1-book-08",
+        "startedAt": 815176800.0,
+        "endedAt": 815183000.0,
+        "totalPausedSeconds": 0,
+        "startProgress": {
+          "percentage": 33.3333,
+          "page": 127,
+          "timestampSeconds": 12400
+        },
+        "endProgress": {
+          "percentage": 50.0,
+          "page": 190,
+          "timestampSeconds": 18600
+        },
+        "formats": [
+          "immersive"
+        ]
+      }
+    },
+    {
+      "collection": "sessions",
+      "id": "6250F41D-1375-540C-A10F-C6E4061EFE66",
+      "data": {
+        "id": "6250F41D-1375-540C-A10F-C6E4061EFE66",
+        "bookID": "demo-history-v1-book-08",
+        "startedAt": 815263200.0,
+        "endedAt": 815269400.0,
+        "totalPausedSeconds": 0,
+        "startProgress": {
+          "percentage": 50.0,
+          "page": 190,
+          "timestampSeconds": 18600
+        },
+        "endProgress": {
+          "percentage": 66.6667,
+          "page": 253,
+          "timestampSeconds": 24800
+        },
+        "formats": [
+          "immersive"
+        ]
+      }
+    },
+    {
+      "collection": "sessions",
+      "id": "48446494-5315-5ED8-9BDF-421F45B6C739",
+      "data": {
+        "id": "48446494-5315-5ED8-9BDF-421F45B6C739",
+        "bookID": "demo-history-v1-book-08",
+        "startedAt": 815349600.0,
+        "endedAt": 815355920.0,
+        "totalPausedSeconds": 120,
+        "startProgress": {
+          "percentage": 66.6667,
+          "page": 253,
+          "timestampSeconds": 24800
+        },
+        "endProgress": {
+          "percentage": 83.3333,
+          "page": 317,
+          "timestampSeconds": 31000
+        },
+        "formats": [
+          "immersive"
+        ]
+      }
+    },
+    {
+      "collection": "sessions",
+      "id": "3BCF6D44-1A4A-542B-A767-B31F0E73C7F8",
+      "data": {
+        "id": "3BCF6D44-1A4A-542B-A767-B31F0E73C7F8",
+        "bookID": "demo-history-v1-book-08",
+        "startedAt": 815436000.0,
+        "endedAt": 815442200.0,
+        "totalPausedSeconds": 0,
+        "startProgress": {
+          "percentage": 83.3333,
+          "page": 317,
+          "timestampSeconds": 31000
+        },
+        "endProgress": {
+          "percentage": 100.0,
+          "page": 380,
+          "timestampSeconds": 37200
+        },
+        "formats": [
+          "immersive"
+        ]
+      }
+    },
+    {
+      "collection": "books",
+      "id": "demo-history-v1-book-08",
+      "data": {
+        "id": "demo-history-v1-book-08",
+        "title": "[Demo] Paths Through Autumn",
+        "authors": [
+          "Demo Author 4"
+        ],
+        "description": "Synthetic book and reading history for demonstrating Book Tracker. This is not a real publication.",
+        "pageCount": 380,
+        "status": "completed",
+        "format": "immersive",
+        "formatsUsed": [
+          "immersive"
+        ],
+        "genre": "Literary fiction",
+        "genres": [
+          "Literary fiction"
+        ],
+        "bookType": "fiction",
+        "language": "English",
+        "progress": {
+          "percentage": 100.0,
+          "page": 380,
+          "timestampSeconds": 37200
+        },
+        "audioDurationSeconds": 37200,
+        "immersiveCompanion": "ebook",
+        "immersiveReadingPercentage": 100.0,
+        "currentReadStartedAt": 815004000.0,
+        "completedAt": 815442200.0
+      }
+    },
+    {
+      "collection": "reviews",
+      "id": "demo-history-v1-book-08",
+      "data": {
+        "id": "B7FA85CF-1BB9-5B81-A2A7-11D92DBBF6B1",
+        "bookID": "demo-history-v1-book-08",
+        "rating": 4,
+        "text": "Synthetic demo review: an engaging read with memorable ideas and a thoughtful ending.",
+        "containsSpoilers": false,
+        "createdAt": 815442200.0,
+        "updatedAt": 815442200.0,
+        "mood": "Reflective"
+      }
+    },
+    {
+      "collection": "sessions",
+      "id": "B40F52D7-5DF1-5AEF-8F09-1579D5A62D34",
+      "data": {
+        "id": "B40F52D7-5DF1-5AEF-8F09-1579D5A62D34",
+        "bookID": "demo-history-v1-book-09",
+        "startedAt": 815518800.0,
+        "endedAt": 815521320.0,
+        "totalPausedSeconds": 0,
+        "startProgress": {
+          "percentage": 0.0,
+          "page": 0
+        },
+        "endProgress": {
+          "percentage": 15.0,
+          "page": 60
+        },
+        "formats": [
+          "physical"
+        ]
+      }
+    },
+    {
+      "collection": "sessions",
+      "id": "84F35DF0-F5AD-516D-9458-B50CE5E13284",
+      "data": {
+        "id": "84F35DF0-F5AD-516D-9458-B50CE5E13284",
+        "bookID": "demo-history-v1-book-09",
+        "startedAt": 815691600.0,
+        "endedAt": 815694360.0,
+        "totalPausedSeconds": 120,
+        "startProgress": {
+          "percentage": 15.0,
+          "page": 60
+        },
+        "endProgress": {
+          "percentage": 30.0,
+          "page": 120
+        },
+        "formats": [
+          "physical"
+        ]
+      }
+    },
+    {
+      "collection": "sessions",
+      "id": "D32C9813-8DC0-574C-8F0F-DB7AC60C8F4B",
+      "data": {
+        "id": "D32C9813-8DC0-574C-8F0F-DB7AC60C8F4B",
+        "bookID": "demo-history-v1-book-09",
+        "startedAt": 815864400.0,
+        "endedAt": 815867160.0,
+        "totalPausedSeconds": 0,
+        "startProgress": {
+          "percentage": 30.0,
+          "page": 120
+        },
+        "endProgress": {
+          "percentage": 45.0,
+          "page": 180
+        },
+        "formats": [
+          "physical"
+        ]
+      }
+    },
+    {
+      "collection": "sessions",
+      "id": "D0FDEA79-C339-577A-A211-2874F7DD3316",
+      "data": {
+        "id": "D0FDEA79-C339-577A-A211-2874F7DD3316",
+        "bookID": "demo-history-v1-book-09",
+        "startedAt": 816037200.0,
+        "endedAt": 816040080.0,
+        "totalPausedSeconds": 0,
+        "startProgress": {
+          "percentage": 45.0,
+          "page": 180
+        },
+        "endProgress": {
+          "percentage": 60.0,
+          "page": 240
+        },
+        "formats": [
+          "physical"
+        ]
+      }
+    },
+    {
+      "collection": "books",
+      "id": "demo-history-v1-book-09",
+      "data": {
+        "id": "demo-history-v1-book-09",
+        "title": "[Demo] The Midnight Archive",
+        "authors": [
+          "Demo Author 1"
+        ],
+        "description": "Synthetic book and reading history for demonstrating Book Tracker. This is not a real publication.",
+        "pageCount": 400,
+        "status": "reading",
+        "format": "physical",
+        "formatsUsed": [
+          "physical"
+        ],
+        "genre": "Fantasy",
+        "genres": [
+          "Fantasy"
+        ],
+        "bookType": "fiction",
+        "language": "English",
+        "progress": {
+          "percentage": 60.0,
+          "page": 240
+        },
+        "currentReadStartedAt": 815518800.0
+      }
+    },
+    {
+      "collection": "notes",
+      "id": "65E7EF11-D60E-50EF-B6F8-D1556338B15C",
+      "data": {
+        "id": "65E7EF11-D60E-50EF-B6F8-D1556338B15C",
+        "bookID": "demo-history-v1-book-09",
+        "text": "Demo reading note: revisit the central idea and discuss it at the next book club.",
+        "containsSpoilers": false,
+        "createdAt": 815519700.0,
+        "updatedAt": 815519700.0,
+        "page": 12
+      }
+    },
+    {
+      "collection": "sessions",
+      "id": "6975F5CC-0C54-5986-85D0-1B6F577E0231",
+      "data": {
+        "id": "6975F5CC-0C54-5986-85D0-1B6F577E0231",
+        "bookID": "demo-history-v1-book-10",
+        "startedAt": 815608800.0,
+        "endedAt": 815614740.0,
+        "totalPausedSeconds": 0,
+        "startProgress": {
+          "percentage": 0.0,
+          "timestampSeconds": 0
+        },
+        "endProgress": {
+          "percentage": 15.0,
+          "timestampSeconds": 5940
+        },
+        "formats": [
+          "audiobook"
+        ]
+      }
+    },
+    {
+      "collection": "sessions",
+      "id": "FFF7AF75-0D13-5B5A-9521-9B8A6935E8F5",
+      "data": {
+        "id": "FFF7AF75-0D13-5B5A-9521-9B8A6935E8F5",
+        "bookID": "demo-history-v1-book-10",
+        "startedAt": 815781600.0,
+        "endedAt": 815787660.0,
+        "totalPausedSeconds": 120,
+        "startProgress": {
+          "percentage": 15.0,
+          "timestampSeconds": 5940
+        },
+        "endProgress": {
+          "percentage": 30.0,
+          "timestampSeconds": 11880
+        },
+        "formats": [
+          "audiobook"
+        ]
+      }
+    },
+    {
+      "collection": "sessions",
+      "id": "E08ED37E-B655-51DA-8EA7-6FF3657F3397",
+      "data": {
+        "id": "E08ED37E-B655-51DA-8EA7-6FF3657F3397",
+        "bookID": "demo-history-v1-book-10",
+        "startedAt": 815954400.0,
+        "endedAt": 815960340.0,
+        "totalPausedSeconds": 0,
+        "startProgress": {
+          "percentage": 30.0,
+          "timestampSeconds": 11880
+        },
+        "endProgress": {
+          "percentage": 45.0,
+          "timestampSeconds": 17820
+        },
+        "formats": [
+          "audiobook"
+        ]
+      }
+    },
+    {
+      "collection": "sessions",
+      "id": "1C7B3193-AB1C-52E7-A798-3CD8246C02AB",
+      "data": {
+        "id": "1C7B3193-AB1C-52E7-A798-3CD8246C02AB",
+        "bookID": "demo-history-v1-book-10",
+        "startedAt": 816127200.0,
+        "endedAt": 816133140.0,
+        "totalPausedSeconds": 0,
+        "startProgress": {
+          "percentage": 45.0,
+          "timestampSeconds": 17820
+        },
+        "endProgress": {
+          "percentage": 60.0,
+          "timestampSeconds": 23760
+        },
+        "formats": [
+          "audiobook"
+        ]
+      }
+    },
+    {
+      "collection": "books",
+      "id": "demo-history-v1-book-10",
+      "data": {
+        "id": "demo-history-v1-book-10",
+        "title": "[Demo] Learning to Notice",
+        "authors": [
+          "Demo Author 2"
+        ],
+        "description": "Synthetic book and reading history for demonstrating Book Tracker. This is not a real publication.",
+        "pageCount": 420,
+        "status": "reading",
+        "format": "audiobook",
+        "formatsUsed": [
+          "audiobook"
+        ],
+        "genre": "Personal development",
+        "genres": [
+          "Personal development"
+        ],
+        "bookType": "nonfiction",
+        "language": "English",
+        "progress": {
+          "percentage": 60.0,
+          "timestampSeconds": 23760
+        },
+        "audioDurationSeconds": 39600,
+        "currentReadStartedAt": 815608800.0
+      }
+    },
+    {
+      "collection": "notes",
+      "id": "939D0315-B7B3-51D3-A32C-DDCA6A31E530",
+      "data": {
+        "id": "939D0315-B7B3-51D3-A32C-DDCA6A31E530",
+        "bookID": "demo-history-v1-book-10",
+        "text": "Demo reading note: revisit the central idea and discuss it at the next book club.",
+        "containsSpoilers": false,
+        "createdAt": 815609700.0,
+        "updatedAt": 815609700.0
+      }
+    },
+    {
+      "collection": "books",
+      "id": "demo-history-v1-book-11",
+      "data": {
+        "id": "demo-history-v1-book-11",
+        "title": "[Demo] Beyond the Valley",
+        "authors": [
+          "Demo Author 3"
+        ],
+        "description": "Synthetic book and reading history for demonstrating Book Tracker. This is not a real publication.",
+        "pageCount": 440,
+        "status": "toRead",
+        "format": "ebook",
+        "formatsUsed": [],
+        "genre": "Adventure",
+        "genres": [
+          "Adventure"
+        ],
+        "bookType": "fiction",
+        "language": "English",
+        "progress": {
+          "percentage": 0,
+          "page": 0
+        }
+      }
+    },
+    {
+      "collection": "sessions",
+      "id": "C29858D3-212F-5120-8D4C-133EBA25B0A6",
+      "data": {
+        "id": "C29858D3-212F-5120-8D4C-133EBA25B0A6",
+        "bookID": "demo-history-v1-book-12",
+        "startedAt": 812329200.0,
+        "endedAt": 812331990.0,
+        "totalPausedSeconds": 0,
+        "startProgress": {
+          "percentage": 0,
+          "page": 0
+        },
+        "endProgress": {
+          "percentage": 10.0,
+          "page": 46
+        },
+        "formats": [
+          "physical"
+        ]
+      }
+    },
+    {
+      "collection": "sessions",
+      "id": "206DB1D3-698A-5E13-B96D-1A1B4D175C06",
+      "data": {
+        "id": "206DB1D3-698A-5E13-B96D-1A1B4D175C06",
+        "bookID": "demo-history-v1-book-12",
+        "startedAt": 812415600.0,
+        "endedAt": 812418630.0,
+        "totalPausedSeconds": 120,
+        "startProgress": {
+          "percentage": 10.0,
+          "page": 46
+        },
+        "endProgress": {
+          "percentage": 20.0,
+          "page": 92
+        },
+        "formats": [
+          "physical"
+        ]
+      }
+    },
+    {
+      "collection": "books",
+      "id": "demo-history-v1-book-12",
+      "data": {
+        "id": "demo-history-v1-book-12",
+        "title": "[Demo] The Unfinished Journey",
+        "authors": [
+          "Demo Author 4"
+        ],
+        "description": "Synthetic book and reading history for demonstrating Book Tracker. This is not a real publication.",
+        "pageCount": 460,
+        "status": "abandoned",
+        "format": "physical",
+        "formatsUsed": [
+          "physical"
+        ],
+        "genre": "Mystery",
+        "genres": [
+          "Mystery"
+        ],
+        "bookType": "fiction",
+        "language": "English",
+        "progress": {
+          "percentage": 20.0,
+          "page": 92
+        },
+        "currentReadStartedAt": 812329200.0,
+        "abandonedAt": 812418630.0
+      }
+    },
+    {
+      "collection": "lists",
+      "id": "516F49A6-51F2-5521-B840-3375A4102068",
+      "data": {
+        "id": "516F49A6-51F2-5521-B840-3375A4102068",
+        "name": "Demo favourites",
+        "description": "Synthetic demonstration collection.",
+        "bookIDs": [
+          "demo-history-v1-book-01",
+          "demo-history-v1-book-04",
+          "demo-history-v1-book-07"
+        ]
+      }
+    },
+    {
+      "collection": "lists",
+      "id": "9F2A60A3-998E-5BCB-A4EA-7FCB7FF19424",
+      "data": {
+        "id": "9F2A60A3-998E-5BCB-A4EA-7FCB7FF19424",
+        "name": "Demo reading now",
+        "description": "Synthetic demonstration collection.",
+        "bookIDs": [
+          "demo-history-v1-book-09",
+          "demo-history-v1-book-10"
+        ]
+      }
+    },
+    {
+      "collection": "lists",
+      "id": "786D21EF-581C-56D5-A2D8-A0D05B651A4F",
+      "data": {
+        "id": "786D21EF-581C-56D5-A2D8-A0D05B651A4F",
+        "name": "Demo book club",
+        "description": "Synthetic demonstration collection.",
+        "bookIDs": [
+          "demo-history-v1-book-05",
+          "demo-history-v1-book-08",
+          "demo-history-v1-book-11"
+        ]
+      }
+    },
+    {
+      "collection": "goals",
+      "id": "2026",
+      "data": {
+        "year": 2026,
+        "target": 30
+      }
+    },
+    {
+      "collection": "goals",
+      "id": "month-pages-2026-11-1",
+      "data": {
+        "year": 2026,
+        "target": 1000,
+        "period": "month",
+        "metric": "pages",
+        "periodKey": "2026-11-1"
+      }
+    },
+    {
+      "collection": "goals",
+      "id": "month-days-2026-11-1",
+      "data": {
+        "year": 2026,
+        "target": 20,
+        "period": "month",
+        "metric": "days",
+        "periodKey": "2026-11-1"
+      }
+    }
+  ]
+}

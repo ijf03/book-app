@@ -20,10 +20,11 @@ struct AccountView: View {
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: AppSpacing.lg) {
-                    if let profile { ReaderProfileCard(store: profile) }
+                    if let profile { ReaderProfileCard(store: profile, email: model.email) }
                     if let library, let sessions, let content {
                         ReadingBehaviourPanel(library: library, sessions: sessions, content: content)
                     }
+                    if profile == nil {
                     AppCard {
                         VStack(alignment: .leading, spacing: AppSpacing.sm) {
                             Text("Signed in as").font(AppTypography.headline).accessibilityAddTraits(.isHeader)
@@ -33,16 +34,7 @@ struct AccountView: View {
                         }
                         .frame(maxWidth: .infinity, alignment: .leading)
                     }
-                    Text("Your reading data is saved locally and syncs to your account when connected. A new device needs internet access to download your library.")
-                        .font(AppTypography.body).foregroundStyle(Color.textSecondary)
-                    NavigationLink {
-                        AboutView()
-                    } label: {
-                        Label("About Book Tracker", systemImage: "info.circle")
-                            .frame(maxWidth: .infinity, alignment: .leading)
                     }
-                    .buttonStyle(.appSecondary)
-                    .accessibilityIdentifier("account.about")
                     AccountSecuritySection(authentication: model.authentication)
                     if let sync { AccountSyncSection(coordinator: sync) }
                     if model.isWaitingToSignOut {
@@ -58,6 +50,15 @@ struct AccountView: View {
                     if let error = model.errorMessage {
                         Text(error).font(AppTypography.body).foregroundStyle(Color.danger)
                     }
+                    NavigationLink {
+                        AboutView()
+                    } label: {
+                        Label("About Book Tracker", systemImage: "info.circle")
+                            .frame(maxWidth: .infinity, alignment: .center)
+                    }
+                    .buttonStyle(.appSecondary)
+                    .accessibilityIdentifier("account.about")
+                    .padding(.top, AppSpacing.xl)
                 }
                 .padding(AppSpacing.lg)
                 .frame(maxWidth: AppLayout.readableWidth)

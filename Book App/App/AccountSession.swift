@@ -1,4 +1,5 @@
 import Foundation
+import Observation
 
 @MainActor
 final class AccountSession {
@@ -30,6 +31,18 @@ final class AccountSession {
         bookContentStore = BookContentStore(notes: savedContent.notes, reviews: savedContent.reviews, localDataSource: content)
         reminders = ReadingRemindersViewModel(repository: .init(fileName: "reading-reminders.json", scope: scope))
         sync?.local.onRemoteChange = { [weak self] in self?.reloadDownloadedData() }
+        observeWidgetActivity()
+    }
+
+    /// Observe only activity that affects the widget; re-arm after each change.
+    private func observeWidgetActivity() {
+        guard scope.isActive else { return }
+        withObservationTracking {
+            ReadingStreakWidgetStore.publish(sessions: readingSessionStore.sessions,
+                                            checkIns: libraryStore.checkIns.entries)
+        } onChange: { [weak self] in
+            Task { @MainActor [weak self] in self?.observeWidgetActivity() }
+        }
     }
 
     private func reloadDownloadedData() {
@@ -46,6 +59,7 @@ final class AccountSession {
     }
 
     func invalidate() {
+        ReadingStreakWidgetStore.clear()
         sync?.stop()
         reminderTask?.cancel()
         scope.invalidate()

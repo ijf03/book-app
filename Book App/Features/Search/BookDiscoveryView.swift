@@ -73,7 +73,7 @@ struct BookDiscoveryView: View {
                     Label("Refresh suggestions", systemImage: "arrow.clockwise")
                 }
                 .disabled(model.isLoading)
-                Text("Suggestions use your reading history, ratings and completion patterns, or the genre you choose. Synopses are supplied by Open Library and may be unavailable. Books already in your library are hidden.")
+                Text("Suggestions use your reading history, ratings and completion patterns, or the genre you choose. When there are no personalised matches, we offer classics to explore. Synopses are supplied by Open Library and may be unavailable. Books already in your library are hidden.")
                     .font(AppTypography.caption).foregroundStyle(Color.textSecondary)
             }
             .padding(AppSpacing.md)

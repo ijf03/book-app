@@ -245,6 +245,10 @@ private struct HomeBookShelf<Destination: View>: View {
     let books: [Book]
     let empty: LocalizedStringResource
     let destination: (Book) -> Destination
+    private var coverWidth: CGFloat {
+        typeSize.isAccessibilitySize ? AppLayout.homeCoverWidth * 2 : AppLayout.homeCoverWidth
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: AppSpacing.md) {
             Text(title).font(AppTypography.title).accessibilityAddTraits(.isHeader)
@@ -252,13 +256,18 @@ private struct HomeBookShelf<Destination: View>: View {
                 Text(empty).font(AppTypography.body).foregroundStyle(Color.textSecondary)
             } else {
                 ScrollView(.horizontal, showsIndicators: false) {
-                    LazyHStack(alignment: .top, spacing: AppSpacing.sm) {
+                    HStack(alignment: .top, spacing: AppSpacing.sm) {
                         ForEach(books) { book in
                             NavigationLink { destination(book) } label: {
                                 VStack(alignment: .leading, spacing: AppSpacing.xs) {
-                                    BookCoverView(url: book.coverURL)
-                                    Text(book.title).font(AppTypography.caption).foregroundStyle(Color.textPrimary).lineLimit(typeSize.isAccessibilitySize ? nil : 2)
-                                }.frame(width: typeSize.isAccessibilitySize ? AppLayout.homeCoverWidth * 2 : AppLayout.homeCoverWidth)
+                                    BookCoverView(url: book.coverURL, contentMode: .fit)
+                                        .frame(width: coverWidth, height: coverWidth * 1.5)
+                                    Text(book.title)
+                                        .font(AppTypography.caption)
+                                        .foregroundStyle(Color.textPrimary)
+                                        .fixedSize(horizontal: false, vertical: true)
+                                }
+                                .frame(width: coverWidth)
                             }
                             .buttonStyle(.plain)
                             .accessibilityLabel("View \(book.title)")
@@ -277,4 +286,22 @@ private struct HomeBookShelf<Destination: View>: View {
     let library = LibraryStore(books: [Book.mockFourthWing], localDataSource: LocalLibraryDataSource(scope: scope))
     let sessions = ReadingSessionStore(sessions: [], localDataSource: LocalReadingSessionDataSource(scope: scope))
     HomeView(store: library, sessionStore: sessions)
+}
+
+#Preview("Home shelf — wrapping titles") {
+    NavigationStack {
+        ScrollView {
+            HomeBookShelf(title: "Up next", books: ["Onyx Storm", "Iron Flame", "[Demo] Beyond the Valley"].enumerated().map { index, title in
+                var book = Book.mockFourthWing
+                book.title = title
+                book.coverURL = nil
+                return Book(id: "shelf-preview-\(index)", title: book.title, authors: book.authors,
+                            description: nil, coverURL: nil, pageCount: nil, status: .toRead, format: .physical)
+            }, empty: "No books") { book in
+                Text(book.title)
+            }
+            .padding()
+        }
+        .background(Color.surfaceSecondary)
+    }
 }

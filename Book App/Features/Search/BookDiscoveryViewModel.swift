@@ -34,6 +34,9 @@ final class BookDiscoveryViewModel {
         let filter: BookSearchFilter
         var id: String { filter.rawValue + ":" + query }
     }
+    static var fallbackSeed: Seed {
+        Seed(title: String(localized: "Discover classics"), query: subjectQuery("Classics"), filter: .all)
+    }
     static let topics = ["All", "Fantasy", "Mystery", "Science fiction", "Romance", "History", "Biography"]
     var topic = "All"
     private(set) var shelves: [Shelf] = []
@@ -42,6 +45,9 @@ final class BookDiscoveryViewModel {
     private let repository: any BookRepository
     private var generation = UUID()
     private var loadedKey: String?
+    private var rotationKey: String?
+    private var shelfAppearances: [String: Int] = [:]
+    private var featuredAppearances: [String: Int] = [:]
 
     init(repository: any BookRepository) { self.repository = repository }
 
@@ -64,7 +70,7 @@ final class BookDiscoveryViewModel {
         }
         if topic == "All" {
             if result.isEmpty {
-                result.append(.init(title: String(localized: "Explore all genres"), query: "*", filter: .all))
+                result.append(fallbackSeed)
             }
             return result
         }
@@ -95,6 +101,11 @@ final class BookDiscoveryViewModel {
         let key = seeds.map(\.id).joined(separator: "|") + owned.sorted().joined(separator: "|") + String(books.hashValue) + String(reviews.hashValue) + String(sessions.hashValue)
         guard scope?.isActive != false else { shelves = []; featured = []; moreToExplore = []; return }
         guard force || loadedKey != key else { return }
+        if rotationKey != key {
+            rotationKey = key
+            shelfAppearances = [:]
+            featuredAppearances = [:]
+        }
         let token = UUID()
         generation = token
         isLoading = true
@@ -112,7 +123,12 @@ final class BookDiscoveryViewModel {
                 try Task.checkCancellation()
                 let results = try await repository.searchBooks(query: seed.query, filter: seed.filter)
                 guard !Task.isCancelled, generation == token, scope?.isActive != false else { return }
-                let available = results.filter { seen.insert($0.id).inserted }
+                // Rotate the complete result pool before limiting the visible shelf.
+                let available = results.filter { seen.insert($0.id).inserted }.enumerated().sorted {
+                    let lhs = shelfAppearances[$0.element.id, default: 0]
+                    let rhs = shelfAppearances[$1.element.id, default: 0]
+                    return lhs == rhs ? $0.offset < $1.offset : lhs < rhs
+                }.map(\.element)
                 if !available.isEmpty {
                     shelves.append(.init(id: seed.id, title: seed.title, books: Array(available.prefix(6))))
                 }
@@ -123,11 +139,35 @@ final class BookDiscoveryViewModel {
                 break
             }
         }
+        // A successful personalised search can still contain only owned books or no matches.
+        // Offer real catalogue classics in that case, without masking network errors.
+        if shelves.isEmpty, !failed, topic == "All", !selectedSeeds.contains(Self.fallbackSeed) {
+            do {
+                let seed = Self.fallbackSeed
+                let results = try await repository.searchBooks(query: seed.query, filter: seed.filter)
+                guard !Task.isCancelled, generation == token, scope?.isActive != false else { return }
+                let available = results.filter { seen.insert($0.id).inserted }.enumerated().sorted {
+                    let lhs = shelfAppearances[$0.element.id, default: 0]
+                    let rhs = shelfAppearances[$1.element.id, default: 0]
+                    return lhs == rhs ? $0.offset < $1.offset : lhs < rhs
+                }.map(\.element)
+                if !available.isEmpty {
+                    shelves.append(.init(id: seed.id, title: seed.title, books: Array(available.prefix(6))))
+                }
+            } catch {
+                guard !Task.isCancelled, generation == token, scope?.isActive != false else { return }
+                failed = true
+                self.error = (error as? OpenLibraryError)?.errorDescription ?? String(localized: "Open Library couldn’t be reached. Please wait a minute before retrying suggestions.")
+            }
+        }
         let candidates = shelves.flatMap { shelf in
             shelf.books.map { Recommendation(book: $0, reason: shelf.title) }
         }
-        // Keep the catalogue order for equally relevant matches.
+        // Prefer less frequently featured books, then reading relevance and catalogue order.
         let ranked = candidates.enumerated().sorted {
+            let lhsAppearances = featuredAppearances[$0.element.id, default: 0]
+            let rhsAppearances = featuredAppearances[$1.element.id, default: 0]
+            if lhsAppearances != rhsAppearances { return lhsAppearances < rhsAppearances }
             let lhs = Self.relevance(of: $0.element.book, books: books, profile: profile)
             let rhs = Self.relevance(of: $1.element.book, books: books, profile: profile)
             return lhs == rhs ? $0.offset < $1.offset : lhs > rhs
@@ -163,6 +203,10 @@ final class BookDiscoveryViewModel {
         }
         let featuredIDs = Set(featured.map(\.id))
         moreToExplore = Array(ranked.filter { !featuredIDs.contains($0.id) }.prefix(2))
-        if !failed { loadedKey = key }
+        if !failed {
+            loadedKey = key
+            for book in shelves.flatMap(\.books) { shelfAppearances[book.id, default: 0] += 1 }
+            for recommendation in featured { featuredAppearances[recommendation.id, default: 0] += 1 }
+        }
     }
 }

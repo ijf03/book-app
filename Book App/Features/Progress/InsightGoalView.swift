@@ -136,8 +136,7 @@ struct InsightGoalView: View {
                 } else {
                     Text("Choose a target for this period.").foregroundStyle(Color.textSecondary)
                 }
-                Button(model.target == nil ? "Set goal" : "Edit goal") {
-                    model.targetText = model.target.map(String.init) ?? ""
+                Button("Edit goals") {
                     editing = true
                 }.buttonStyle(AppButtonStyle(kind: .secondary))
                 if showsMonthlyInsight, let count = model.booksPerMonth {
@@ -152,23 +151,9 @@ struct InsightGoalView: View {
         }
         .task(id: refreshKey) { await model.refresh() }
         .sheet(isPresented: $editing) {
-            NavigationStack {
-                Form {
-                    Text(model.period.title)
-                    Text(model.metric.title)
-                    TextField("Target", text: $model.targetText).keyboardType(.numberPad)
-                    Text("Pages use new page coverage in finished sessions. Active days include reading check-ins or recorded reading time.")
-                        .font(AppTypography.caption)
-                    if let error = model.error { Text(error) }
-                }
-                .navigationTitle("Reading goal")
-                .toolbar {
-                    ToolbarItem(placement: .cancellationAction) { Button("Cancel") { editing = false } }
-                    ToolbarItem(placement: .confirmationAction) {
-                        Button("Save") { if model.save() { revision += 1; editing = false } }
-                            .disabled(ReadingGoalsViewModel.validTarget(model.targetText) == nil)
-                    }
-                }
+            ReadingGoalsEditor(date: model.date,
+                               repository: .init(fileName: "reading-goals.json", scope: model.library.accountScope)) {
+                revision += 1
             }
         }
     }
