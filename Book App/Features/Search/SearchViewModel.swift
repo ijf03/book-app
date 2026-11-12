@@ -21,6 +21,7 @@ final class SearchViewModel {
 
     var searchText = ""
     var selectedFilter: BookSearchFilter = .all
+    var selectedGenre = "All"
 
     private(set) var state: State = .idle
 
@@ -29,6 +30,11 @@ final class SearchViewModel {
 
     init(repository: any BookRepository) {
         self.repository = repository
+    }
+
+    func clear() {
+        requestID = UUID()
+        state = .idle
     }
 
     func search() async {
@@ -50,7 +56,7 @@ final class SearchViewModel {
         do {
             let results =
                 try await repository.searchBooks(
-                    query: query,
+                    query: selectedGenre == "All" ? query : "(\(query)) AND \(BookDiscoveryViewModel.subjectQuery(selectedGenre))",
                     filter: selectedFilter
                 )
 
@@ -69,7 +75,7 @@ final class SearchViewModel {
             print(String(describing: error))
 
             state = .failed(
-                "We couldn't search for books. Please try again."
+                (error as? OpenLibraryError)?.errorDescription ?? "We couldn't search for books. Please wait a minute before trying again."
             )
         }
     }

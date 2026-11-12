@@ -120,7 +120,7 @@ struct InsightGoalView: View {
     var body: some View {
         AppCard {
             VStack(alignment: .leading, spacing: AppSpacing.md) {
-                Text("Make reading your own").font(AppTypography.title)
+                Text("Make reading your own").font(AppTypography.title).accessibilityAddTraits(.isHeader)
                 ViewThatFits(in: .horizontal) {
                     HStack { selectors }
                     VStack(alignment: .leading) { selectors }
@@ -130,6 +130,8 @@ struct InsightGoalView: View {
                     Text("\(model.progress) of \(target)").font(AppTypography.title)
                     SwiftUI.ProgressView(value: min(Double(model.progress), Double(target)), total: Double(target))
                         .tint(Color.appAccent)
+                        .accessibilityLabel(Text(model.metric.title))
+                        .accessibilityValue("\(model.progress) of \(target)")
                     Text(model.metric.title).font(AppTypography.caption)
                 } else {
                     Text("Choose a target for this period.").foregroundStyle(Color.textSecondary)

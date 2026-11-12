@@ -8,6 +8,11 @@
 import SwiftUI
 
 struct BookDetailView: View {
+    @Environment(\.bookCatalogue) private var repository
+    @State private var metadataModel: BookMetadataViewModel
+    @State private var metadataRequest = 0
+    @State private var showingEditions = false
+
 
     @Environment(\.dismiss)
     private var dismiss
@@ -70,6 +75,7 @@ struct BookDetailView: View {
             @escaping () -> Void =
                 {}
     ) {
+        _metadataModel = State(initialValue: BookMetadataViewModel(book: BookSearchResult(book: book)))
         _viewModel =
             State(
                 initialValue:
@@ -118,7 +124,7 @@ struct BookDetailView: View {
                         : nil
                 )
 
-                aboutSection
+                bookActionsSection
 
                 if let error = libraryStore?.persistenceError {
                     Text(error)
@@ -127,9 +133,11 @@ struct BookDetailView: View {
                         .accessibilityLabel("Could not save book. \(error)")
                 }
 
-                bookActionsSection
-
                 manageSection
+
+                BookMetadataSection(book: BookSearchResult(book: viewModel.book),
+                                    isLoading: metadataModel.isLoading, error: metadataModel.error,
+                                    retry: { metadataRequest += 1 }, chooseEdition: { showingEditions = true })
             }
             .padding(
                 AppSpacing.md
@@ -152,6 +160,37 @@ struct BookDetailView: View {
         .navigationBarTitleDisplayMode(
             .inline
         )
+
+        .task(id: metadataRequest) {
+            guard let repository, let libraryStore else { return }
+            await metadataModel.load(using: repository, scope: libraryStore.accountScope)
+            guard !Task.isCancelled, libraryStore.accountScope?.isActive != false,
+                  metadataModel.error == nil, metadataModel.result.metadata != nil else { return }
+            libraryStore.applyMetadata(metadataModel.result, bookID: viewModel.book.id)
+            if let updated = libraryStore.book(id: viewModel.book.id) { viewModel.updateBook(updated) }
+        }
+        .sheet(isPresented: $showingEditions) {
+            BookEditionPicker(model: metadataModel, scope: libraryStore?.accountScope) { _ in
+                guard let libraryStore else { return }
+                libraryStore.applyMetadata(metadataModel.result, bookID: viewModel.book.id, selectingEdition: true)
+                if let updated = libraryStore.book(id: viewModel.book.id) { viewModel.updateBook(updated) }
+            }
+        }
+
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                Menu("Book actions", systemImage: "ellipsis.circle") {
+                    Button(viewModel.primaryActionTitle, systemImage: "book") { primaryActionTapped() }
+                    if viewModel.shouldShowReadingProgress {
+                        Button("Update progress", systemImage: "pencil") { isShowingUpdateProgress = true }
+                    }
+                    Button("Write or edit review", systemImage: "star") { isShowingCompletionReview = true }
+                    Button("Add a note", systemImage: "note.text") { isShowingCompletionNote = true }
+                    Button("Change reading status", systemImage: "arrow.triangle.2.circlepath") { isShowingStatusSheet = true }
+                }
+                .accessibilityLabel("Book actions")
+            }
+        }
 
         // MARK: Update Progress
 
@@ -594,7 +633,7 @@ struct BookDetailView: View {
             isShowingReadingSession =
                 true
 
-        case .toRead:
+        case .toRead, .abandoned:
 
             changeStatus(
                 to: .reading

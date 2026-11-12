@@ -4,7 +4,9 @@ import Foundation
 /// Only explicit recognised genre terms are mapped; titles/authors are never classifiers.
 /// Priority is deterministic and favours specific genres over broad Fiction.
 nonisolated enum OpenLibraryGenre {
-    static func primary(from subjects: [String]) -> String? {
+    static func primary(from subjects: [String]) -> String? { all(from: subjects).first }
+
+    static func all(from subjects: [String]) -> [String] {
         let terms = Set(subjects.flatMap { subject in
             subject.lowercased().split(whereSeparator: { ",;/".contains($0) })
                 .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
@@ -28,7 +30,7 @@ nonisolated enum OpenLibraryGenre {
             ("Fiction", ["fiction"]),
             ("Non-fiction", ["nonfiction", "non-fiction"])
         ]
-        return genres.first { !$0.1.isDisjoint(with: terms) }?.0
+        return genres.filter { !$0.1.isDisjoint(with: terms) }.map(\.0)
     }
 
     static func workID(_ raw: String) -> String? {

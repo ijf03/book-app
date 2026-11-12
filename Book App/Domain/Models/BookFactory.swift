@@ -30,6 +30,9 @@ enum BookFactory {
             format:
                 format,
             genre: result.genre,
+            genres: result.genreChips.isEmpty ? nil : result.genreChips,
+            metadata: result.metadata,
+            language: result.metadata?.edition?.languages.first,
             progress: .empty
         )
     }

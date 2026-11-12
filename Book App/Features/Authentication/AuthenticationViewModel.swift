@@ -4,8 +4,8 @@ import Observation
 @MainActor
 @Observable
 final class AuthenticationViewModel {
-    enum Mode: Equatable { case login, signUp, reset }
-    enum Submission: Equatable { case idle, loading, failed(String), resetSent }
+    enum Mode: Equatable { case login, signUp }
+    enum Submission: Equatable { case idle, loading, failed(String) }
     enum Field: Hashable { case email, password, confirmation }
 
     var email = ""
@@ -22,10 +22,9 @@ final class AuthenticationViewModel {
         switch mode {
         case .login: String(localized: "Log in")
         case .signUp: String(localized: "Create account")
-        case .reset: String(localized: "Reset password")
         }
     }
-    var actionTitle: String { mode == .reset ? String(localized: "Send reset email") : title }
+    var actionTitle: String { title }
 
     func changeMode(_ mode: Mode) {
         guard !isLoading else { return }
@@ -45,7 +44,7 @@ final class AuthenticationViewModel {
             if value.isEmpty { return String(localized: "Enter your email address.") }
             if !value.contains("@") { return AuthenticationError.invalidEmail.message }
         case .password:
-            if mode != .reset && password.isEmpty { return String(localized: "Enter your password.") }
+            if password.isEmpty { return String(localized: "Enter your password.") }
         case .confirmation:
             if mode == .signUp && confirmation != password { return String(localized: "Your passwords don’t match.") }
             if mode == .signUp && confirmation.isEmpty { return String(localized: "Confirm your password.") }
@@ -63,10 +62,9 @@ final class AuthenticationViewModel {
             switch mode {
             case .login: try await service.signIn(email: email, password: password)
             case .signUp: try await service.signUp(email: email, password: password)
-            case .reset: try await service.resetPassword(email: email)
             }
             password = ""; confirmation = ""
-            submission = mode == .reset ? .resetSent : .idle
+            submission = .idle
         } catch {
             submission = .failed((error as? AuthenticationError ?? .unknown).message)
         }

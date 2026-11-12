@@ -71,6 +71,8 @@ struct ReadingGoal: Codable, Identifiable, Equatable {
 }
 
 struct ReadingGoalSection: View {
+    @ScaledMetric(relativeTo: .headline) private var ringSize = 92
+    @Environment(\.dynamicTypeSize) private var typeSize
     @State private var viewModel: ReadingGoalsViewModel
     @State private var year = Calendar.current.component(.year, from: Date())
     @State private var isEditing = false
@@ -85,14 +87,18 @@ struct ReadingGoalSection: View {
                     if let goal = viewModel.goal(for: year) {
                         let completed = viewModel.completedBooks(in: year)
                         let fraction = min(Double(completed) / Double(max(goal.target, 1)), 1)
-                        HStack(spacing: AppSpacing.md) {
+                        let layout = typeSize.isAccessibilitySize
+                            ? AnyLayout(VStackLayout(alignment: .leading, spacing: AppSpacing.md))
+                            : AnyLayout(HStackLayout(spacing: AppSpacing.md))
+                        layout {
                             ZStack {
                                 Circle().stroke(Color.accentTint, lineWidth: 10)
                                 Circle().trim(from: 0, to: fraction).stroke(Color.appAccent, style: StrokeStyle(lineWidth: 10, lineCap: .round)).rotationEffect(.degrees(-90))
                                 Text("\(Int(fraction * 100))%").font(AppTypography.headline)
-                            }.frame(width: 92, height: 92)
+                            }.frame(width: ringSize, height: ringSize)
                                 .accessibilityElement(children: .ignore)
-                                .accessibilityLabel("\(completed) of \(goal.target) books completed")
+                                .accessibilityLabel("Reading goal")
+                                .accessibilityValue("\(completed) of \(goal.target) books completed")
                             VStack(alignment: .leading, spacing: AppSpacing.xs) {
                                 Text("\(completed) / \(goal.target) books").font(AppTypography.title)
                                 Text("\(max(goal.target - completed, 0)) remaining").font(AppTypography.body).foregroundStyle(Color.textSecondary)

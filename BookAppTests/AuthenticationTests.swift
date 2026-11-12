@@ -52,14 +52,13 @@ struct AuthenticationTests {
         #expect(model.validation(.confirmation) != nil)
     }
 
-    @Test func resetDoesNotRequirePasswordAndShowsNeutralResponse() async {
+    @Test func loginRequiresPassword() async {
         let service = FakeAuthenticationService()
         let model = AuthenticationViewModel(service: service)
-        model.changeMode(.reset)
         model.email = "unknown@example.com"
         await model.submit()
-        #expect(service.requests == 1)
-        #expect(model.submission == .resetSent)
+        #expect(service.requests == 0)
+        #expect(model.validation(.password) != nil)
     }
 
     @Test func duplicateSubmissionIsIgnoredAndOfflineErrorIsFriendly() async {
@@ -178,7 +177,6 @@ private final class FakeAuthenticationService: AuthenticationService {
         submittedPassword = password
         if shouldSuspend { try await withCheckedThrowingContinuation { pending = $0 } }
     }
-    func resetPassword(email: String) async throws { requests += 1 }
     func signOut() throws {}
 }
 

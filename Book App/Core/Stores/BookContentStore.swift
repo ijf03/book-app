@@ -13,6 +13,7 @@ import Observation
 final class BookContentStore {
     /// Hydration never saves back to the repository, avoiding listener feedback.
     func reloadFromLocalSync() {
+        moods.reload()
         do {
             let content = try localDataSource.loadContent()
             notes = content.notes
@@ -21,8 +22,10 @@ final class BookContentStore {
         } catch { persistenceError = SyncFailure.localStorage.message }
     }
 
-    func clearAccountMemory() { notes = []; reviews = []; persistenceError = nil }
+    func clearAccountMemory() { moods.clear(); notes = []; reviews = []; persistenceError = nil }
 
+
+    let moods: ReviewMoodStore
 
     private(set) var notes:
         [ReadingNote]
@@ -42,6 +45,7 @@ final class BookContentStore {
         localDataSource:
             LocalBookContentDataSource
     ) {
+        self.moods = ReviewMoodStore(scope: localDataSource.scope)
         self.notes = notes
         self.reviews = reviews
         self.localDataSource =
@@ -142,26 +146,20 @@ final class BookContentStore {
         }
     }
 
-    func saveReview(
-        _ review: BookReview
-    ) {
-        if let index =
-            reviews.firstIndex(
-                where: {
-                    $0.bookID ==
-                        review.bookID
-                }
-            )
-        {
-            reviews[index] =
-                review
-        } else {
-            reviews.append(
-                review
-            )
+    @discardableResult
+    func saveReview(_ review: BookReview) -> Bool {
+        var updated = reviews
+        if let index = updated.firstIndex(where: { $0.bookID == review.bookID }) { updated[index] = review }
+        else { updated.append(review) }
+        do {
+            try localDataSource.saveContent(BookContentData(notes: notes, reviews: updated))
+            reviews = updated
+            persistenceError = nil
+            return true
+        } catch {
+            persistenceError = String(localized: "Your review couldn’t be saved. Please try again.")
+            return false
         }
-
-        save()
     }
 
     func deleteReview(

@@ -1,419 +1,211 @@
-//
-//  UpdateProgressViewModel.swift
-//  Book App
-//
-//  Created by Sabi on 3/10/2026.
-//
-
 import Foundation
 import Observation
 
-@MainActor
-@Observable
+@MainActor @Observable
 final class UpdateProgressViewModel {
+    enum Unit: String, CaseIterable, Identifiable {
+        case page, percentage, timestamp
+        var id: Self { self }
+        var title: LocalizedStringResource {
+            switch self { case .page: "Page"; case .percentage: "Percentage"; case .timestamp: "Audio timestamp" }
+        }
+    }
 
     let originalBook: Book
-
-    var isPageEnabled: Bool
-    var isPercentageEnabled: Bool
-    var isTimestampEnabled: Bool
-
+    var format: ReadingFormat {
+        didSet { alignUnitWithFormat() }
+    }
+    var immersiveCompanion: ReadingFormat {
+        didSet { if format == .immersive { alignUnitWithFormat() } }
+    }
+    var unit: Unit
     var pageText: String
     var percentageText: String
     var timestampText: String
+    var pageCountText: String
+    var audioDurationText: String
 
     init(book: Book) {
-        self.originalBook = book
-
+        originalBook = book
+        format = book.format
+        immersiveCompanion = book.immersiveCompanion == .ebook ? .ebook : .physical
+        let fraction = book.progress.normalizedFraction(pageCount: book.pageCount, audioDuration: book.audioDurationSeconds)
+        let pageFraction = ReadingProgress(page: book.progress.page, percentage: nil, timestampSeconds: nil)
+            .normalizedFraction(pageCount: book.pageCount, audioDuration: nil)
+        let audioFraction = ReadingProgress(page: nil, percentage: nil, timestampSeconds: book.progress.timestampSeconds)
+            .normalizedFraction(pageCount: nil, audioDuration: book.audioDurationSeconds)
+        // Keep explicit positions when they agree with the shared percentage.
+        // Older records can contain stale positions from another format.
+        if book.format == .audiobook, book.progress.timestampSeconds != nil, audioFraction == fraction {
+            unit = .timestamp
+        } else if book.progress.page != nil, pageFraction == fraction {
+            unit = .page
+        } else {
+            unit = fraction != nil ? .percentage : book.format == .audiobook ? .timestamp : .page
+        }
+        if book.format == .immersive {
+            unit = book.progress.page != nil || book.immersiveCompanion != .ebook ? .page : .percentage
+        }
         pageText = book.progress.page.map(String.init) ?? ""
+        percentageText = (book.format == .immersive ? book.immersiveReadingPercentage : nil).map { String($0) } ?? fraction.map { String($0 * 100) } ?? ""
+        timestampText = book.progress.timestampSeconds.map(ReadingProgress.timeText) ?? ""
+        pageCountText = book.pageCount.map(String.init) ?? ""
+        audioDurationText = book.audioDurationSeconds.map(ReadingProgress.timeText) ?? ""
+        alignUnitWithFormat()
 
-        if let percentage = book.progress.percentage {
-            percentageText = Self.formatPercentage(percentage)
-        } else {
-            percentageText = ""
-        }
-
-        if let seconds = book.progress.timestampSeconds {
-            timestampText = Self.formatTimestamp(seconds)
-        } else {
-            timestampText = ""
-        }
-
-        switch book.format {
-        case .physical, .ebook, .immersive:
-            isPageEnabled = true
-            isPercentageEnabled = true
-            isTimestampEnabled = false
-
-        case .audiobook:
-            isPageEnabled = false
-            isPercentageEnabled = true
-            isTimestampEnabled = true
-        }
     }
-
-    // MARK: - Current Progress
 
     var currentProgressFraction: Double {
-        if let percentage = originalBook.progress.percentage {
-            return min(max(percentage / 100, 0), 1)
-        }
-
-        if
-            let page = originalBook.progress.page,
-            let pageCount = originalBook.pageCount,
-            pageCount > 0
-        {
-            return min(
-                max(Double(page) / Double(pageCount), 0),
-                1
-            )
-        }
-
-        return 0
+        originalBook.progress.normalizedFraction(pageCount: originalBook.pageCount,
+                                                audioDuration: originalBook.audioDurationSeconds) ?? 0
     }
-
     var currentProgressDescription: String {
-        var parts: [String] = []
-
-        if let page = originalBook.progress.page {
-            if let pageCount = originalBook.pageCount {
-                parts.append(
-                    "Page \(page) of \(pageCount)"
-                )
-            } else {
-                parts.append("Page \(page)")
-            }
+        guard let fraction = originalBook.progress.normalizedFraction(pageCount: originalBook.pageCount,
+                                                                      audioDuration: originalBook.audioDurationSeconds) else {
+            return String(localized: "No shared progress recorded yet")
         }
-
-        if let percentage = originalBook.progress.percentage {
-            parts.append(
-                "\(Self.formatPercentage(percentage))%"
-            )
-        }
-
-        if let seconds = originalBook.progress.timestampSeconds {
-            parts.append(Self.formatTimestamp(seconds))
-        }
-
-        if parts.isEmpty {
-            return "No progress recorded yet"
-        }
-
-        return parts.joined(separator: " · ")
+        return fraction.formatted(.percent.precision(.fractionLength(1)))
     }
+    var pageCount: Int? { Int(pageCountText) }
+    var audioDuration: Int? { ReadingProgress.parseTime(audioDurationText) }
 
-    // MARK: - Bindings
+    var usesAudio: Bool { format == .audiobook || format == .immersive }
+    var usesPages: Bool { unit == .page }
+    var offersEbookUnits: Bool { format == .ebook || (format == .immersive && immersiveCompanion == .ebook) }
 
-    func updatePage(_ value: String) {
-        pageText = value
-
-        guard
-            isPageEnabled,
-            isPercentageEnabled,
-            let page = Int(value),
-            let pageCount = originalBook.pageCount,
-            pageCount > 0
-        else {
-            return
+    private func alignUnitWithFormat() {
+        switch format {
+        case .physical: changeUnit(.page)
+        case .audiobook: changeUnit(.timestamp)
+        case .ebook:
+            if unit == .timestamp { changeUnit(.percentage) }
+        case .immersive:
+            if immersiveCompanion == .physical { changeUnit(.page) }
+            else if unit == .timestamp { changeUnit(.percentage) }
         }
-
-        let percentage =
-            Double(page) /
-            Double(pageCount) *
-            100
-
-        percentageText = Self.formatPercentage(
-            min(max(percentage, 0), 100)
-        )
     }
-
-    func updatePercentage(_ value: String) {
-        percentageText = value
-
-        guard
-            isPercentageEnabled,
-            isPageEnabled,
-            let percentage = Double(value),
-            let pageCount = originalBook.pageCount,
-            pageCount > 0
-        else {
-            return
-        }
-
-        let page = Int(
-            (percentage / 100 * Double(pageCount))
-                .rounded()
-        )
-
-        pageText = String(
-            min(max(page, 0), pageCount)
-        )
-    }
-
-    func updateTimestamp(_ value: String) {
-        timestampText = value
-    }
-
-    // MARK: - Validation
 
     var validationMessage: String? {
-        if
-            isPageEnabled,
-            !pageText.isEmpty
-        {
-            guard let page = Int(pageText) else {
-                return "Page must be a whole number."
+        if usesPages && pageCountText.isEmpty {
+            return String(localized: "Enter the total pages once. We’ll remember it for this book.")
+        }
+        if usesAudio {
+            guard let audioDuration, audioDuration > 0 else {
+                return String(localized: "Enter the total audiobook duration as HH:MM:SS. We’ll remember it for this book.")
             }
-
-            if page < 0 {
-                return "Page cannot be negative."
-            }
-
-            if
-                let pageCount = originalBook.pageCount,
-                page > pageCount
-            {
-                return "Page cannot be greater than \(pageCount)."
+            guard let position = ReadingProgress.parseTime(timestampText), position <= audioDuration else {
+                return String(localized: "Enter an audio position as HH:MM:SS within the total duration.")
             }
         }
-
-        if
-            isPercentageEnabled,
-            !percentageText.isEmpty
-        {
-            guard let percentage = Double(percentageText) else {
-                return "Percentage must be a number."
-            }
-
-            if percentage < 0 || percentage > 100 {
-                return "Percentage must be between 0 and 100."
-            }
+        if !pageCountText.isEmpty, pageCount == nil || (pageCount ?? 0) <= 0 || (pageCount ?? 0) > 1_000_000 {
+            return String(localized: "Enter a total page count from 1 to 1,000,000.")
         }
-
-        if
-            isTimestampEnabled,
-            !timestampText.isEmpty,
-            Self.parseTimestamp(timestampText) == nil
-        {
-            return "Timestamp must use HH:MM:SS."
+        if !audioDurationText.isEmpty, audioDuration == nil || (audioDuration ?? 0) <= 0 {
+            return String(localized: "Enter the total audiobook duration as HH:MM:SS, greater than zero.")
         }
-
+        switch unit {
+        case .page:
+            guard let page = Int(pageText), page >= 0, page <= 1_000_000 else {
+                return String(localized: "Enter a valid page number.")
+            }
+            if let pageCount, page > pageCount { return String(localized: "The page is beyond the end of this edition.") }
+        case .percentage:
+            guard let value = Double(percentageText), value.isFinite, (0...100).contains(value) else {
+                return String(localized: "Enter a percentage between 0 and 100.")
+            }
+        case .timestamp:
+            guard let seconds = ReadingProgress.parseTime(timestampText) else {
+                return String(localized: "Enter the audio position as HH:MM:SS.")
+            }
+            if let audioDuration, seconds > audioDuration { return String(localized: "The audio position is beyond the total duration.") }
+        }
         return nil
     }
 
-    var hasValueToSave: Bool {
-        let hasPage =
-            isPageEnabled &&
-            !pageText.isEmpty
+    var hasPosition: Bool {
+        if format == .immersive && !timestampText.isEmpty { return true }
+        return switch unit {
+        case .page: !pageText.isEmpty
+        case .percentage: !percentageText.isEmpty
+        case .timestamp: !timestampText.isEmpty
+        }
+    }
+    var canSave: Bool { validationMessage == nil }
+    var canSaveSession: Bool { canSave || (!hasPosition && pageCountText == (originalBook.pageCount.map(String.init) ?? "") && audioDurationText == (originalBook.audioDurationSeconds.map(ReadingProgress.timeText) ?? "")) }
 
-        let hasPercentage =
-            isPercentageEnabled &&
-            !percentageText.isEmpty
-
-        let hasTimestamp =
-            isTimestampEnabled &&
-            !timestampText.isEmpty
-
-        return hasPage ||
-            hasPercentage ||
-            hasTimestamp
+    var enteredProgress: ReadingProgress {
+        var progress = primaryProgress
+        if format == .immersive {
+            let seconds = ReadingProgress.parseTime(timestampText)
+            let audioFraction = ReadingProgress(page: nil, percentage: nil, timestampSeconds: seconds)
+                .normalizedFraction(pageCount: nil, audioDuration: audioDuration)
+            let readingFraction = progress.normalizedFraction(pageCount: pageCount, audioDuration: nil)
+            progress.timestampSeconds = seconds
+            // Both positions belong to the same book: use the furthest, never add them.
+            progress.percentage = [audioFraction, readingFraction].compactMap { $0 }.max().map { $0 * 100 }
+        }
+        return progress
     }
 
-    var canSave: Bool {
-        hasValueToSave &&
-        validationMessage == nil
+    private var primaryProgress: ReadingProgress {
+        // Only explicitly entered pages become page records. Converted equivalents
+        // are displayed below, but never inflate recorded-page statistics.
+        switch unit {
+        case .page:
+            let page = Int(pageText)
+            let fraction = page.flatMap { page in pageCount.map { Double(page) / Double($0) } }
+            return .init(page: page, percentage: fraction.map { $0 * 100 }, timestampSeconds: nil)
+        case .percentage:
+            return .init(page: nil, percentage: Double(percentageText), timestampSeconds: nil)
+        case .timestamp:
+            let seconds = ReadingProgress.parseTime(timestampText)
+            let fraction = seconds.flatMap { seconds in audioDuration.map { Double(seconds) / Double($0) } }
+            return .init(page: nil, percentage: fraction.map { $0 * 100 }, timestampSeconds: seconds)
+        }
     }
-
-    // MARK: - Save Summary
 
     var saveSummary: String {
+        guard canSave else { return String(localized: "Enter a valid position to save.") }
+        guard let fraction = enteredProgress.normalizedFraction(pageCount: pageCount, audioDuration: audioDuration) else {
+            return String(localized: "Position saved. Add total pages or audio duration to calculate shared progress.")
+        }
+        return String(localized: "Shared progress: \(fraction.formatted(.percent.precision(.fractionLength(1))))")
+    }
+
+    var equivalents: String? {
+        guard canSave, let fraction = enteredProgress.normalizedFraction(pageCount: pageCount, audioDuration: audioDuration) else { return nil }
         var parts: [String] = []
-
-        if
-            isPageEnabled,
-            let page = Int(pageText)
-        {
-            if let pageCount = originalBook.pageCount {
-                parts.append(
-                    "Page \(page) of \(pageCount)"
-                )
-            } else {
-                parts.append("Page \(page)")
-            }
-        }
-
-        if
-            isPercentageEnabled,
-            let percentage = Double(percentageText)
-        {
-            parts.append(
-                "\(Self.formatPercentage(percentage))%"
-            )
-        }
-
-        if
-            isTimestampEnabled,
-            Self.parseTimestamp(timestampText) != nil
-        {
-            parts.append(timestampText)
-        }
-
-        if parts.isEmpty {
-            return "Select at least one value to update."
-        }
-
-        return parts.joined(separator: " · ")
+        if let pageCount { parts.append(String(localized: "About page \(Int((fraction * Double(pageCount)).rounded())) of \(pageCount)")) }
+        if let audioDuration { parts.append(String(localized: "About \(ReadingProgress.timeText(Int((fraction * Double(audioDuration)).rounded()))) into the audiobook")) }
+        return parts.isEmpty ? nil : parts.joined(separator: " · ")
     }
 
-    // MARK: - Saving
-
-    func makeUpdatedBook() -> Book? {
-
-        guard canSave else {
-            return nil
+    func changeUnit(_ newUnit: Unit) {
+        guard newUnit != unit else { return }
+        let fraction = primaryProgress.normalizedFraction(pageCount: pageCount, audioDuration: audioDuration)
+        unit = newUnit
+        guard let fraction else { return }
+        switch newUnit {
+        case .page:
+            if let pageCount { pageText = String(Int((fraction * Double(pageCount)).rounded())) }
+        case .percentage: percentageText = String(fraction * 100)
+        case .timestamp:
+            if let audioDuration { timestampText = ReadingProgress.timeText(Int((fraction * Double(audioDuration)).rounded())) }
         }
-
-        var updatedBook =
-            originalBook
-
-        var progress =
-            originalBook.progress
-
-        if
-            isPageEnabled,
-            let page =
-                Int(pageText)
-        {
-            progress.page =
-                page
-        }
-
-        if
-            isPercentageEnabled,
-            let percentage =
-                Double(
-                    percentageText
-                )
-        {
-            progress.percentage =
-                percentage
-        }
-
-        if
-            isTimestampEnabled,
-            let seconds =
-                Self.parseTimestamp(
-                    timestampText
-                )
-        {
-            progress.timestampSeconds =
-                seconds
-        }
-
-        updatedBook.progress =
-            progress
-
-        if isCompleted(
-            progress:
-                progress,
-            book:
-                updatedBook
-        ) {
-            updatedBook.status =
-                .completed
-        }
-
-        return updatedBook
     }
 
-    private func isCompleted(
-        progress: ReadingProgress,
-        book: Book
-    ) -> Bool {
-
-        if let percentage =
-            progress.percentage,
-           percentage >= 100
-        {
-            return true
+    func makeUpdatedBook(allowEmptyProgress: Bool = false) -> Book? {
+        guard canSave || (allowEmptyProgress && canSaveSession) else { return nil }
+        var book = originalBook
+        book.format = format
+        book.immersiveCompanion = immersiveCompanion
+        if format == .immersive && hasPosition {
+            book.immersiveReadingPercentage = primaryProgress.percentage
         }
-
-        if
-            let page =
-                progress.page,
-            let pageCount =
-                book.pageCount,
-            pageCount > 0,
-            page >= pageCount
-        {
-            return true
-        }
-
-        return false
-    }
-    // MARK: - Formatting
-
-    private static func formatPercentage(
-        _ percentage: Double
-    ) -> String {
-        if percentage.rounded() == percentage {
-            return String(Int(percentage))
-        }
-
-        return String(
-            format: "%.1f",
-            percentage
-        )
-    }
-
-    private static func formatTimestamp(
-        _ seconds: Int
-    ) -> String {
-        let hours = seconds / 3600
-        let minutes = (seconds % 3600) / 60
-        let remainingSeconds = seconds % 60
-
-        return String(
-            format: "%02d:%02d:%02d",
-            hours,
-            minutes,
-            remainingSeconds
-        )
-    }
-
-    private static func parseTimestamp(
-        _ value: String
-    ) -> Int? {
-        let components = value.split(
-            separator: ":",
-            omittingEmptySubsequences: false
-        )
-
-        guard components.count == 3 else {
-            return nil
-        }
-
-        guard
-            let hours = Int(components[0]),
-            let minutes = Int(components[1]),
-            let seconds = Int(components[2])
-        else {
-            return nil
-        }
-
-        guard
-            hours >= 0,
-            minutes >= 0,
-            minutes < 60,
-            seconds >= 0,
-            seconds < 60
-        else {
-            return nil
-        }
-
-        return hours * 3600 +
-            minutes * 60 +
-            seconds
+        book.pageCount = pageCount
+        book.audioDurationSeconds = audioDuration
+        book.progress = hasPosition ? enteredProgress : originalBook.progress
+        if (book.progress.percentage ?? 0) >= 100 { book.status = .completed }
+        return book
     }
 }

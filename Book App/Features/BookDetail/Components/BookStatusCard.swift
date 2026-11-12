@@ -56,6 +56,8 @@ struct BookStatusCard: View {
 
         case .completed:
             return "Finished"
+        case .abandoned:
+            return "Did not finish"
         }
     }
 
@@ -63,7 +65,7 @@ struct BookStatusCard: View {
     private var statusContent: some View {
         switch book.status {
 
-        case .reading:
+        case .reading, .abandoned:
             readingProgress
 
         case .toRead:

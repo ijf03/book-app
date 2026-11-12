@@ -11,6 +11,7 @@ enum ReadingStatus: String, Codable, CaseIterable, Identifiable {
     case reading
     case toRead
     case completed
+    case abandoned
 
     var id: Self { self }
 
@@ -20,6 +21,8 @@ enum ReadingStatus: String, Codable, CaseIterable, Identifiable {
             return "Reading"
         case .toRead:
             return "To Read"
+        case .abandoned:
+            return "Did not finish"
         case .completed:
             return "Completed"
         }

@@ -30,6 +30,8 @@ final class BookDetailViewModel {
 
         case .completed:
             return "Completed"
+        case .abandoned:
+            return "Did not finish"
         }
     }
 
@@ -43,6 +45,8 @@ final class BookDetailViewModel {
 
         case .completed:
             return "Read Again"
+        case .abandoned:
+            return "Resume Reading"
         }
     }
 

@@ -137,3 +137,55 @@ test('daily check-ins are owner-scoped and validate date identity and boolean an
   }
   await assertSucceeds(setDoc(own, envelope({ ...fixture, data: { ...fixture.data, didRead: false } }, 2)));
 });
+
+
+test('reader profile is owner-only and validates fields', async () => {
+  const owner = environment.authenticatedContext('A').firestore();
+  const other = environment.authenticatedContext('B').firestore();
+  const guest = environment.unauthenticatedContext().firestore();
+  const fixture = { id: 'readerProfile', data: { username: 'reader_01', preferredName: 'Sabi', bio: 'Reading fantasy' } };
+  await assertSucceeds(setDoc(reference(owner, 'preferences', fixture.id), envelope(fixture)));
+  for (const client of [other, guest]) {
+    await assertFails(getDoc(reference(client, 'preferences', fixture.id)));
+    await assertFails(setDoc(reference(client, 'preferences', fixture.id), envelope(fixture, 2)));
+  }
+  for (const data of [{username: 'x'}, {username: 'bad space'}, {username: 'reader', bio: 'x'.repeat(241)}, {username: 'reader', password: 'never store'}]) {
+    await assertFails(setDoc(reference(owner, 'preferences', fixture.id), envelope({id: fixture.id, data}, 2)));
+  }
+});
+
+test('catalogue metadata and persistent moods are owner-only and validated', async () => {
+  const owner = environment.authenticatedContext('A').firestore();
+  const other = environment.authenticatedContext('B').firestore();
+  const guest = environment.unauthenticatedContext().firestore();
+  const book = { id: '/works/OL1W', data: { ...fixtures.books.data, id: '/works/OL1W', genres: ['Fantasy', 'Romance'],
+    metadata: { schemaVersion: 1, workID: '/works/OL1W', fetchedAt: 700000000, communityRating: 4.2,
+      communityRatingCount: 12, edition: { id: '/books/OL1M', title: 'Book', publishers: ['Publisher'], languages: ['English'], isbn: ['9780140328721'], pages: 200 } } } };
+  const mood = { id: 'mood-dreamy', data: { name: 'Dreamy' } };
+  for (const [kind, value] of [['books', book], ['preferences', mood]]) {
+    await assertSucceeds(setDoc(reference(owner, kind, value.id), envelope(value)));
+    for (const client of [other, guest]) {
+      await assertFails(getDoc(reference(client, kind, value.id)));
+      await assertFails(setDoc(reference(client, kind, value.id), envelope(value, 2)));
+    }
+  }
+  await assertFails(setDoc(reference(owner, 'books', book.id), envelope({ ...book, data: { ...book.data, metadata: { ...book.data.metadata, communityRating: 6 } } }, 2)));
+  await assertFails(setDoc(reference(owner, 'books', book.id), envelope({ ...book, data: { ...book.data, metadata: { ...book.data.metadata, admin: true } } }, 2)));
+  await assertFails(setDoc(reference(owner, 'preferences', mood.id), envelope({ ...mood, data: { name: 'Wrong identity' } }, 2)));
+});
+
+
+test('wow factor fields preserve owner isolation and validate durations and formats', async () => {
+  const owner = environment.authenticatedContext('A').firestore();
+  const other = environment.authenticatedContext('B').firestore();
+  const book = { ...fixtures.books, data: { ...fixtures.books.data, status: 'abandoned',
+    audioDurationSeconds: 36000, abandonedAt: 700000000, formatsUsed: ['physical', 'audiobook'] } };
+  await assertSucceeds(setDoc(reference(owner, 'books', book.id), envelope(book)));
+  await assertFails(getDoc(reference(other, 'books', book.id)));
+  await assertFails(setDoc(reference(owner, 'books', book.id), envelope({ ...book,
+    data: { ...book.data, audioDurationSeconds: 0 } }, 2)));
+  await assertFails(setDoc(reference(owner, 'books', book.id), envelope({ ...book,
+    data: { ...book.data, formatsUsed: ['unknown'] } }, 2)));
+  const session = { ...fixtures.sessions, data: { ...fixtures.sessions.data, formats: ['physical', 'ebook'] } };
+  await assertSucceeds(setDoc(reference(owner, 'sessions', session.id), envelope(session)));
+});

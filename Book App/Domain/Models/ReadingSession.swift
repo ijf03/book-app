@@ -16,6 +16,7 @@ struct ReadingSession:
     let id: UUID
     let bookID: String
     var readID: String? = nil
+    var formats: [ReadingFormat]? = nil
 
     let startedAt: Date
     var endedAt: Date?

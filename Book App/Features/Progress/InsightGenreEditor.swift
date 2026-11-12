@@ -17,7 +17,7 @@ struct InsightGenreEditor: View {
                     ForEach(library.books) { Text($0.title).tag($0.id) }
                 }
                 Section("Reading details") {
-                    TextField("Primary genre, for example Fantasy", text: $genre)
+                    TextField("Genres, separated by commas", text: $genre)
                         .textInputAutocapitalization(.words)
                     Picker("Book type", selection: $bookType) {
                         Text("Not recorded").tag("")
@@ -39,7 +39,7 @@ struct InsightGenreEditor: View {
             .navigationTitle("Book details for insights")
             .onChange(of: bookID) { _, id in
                 guard let book = library.book(id: id) else { return }
-                genre = book.genre ?? ""
+                genre = book.genreChips.joined(separator: ", ")
                 bookType = book.bookType ?? ""
                 language = book.language ?? ""
                 format = book.format
@@ -52,13 +52,14 @@ struct InsightGenreEditor: View {
                         guard var book = library.book(id: bookID) else { return }
                         let genre = genre.trimmingCharacters(in: .whitespacesAndNewlines)
                         let language = language.trimmingCharacters(in: .whitespacesAndNewlines)
-                        book.genre = genre.isEmpty ? nil : genre
+                        book.genres = GenreTags.normalized(genre.components(separatedBy: ","))
+                        book.genre = book.genres?.first
                         book.language = language.isEmpty ? nil : language
                         book.bookType = bookType.isEmpty ? nil : bookType
                         book.format = format
                         library.updateBook(book)
                         if library.persistenceError == nil { dismiss() }
-                    }.disabled(bookID.isEmpty || genre.count > 100 || language.count > 100)
+                    }.disabled(bookID.isEmpty || genre.count > 1000 || language.count > 100)
                 }
             }
         }

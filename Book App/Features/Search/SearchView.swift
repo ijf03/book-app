@@ -4,6 +4,9 @@ struct SearchView: View {
 
     @State
     private var viewModel: SearchViewModel
+    @State private var searchRequest = 0
+    @FocusState private var searchFocused: Bool
+    @Environment(\.dynamicTypeSize) private var typeSize
     @State private var discovery: BookDiscoveryViewModel
 
     let libraryStore: LibraryStore
@@ -26,7 +29,34 @@ struct SearchView: View {
         NavigationStack {
             VStack(spacing: 0) {
 
-                filterPicker
+                VStack(alignment: .leading, spacing: AppSpacing.md) {
+                    let layout = typeSize.isAccessibilitySize
+                        ? AnyLayout(VStackLayout(alignment: .leading, spacing: AppSpacing.sm))
+                        : AnyLayout(HStackLayout(spacing: AppSpacing.sm))
+                    layout {
+                    HStack {
+                        Image(systemName: "magnifyingglass").accessibilityHidden(true)
+                        TextField("Search title or author", text: $viewModel.searchText)
+                            .focused($searchFocused)
+                            .submitLabel(.search)
+                            .autocorrectionDisabled()
+                            .onSubmit { searchFocused = false; searchRequest += 1 }
+                        if !viewModel.searchText.isEmpty {
+                            Button { viewModel.searchText = "" } label: {
+                                Image(systemName: "xmark.circle.fill")
+                            }
+                            .accessibilityLabel("Clear search")
+                        }
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(AppSpacing.md)
+                    .background(Color.surfaceSecondary, in: RoundedRectangle(cornerRadius: AppRadius.md))
+                    filterPicker
+                    }
+                }
+                .padding(AppSpacing.md)
+                .frame(maxWidth: .infinity)
+                .background(Color.surface)
 
                 Divider()
 
@@ -37,13 +67,23 @@ struct SearchView: View {
                     )
             }
             .background(Color.surfaceSecondary)
+            .navigationBarTitleDisplayMode(.inline)
             .navigationTitle("Find Books")
-            .searchable(
-                text: $viewModel.searchText,
-                prompt: "Search title or author"
-            )
-            .task(id: searchTaskID) {
-                await performDebouncedSearch()
+            .onChange(of: discovery.topic) { _, genre in
+                viewModel.selectedGenre = genre
+                if !viewModel.searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                    searchRequest += 1
+                }
+            }
+            .onChange(of: viewModel.searchText) { _, text in
+                if text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                    searchRequest += 1
+                    viewModel.clear()
+                }
+            }
+            .task(id: searchRequest) {
+                guard searchRequest > 0 else { return }
+                await viewModel.search()
             }
         }
     }
@@ -68,59 +108,35 @@ struct SearchView: View {
         }
     }
 
-    // MARK: - Search Trigger
-
-    private var searchTaskID: String {
-        "\(viewModel.searchText)-\(viewModel.selectedFilter.rawValue)"
-    }
-
-    private func performDebouncedSearch() async {
-
-        let query = viewModel.searchText
-            .trimmingCharacters(
-                in: .whitespacesAndNewlines
-            )
-
-        guard !query.isEmpty else {
-            await viewModel.search()
-            return
-        }
-
-        do {
-            try await Task.sleep(
-                for: .milliseconds(500)
-            )
-
-            try Task.checkCancellation()
-
-            await viewModel.search()
-
-        } catch is CancellationError {
-            return
-
-        } catch {
-            return
-        }
-    }
-
     // MARK: - Filters
 
     private var filterPicker: some View {
-        Picker(
-            "Search Filter",
-            selection: $viewModel.selectedFilter
-        ) {
-            ForEach(
-                BookSearchFilter.allCases
-            ) { filter in
-                Text(filter.displayName)
-                    .tag(filter)
+        Menu {
+            Picker("Genre", selection: $discovery.topic) {
+                ForEach(BookDiscoveryViewModel.topics, id: \.self) { topic in
+                    Text(topic).tag(topic)
+                }
             }
+        } label: {
+            // Measure every option so changing genres never resizes the search field.
+            ZStack(alignment: .leading) {
+                ForEach(BookDiscoveryViewModel.topics, id: \.self) { topic in
+                    Label(topic, systemImage: "line.3.horizontal.decrease")
+                        .hidden()
+                        .accessibilityHidden(true)
+                }
+                Label(discovery.topic, systemImage: "line.3.horizontal.decrease")
+            }
+            .font(AppTypography.caption)
+            .fixedSize(horizontal: true, vertical: false)
+            .frame(minHeight: AppLayout.minimumTapTarget)
+            .padding(.horizontal, AppSpacing.sm)
+            .background(Color.surfaceSecondary, in: RoundedRectangle(cornerRadius: AppRadius.md))
         }
-        .pickerStyle(.segmented)
-        .padding(.horizontal, AppSpacing.md)
-        .padding(.vertical, AppSpacing.sm)
-        .background(Color.surface)
+        .fixedSize(horizontal: true, vertical: false)
+        .accessibilityLabel("Genre")
+        .accessibilityValue(discovery.topic)
+        .accessibilityIdentifier("search.discovery.genre")
     }
 
     // MARK: - Idle
@@ -183,6 +199,8 @@ struct SearchView: View {
                         }
                         .buttonStyle(.plain)
 
+                        SearchSynopsisDisclosure(book: book, scope: libraryStore.accountScope)
+
                         Divider()
                     }
                 }
@@ -210,9 +228,7 @@ struct SearchView: View {
             Text(message)
         } actions: {
             Button("Try Again") {
-                Task {
-                    await viewModel.search()
-                }
+                searchRequest += 1
             }
             .buttonStyle(
                 AppButtonStyle(

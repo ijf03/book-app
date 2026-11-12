@@ -23,14 +23,7 @@ struct FinishReadingSessionView: View {
     let onBookUpdated: (Book) -> Void
     let onSessionFinished: () -> Void
 
-    @State
-    private var pageText: String
-
-    @State
-    private var percentageText: String
-
-    @State
-    private var timestampText: String
+    @State private var progressModel: UpdateProgressViewModel
 
     init(
         book: Book,
@@ -43,24 +36,7 @@ struct FinishReadingSessionView: View {
         self.onBookUpdated = onBookUpdated
         self.onSessionFinished = onSessionFinished
 
-        _pageText = State(
-            initialValue:
-                book.progress.page.map(String.init) ?? ""
-        )
-
-        _percentageText = State(
-            initialValue:
-                book.progress.percentage.map {
-                    String(Int($0.rounded()))
-                } ?? ""
-        )
-
-        _timestampText = State(
-            initialValue:
-                Self.formatTimestamp(
-                    book.progress.timestampSeconds
-                )
-        )
+        _progressModel = State(initialValue: UpdateProgressViewModel(book: book))
     }
 
     var body: some View {
@@ -98,16 +74,7 @@ struct FinishReadingSessionView: View {
                     .font(AppTypography.caption)
                     .foregroundStyle(Color.textSecondary)
 
-                Text(
-                    formattedSessionDuration
-                )
-                .font(
-                    .system(
-                        size: 32,
-                        weight: .semibold,
-                        design: .rounded
-                    )
-                )
+                ReadingDurationText(seconds: sessionDuration, defaultSize: 32)
                 .foregroundStyle(Color.appAccent)
                 .monospacedDigit()
 
@@ -151,41 +118,12 @@ struct FinishReadingSessionView: View {
     // MARK: - Progress
 
     private var progressSection: some View {
-        VStack(
-            alignment: .leading,
-            spacing: AppSpacing.md
-        ) {
-
-            SectionHeader(
-                title: "Progress After Session"
-            )
-
-            VStack(
-                spacing: AppSpacing.md
-            ) {
-                textFieldCard(
-                    title: "Page",
-                    subtitle: "Optional · physical / ebook",
-                    text: $pageText,
-                    placeholder: "214"
-                )
-                .keyboardType(.numberPad)
-
-                textFieldCard(
-                    title: "Percentage",
-                    subtitle: "Optional · works with any format",
-                    text: $percentageText,
-                    placeholder: "67"
-                )
-                .keyboardType(.decimalPad)
-
-                textFieldCard(
-                    title: "Timestamp",
-                    subtitle: "Optional · HH:MM:SS for audio",
-                    text: $timestampText,
-                    placeholder: "01:42:18"
-                )
+        VStack(alignment: .leading, spacing: AppSpacing.md) {
+            ProgressEntryFields(model: progressModel)
+            if progressModel.hasPosition, let error = progressModel.validationMessage {
+                Text(error).font(AppTypography.caption).foregroundStyle(Color.danger)
             }
+            Text(progressModel.saveSummary).font(AppTypography.body)
         }
     }
 
@@ -199,7 +137,7 @@ struct FinishReadingSessionView: View {
             Button("Save Session") {
                 saveSession()
             }
-            .disabled(!noteDraft.canSave)
+            .disabled(!noteDraft.canSave || !progressModel.canSaveSession)
             .accessibilityIdentifier("session.save")
             .buttonStyle(
                 AppButtonStyle(
@@ -265,44 +203,13 @@ struct FinishReadingSessionView: View {
         }
     }
 
-    private var formattedSessionDuration: String {
-        guard let session =
-            sessionStore.session(
-                id: sessionID
-            )
-        else {
-            return "00:00:00"
-        }
-
-        return Self.formatDuration(
-            session.elapsedSeconds(
-                at: session.endedAt ?? Date()
-            )
-        )
+    private var sessionDuration: Int {
+        guard let session = sessionStore.session(id: sessionID) else { return 0 }
+        return session.elapsedSeconds(at: session.endedAt ?? Date())
     }
 
     private func saveSession() {
-        var updatedBook = book
-
-        updatedBook.progress = ReadingProgress(
-            page: pageText.trimmingCharacters(
-                in: .whitespacesAndNewlines
-            ).isEmpty
-                ? nil
-                : Int(pageText),
-            percentage: percentageText.trimmingCharacters(
-                in: .whitespacesAndNewlines
-            ).isEmpty
-                ? nil
-                : Double(percentageText),
-            timestampSeconds: timestampText.trimmingCharacters(
-                in: .whitespacesAndNewlines
-            ).isEmpty
-                ? nil
-                : Self.parseTimestamp(
-                    timestampText
-                )
-        )
+        guard let updatedBook = progressModel.makeUpdatedBook(allowEmptyProgress: true) else { return }
 
         guard noteDraft.save(bookID: book.id, page: updatedBook.progress.page, to: contentStore) else { return }
 
@@ -310,7 +217,8 @@ struct FinishReadingSessionView: View {
 
         sessionStore.updateFinishedSessionProgress(
             sessionID: sessionID,
-            progress: updatedBook.progress
+            progress: updatedBook.progress,
+            format: updatedBook.format
         )
 
         dismiss()

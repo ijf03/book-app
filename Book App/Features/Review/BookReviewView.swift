@@ -17,6 +17,8 @@ struct BookReviewView: View {
 
     let book: Book
     @State private var mood: String
+    @State private var customMood = ""
+    @State private var addingMood = false
 
     @State
     private var rating: Int
@@ -83,12 +85,20 @@ struct BookReviewView: View {
                 AppCard {
                     VStack(alignment: .leading, spacing: AppSpacing.sm) {
                         Text("How did this book leave you feeling?").font(AppTypography.headline)
-                        TextField("Mood, for example Hopeful or Reflective", text: $mood)
-                            .textInputAutocapitalization(.words)
+                        Picker("Mood", selection: $mood) {
+                            Text("Not recorded").tag("")
+                            ForEach(contentStore.moods.choices(reviews: contentStore.reviews, selected: mood), id: \.self) { value in
+                                Text(ReviewMood.displayName(value)).tag(value)
+                            }
+                        }
+                        Button("Add custom mood", systemImage: "plus") { addingMood = true }
+                            .frame(minHeight: AppLayout.minimumTapTarget)
+                        if let error = contentStore.moods.error { Text(error).font(AppTypography.caption) }
                         Text("Optional. Record your feeling after finishing the book; this appears in your mood statistics.")
                             .font(AppTypography.caption).foregroundStyle(Color.textSecondary)
                     }
                 }
+                if let error = contentStore.persistenceError { Text(error).font(AppTypography.caption) }
                 reviewSection
 
                 spoilerSection
@@ -138,6 +148,15 @@ struct BookReviewView: View {
             .background(
                 Color.surface
             )
+        }
+        .alert("Add a mood", isPresented: $addingMood) {
+            TextField("Mood name", text: $customMood)
+            Button("Cancel", role: .cancel) { customMood = "" }
+            Button("Add") {
+                if let saved = contentStore.moods.remember(customMood) { mood = saved; customMood = "" }
+            }
+        } message: {
+            Text("Your custom mood will be available for future reviews on your account.")
         }
         .alert(
             "Delete Review?",
@@ -202,6 +221,7 @@ struct BookReviewView: View {
                         ? "Tap a star to rate this book."
                         : "\(rating) out of 5 stars"
                     )
+                    .accessibilityHidden(true)
                     .font(
                         AppTypography.caption
                     )
@@ -233,6 +253,7 @@ struct BookReviewView: View {
                     text:
                         $reviewText
                 )
+                .accessibilityLabel("Book review")
                 .font(
                     AppTypography.body
                 )
@@ -376,11 +397,7 @@ struct BookReviewView: View {
                 mood: mood.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? nil : mood.trimmingCharacters(in: .whitespacesAndNewlines)
             )
 
-        contentStore
-            .saveReview(
-                review
-            )
-
-        dismiss()
+        if let mood = review.mood, contentStore.moods.remember(mood) == nil { return }
+        if contentStore.saveReview(review) { dismiss() }
     }
 }

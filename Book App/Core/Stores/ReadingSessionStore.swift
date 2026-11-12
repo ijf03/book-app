@@ -55,13 +55,14 @@ final class ReadingSessionStore {
             return existing
         }
 
-        let session =
+        var session =
             ReadingSession(
                 bookID: book.id,
                 startProgress: book.progress,
                 readID: book.currentReadID
             )
 
+        session.formats = [book.format]
         sessions.append(session)
         save()
 
@@ -162,7 +163,8 @@ final class ReadingSessionStore {
 
     func updateFinishedSessionProgress(
         sessionID: UUID,
-        progress: ReadingProgress
+        progress: ReadingProgress,
+        format: ReadingFormat? = nil
     ) {
         guard let index =
             sessions.firstIndex(
@@ -173,6 +175,11 @@ final class ReadingSessionStore {
         }
 
         sessions[index].endProgress = progress
+        if let format {
+            sessions[index].formats = ReadingFormat.allCases.filter {
+                Set((sessions[index].formats ?? []) + [format]).contains($0)
+            }
+        }
         save()
     }
 

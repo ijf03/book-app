@@ -16,6 +16,26 @@ struct RatingStars: View {
         Bool = true
 
     var body: some View {
+        if isEditable {
+            stars
+                .accessibilityHint("Swipe up or down to change the rating.")
+                .accessibilityAdjustableAction(adjustRating)
+        } else {
+            stars
+        }
+    }
+
+    // Zero represents an unrated book, matching the review editor's existing state.
+    func adjustRating(_ direction: AccessibilityAdjustmentDirection) {
+        guard isEditable else { return }
+        switch direction {
+        case .increment: rating = min(5, max(0, rating) + 1)
+        case .decrement: rating = max(0, min(5, rating) - 1)
+        @unknown default: break
+        }
+    }
+
+    private var stars: some View {
 
         HStack(
             spacing: AppSpacing.sm

@@ -1,6 +1,8 @@
 import SwiftUI
 
 struct ProgressDashboardView: View {
+    @Environment(\.dynamicTypeSize) private var typeSize
+    @ScaledMetric(relativeTo: .title2) private var statFontSize = 26
     @Environment(BookContentStore.self) private var contentStore: BookContentStore?
     private let repository: (any BookRepository)?
     private let reminders: ReadingRemindersViewModel
@@ -76,6 +78,9 @@ struct ProgressDashboardView: View {
                         .accessibilityIdentifier("progress.detailedStats")
                     }
 
+                    if let contentStore {
+                        ReadingBehaviourPanel(library: libraryStore, sessions: sessionStore, content: contentStore)
+                    }
                     InsightGoalView(library: libraryStore, sessions: sessionStore)
 
                     overviewSection
@@ -96,11 +101,12 @@ struct ProgressDashboardView: View {
                 Color.surfaceSecondary
             )
             .task(id: sessionStore.sessions) { await viewModel.refreshRecordedPages() }
+            .navigationBarTitleDisplayMode(.inline)
             .navigationTitle(
                 "Stats & Goals"
             )
             .toolbar {
-                NavigationLink { ReadingRemindersSettingsView(model: reminders) } label: { Label("Reading Reminders", systemImage: "gearshape") }
+                NavigationLink { ReadingRemindersSettingsView(model: reminders) } label: { Label("Notifications", systemImage: "bell") }
             }
         }
     }
@@ -121,18 +127,8 @@ struct ProgressDashboardView: View {
             )
 
             LazyVGrid(
-                columns: [
-                    GridItem(
-                        .flexible(),
-                        spacing:
-                            AppSpacing.sm
-                    ),
-                    GridItem(
-                        .flexible(),
-                        spacing:
-                            AppSpacing.sm
-                    )
-                ],
+                columns: Array(repeating: GridItem(.flexible(), spacing: AppSpacing.sm),
+                               count: typeSize.isAccessibilitySize ? 1 : 2),
                 spacing:
                     AppSpacing.sm
             ) {
@@ -259,6 +255,13 @@ struct ProgressDashboardView: View {
                         .foregroundStyle(
                             Color.textSecondary
                         )
+                        NavigationLink {
+                            ReadingRemindersSettingsView(model: reminders)
+                        } label: {
+                            Label("Set up reading reminders", systemImage: "bell.badge")
+                        }
+                        .buttonStyle(.appSecondary)
+                        .accessibilityIdentifier("progress.setUpReminders")
                     }
 
                     Spacer()
@@ -294,9 +297,30 @@ struct ProgressDashboardView: View {
 
                 } else {
 
-                    weeklyChart
+                    VStack(alignment: .leading, spacing: AppSpacing.md) {
+                        if !typeSize.isAccessibilitySize {
+                            weeklyChart.accessibilityHidden(true)
+                            DisclosureGroup("Daily reading time as text") {
+                                weeklyActivityText
+                            }
+                        } else {
+                            weeklyActivityText
+                        }
+                    }
                 }
             }
+        }
+    }
+
+    private var weeklyActivityText: some View {
+        ForEach(viewModel.weeklyActivity) { activity in
+            VStack(alignment: .leading, spacing: AppSpacing.xs) {
+                Text(activity.date, format: .dateTime.weekday(.wide).month().day())
+                Text(Duration.seconds(activity.seconds).formatted(
+                    .units(allowed: [.hours, .minutes, .seconds], width: .wide)
+                ))
+            }
+            .accessibilityElement(children: .combine)
         }
     }
 
@@ -707,7 +731,7 @@ struct ProgressDashboardView: View {
                 Text(value)
                     .font(
                         .system(
-                            size: 26,
+                            size: statFontSize,
                             weight:
                                 .semibold,
                             design:
@@ -726,10 +750,7 @@ struct ProgressDashboardView: View {
                     .foregroundStyle(
                         Color.textSecondary
                     )
-                    .lineLimit(1)
-                    .minimumScaleFactor(
-                        0.8
-                    )
+                    .fixedSize(horizontal: false, vertical: true)
             }
             .frame(
                 maxWidth:

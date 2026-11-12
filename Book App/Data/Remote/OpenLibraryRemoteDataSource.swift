@@ -1,12 +1,15 @@
 import Foundation
 
 enum OpenLibraryError: LocalizedError {
+    case cooldown
     case invalidURL
     case invalidResponse
     case httpError(statusCode: Int)
 
     var errorDescription: String? {
         switch self {
+        case .cooldown:
+            return "Book requests are paused briefly. Please wait a few minutes before trying again."
         case .invalidURL:
             return "The book search URL could not be created."
 
@@ -75,49 +78,7 @@ struct OpenLibraryRemoteDataSource: Sendable {
             throw OpenLibraryError.invalidURL
         }
 
-        var request = URLRequest(url: url)
-
-        request.setValue(
-            "BookApp/1.0",
-            forHTTPHeaderField: "User-Agent"
-        )
-
-        let (data, response) = try await URLSession.shared.data(
-            for: request
-        )
-
-        guard let httpResponse = response as? HTTPURLResponse else {
-            throw OpenLibraryError.invalidResponse
-        }
-
-        print("Open Library status:", httpResponse.statusCode)
-        print("Open Library URL:", url.absoluteString)
-
-        guard 200..<300 ~= httpResponse.statusCode else {
-            if let body = String(
-                data: data,
-                encoding: .utf8
-            ) {
-                print("Open Library response:")
-                print(body)
-            }
-
-            throw OpenLibraryError.httpError(
-                statusCode: httpResponse.statusCode
-            )
-        }
-
-        do {
-            let decoded = try JSONDecoder().decode(
-                OpenLibrarySearchResponseDTO.self,
-                from: data
-            )
-
-            return decoded.docs
-        } catch {
-            print("Open Library decoding error:")
-            print(error)
-            throw error
-        }
+        let data = try await OpenLibraryRequestClient.shared.data(for: url)
+        return try JSONDecoder().decode(OpenLibrarySearchResponseDTO.self, from: data).docs
     }
 }

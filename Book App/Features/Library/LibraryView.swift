@@ -28,6 +28,7 @@ struct LibraryView: View {
             .navigationDestination(isPresented: $showsShelf) {
                 booksPage
                     .background(Color.surfaceSecondary)
+                    .navigationBarTitleDisplayMode(.inline)
                     .navigationTitle(viewModel.selectedStatus?.displayName ?? String(localized: "All books"))
             }
         }
@@ -39,7 +40,7 @@ struct LibraryView: View {
             VStack(alignment: .leading, spacing: AppSpacing.lg) {
                 HStack(alignment: .top, spacing: AppSpacing.md) {
                     VStack(alignment: .leading, spacing: AppSpacing.xs) {
-                        Text("Your books, your shelves").font(AppTypography.title)
+                        Text("Your books, your shelves").font(AppTypography.title).accessibilityAddTraits(.isHeader)
                         Text("\(viewModel.totalCount) books in your library")
                             .font(AppTypography.caption).foregroundStyle(Color.textSecondary)
                     }
@@ -54,6 +55,7 @@ struct LibraryView: View {
                         filter("Reading", count: viewModel.count(for: .reading), status: .reading)
                         filter("To read", count: viewModel.count(for: .toRead), status: .toRead)
                         filter("Completed", count: viewModel.count(for: .completed), status: .completed)
+                        filter("Did not finish", count: viewModel.count(for: .abandoned), status: .abandoned)
                     }
                 }.scrollIndicators(.hidden)
                 HStack {

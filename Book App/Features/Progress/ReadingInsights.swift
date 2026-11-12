@@ -71,8 +71,8 @@ nonisolated enum ReadingInsightsCalculator {
                 .sorted { $0.count == $1.count ? $0.name < $1.name : $0.count > $1.count }
         }
         result.authors = counts(completed.flatMap { Array(Set($0.authors.filter { !$0.isEmpty })) })
-        result.genres = counts(completed.compactMap { $0.genre?.trimmingCharacters(in: .whitespacesAndNewlines) }.filter { !$0.isEmpty })
-        result.untaggedBooks = completed.filter { $0.genre?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ?? true }.count
+        result.genres = counts(completed.flatMap(\.genreChips))
+        result.untaggedBooks = completed.filter { $0.genreChips.isEmpty }.count
         let reviews = Dictionary(input.reviews.filter { (1...5).contains($0.rating) }
             .map { ($0.bookID, $0) }, uniquingKeysWith: { $0.updatedAt > $1.updatedAt ? $0 : $1 })
         result.ratings = (1...5).map { rating in

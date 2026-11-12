@@ -60,10 +60,16 @@ nonisolated struct StatisticsInput: Sendable {
         var authors: [String] = []
         var coverURL: URL? = nil
         var genre: String? = nil
+        var genres: [String]? = nil
+        var genreChips: [String] { GenreTags.normalized(genres ?? genre.map { [$0] } ?? []) }
         var bookType: String? = nil
         var language: String? = nil
         var readID: String? = nil
         var startedAt: Date? = nil
+        var status: String = ""
+        var pageCount: Int? = nil
+        var progressPercentage: Double? = nil
+        var abandonedAt: Date? = nil
         var cycleKey: String { "\(id.utf8.count):\(id):\(readID ?? "initial")" }
     }
     struct SessionValue: Sendable {
@@ -75,6 +81,7 @@ nonisolated struct StatisticsInput: Sendable {
         let startPage: Int?
         let endPage: Int?
         var readID: String? = nil
+        var formats: [String]? = nil
         var cycleKey: String { "\(bookID.utf8.count):\(bookID):\(readID ?? "initial")" }
     }
     struct ReviewValue: Sendable {
@@ -93,14 +100,14 @@ nonisolated struct StatisticsInput: Sendable {
 
     @MainActor init(books: [Book], sessions: [ReadingSession], reviews: [BookReview], checkIns: [ReadingCheckIn] = []) {
         self.checkIns = checkIns
-        self.books = books.map { .init(id: $0.id, completed: $0.status == .completed, completedAt: $0.completedAt, format: $0.format.rawValue, title: $0.title, authors: $0.authors, coverURL: $0.coverURL, genre: $0.genre, bookType: $0.bookType, language: $0.language, readID: $0.currentReadID, startedAt: $0.currentReadStartedAt) }
+        self.books = books.map { .init(id: $0.id, completed: $0.status == .completed, completedAt: $0.completedAt, format: $0.format.rawValue, title: $0.title, authors: $0.authors, coverURL: $0.coverURL, genre: $0.genre, genres: $0.genreChips, bookType: $0.bookType, language: $0.language, readID: $0.currentReadID, startedAt: $0.currentReadStartedAt, status: $0.status.rawValue, pageCount: $0.pageCount, progressPercentage: $0.progress.normalizedFraction(pageCount: $0.pageCount, audioDuration: $0.audioDurationSeconds).map { $0 * 100 }, abandonedAt: $0.abandonedAt) }
         self.archivedReads = books.flatMap { book in
             (book.pastReads ?? []).map { read in
-                .init(id: book.id, completed: true, completedAt: read.completedAt, format: read.format.rawValue, title: book.title, authors: book.authors, coverURL: book.coverURL, genre: book.genre, bookType: book.bookType, language: book.language, readID: read.id, startedAt: read.startedAt)
+                .init(id: book.id, completed: true, completedAt: read.completedAt, format: read.format.rawValue, title: book.title, authors: book.authors, coverURL: book.coverURL, genre: book.genre, genres: book.genreChips, bookType: book.bookType, language: book.language, readID: read.id, startedAt: read.startedAt, status: "completed", pageCount: book.pageCount, progressPercentage: 100)
             }
         }
         self.sessions = sessions.map { .init(id: $0.id, bookID: $0.bookID, start: $0.startedAt, end: $0.endedAt,
-                                            pausedSeconds: $0.totalPausedSeconds, startPage: $0.startProgress.page, endPage: $0.endProgress?.page, readID: $0.readID) }
+                                            pausedSeconds: $0.totalPausedSeconds, startPage: $0.startProgress.page, endPage: $0.endProgress?.page, readID: $0.readID, formats: $0.formats?.map(\.rawValue)) }
         self.reviews = reviews.map { .init(bookID: $0.bookID, rating: $0.rating, createdAt: $0.createdAt, updatedAt: $0.updatedAt, mood: $0.mood) }
     }
     init() {}
@@ -146,6 +153,7 @@ nonisolated struct ReadingStatistics: Sendable {
     var events: [SessionEvent] = []
     var insights = ReadingInsights()
     var extended = ExtendedReadingStatistics()
+    var behaviour = ReadingBehaviour()
     var completedBooks = 0
     var undatedCompletedBooks = 0
     var seconds = 0

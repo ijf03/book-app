@@ -32,35 +32,37 @@ struct ChangeReadingStatusSheet: View {
 
     var body: some View {
         NavigationStack {
-            VStack(
-                alignment: .leading,
-                spacing: AppSpacing.lg
-            ) {
+            ScrollView {
+                VStack(
+                    alignment: .leading,
+                    spacing: AppSpacing.lg
+                ) {
 
-                Text(
-                    "Choose where this book belongs in your library."
-                )
-                .font(AppTypography.body)
-                .foregroundStyle(
-                    Color.textSecondary
-                )
+                    Text(
+                        "Choose where this book belongs in your library."
+                    )
+                    .font(AppTypography.body)
+                    .foregroundStyle(
+                        Color.textSecondary
+                    )
 
-                VStack(spacing: AppSpacing.sm) {
-                    ForEach(
-                        ReadingStatus.allCases
-                    ) { status in
+                    VStack(spacing: AppSpacing.sm) {
+                        ForEach(
+                            ReadingStatus.allCases
+                        ) { status in
 
-                        statusButton(
-                            status
-                        )
+                            statusButton(
+                                status
+                            )
+                        }
                     }
-                }
 
-                Spacer()
+                    Spacer()
+                }
+                .padding(
+                    AppSpacing.md
+                )
             }
-            .padding(
-                AppSpacing.md
-            )
             .background(
                 Color.surfaceSecondary
             )
@@ -185,6 +187,7 @@ struct ChangeReadingStatusSheet: View {
             }
         }
         .buttonStyle(.plain)
+        .accessibilityAddTraits(selectedStatus == status ? .isSelected : [])
     }
 
     // MARK: - Helpers
@@ -202,6 +205,8 @@ struct ChangeReadingStatusSheet: View {
 
         case .completed:
             return "checkmark.circle"
+        case .abandoned:
+            return "book.closed"
         }
     }
 
@@ -218,6 +223,8 @@ struct ChangeReadingStatusSheet: View {
 
         case .completed:
             return "You've finished reading this book."
+        case .abandoned:
+            return "Keep your progress and record that you stopped reading this book."
         }
     }
 }

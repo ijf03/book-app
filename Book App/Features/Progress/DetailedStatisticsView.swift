@@ -62,7 +62,7 @@ struct DetailedStatisticsView: View {
                     Picker("Genre chart style", selection: $genrePie) {
                         Text("Genre bars").tag(false)
                         Text("Genre pie").tag(true)
-                    }.pickerStyle(.segmented)
+                    }.accessibleSegmentedPicker()
                     if genrePie {
                         InsightPieChart(title: "Your reading tastes", counts: model.statistics.insights.genres)
                     } else {
@@ -82,7 +82,7 @@ struct DetailedStatisticsView: View {
                             Text(message).font(AppTypography.caption).foregroundStyle(Color.textSecondary)
                         }
                     }
-                    Text("One primary genre per read, based on recognised Open Library subjects or your edits.")
+                    Text("Genres match the chips on your books. Each completed read counts once per chip; pie slices show shares of genre tags, not unique books.")
                         .font(AppTypography.caption).foregroundStyle(Color.textSecondary)
                     Button("Edit book details for insights") { showsGenres = true }
                     InsightCountChart(title: "How you rate", counts: model.statistics.insights.ratings, empty: "Add a review to see your rating distribution.")
@@ -92,6 +92,7 @@ struct DetailedStatisticsView: View {
                     StatisticsFormatChart(formats: model.statistics.formats, total: model.statistics.completedBooks)
                     StatisticsActivityChart(statistics: model.statistics)
                     ExtendedStatisticsSection(statistics: model.statistics)
+                    ReadingBehaviourDetails(profile: model.statistics.behaviour)
                     StatisticsDefinitions(undatedBooks: model.statistics.undatedCompletedBooks)
                 }
             }
@@ -193,7 +194,7 @@ private struct StatisticsFormatChart: View {
     var body: some View {
         AppCard {
             VStack(alignment: .leading, spacing: AppSpacing.md) {
-                Text("Completed books by format").font(AppTypography.headline)
+                Text("Completed books by format").font(AppTypography.headline).accessibilityAddTraits(.isHeader)
                 if total == 0 {
                     Text("No completed books for this period.").foregroundStyle(Color.textSecondary)
                 } else {
@@ -243,7 +244,7 @@ private struct StatisticsActivityChart: View {
     var body: some View {
         AppCard {
             VStack(alignment: .leading, spacing: AppSpacing.md) {
-                Text("Reading activity").font(AppTypography.headline)
+                Text("Reading activity").font(AppTypography.headline).accessibilityAddTraits(.isHeader)
                 Text(statistics.bucket.title).font(AppTypography.caption).foregroundStyle(Color.textSecondary)
                 Text("Finished sessions are assigned to the date they ended.").font(AppTypography.caption)
                 if statistics.sessions == 0 {

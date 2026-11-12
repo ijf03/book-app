@@ -12,11 +12,11 @@ struct InsightRhythmView: View {
     var body: some View {
         AppCard {
             VStack(alignment: .leading, spacing: AppSpacing.md) {
-                Text("Patterns & pace").font(AppTypography.title)
+                Text("Patterns & pace").font(AppTypography.title).accessibilityAddTraits(.isHeader)
                 Picker("Chart view", selection: $monthly) {
                     Text("Year").tag(false)
                     Text("Month").tag(true)
-                }.pickerStyle(.segmented)
+                }.accessibleSegmentedPicker()
                 if monthly {
                     Picker("Explore a month", selection: $selectedMonth) {
                         ForEach(months) { month in
@@ -30,13 +30,13 @@ struct InsightRhythmView: View {
                 } else {
                     Picker("Activity metric", selection: $metric) {
                         ForEach(InsightGoalMetric.allCases) { Text($0.title).tag($0) }
-                    }.pickerStyle(.segmented)
+                    }.accessibleSegmentedPicker()
                     Chart(months) { month in
                         BarMark(x: .value("Month", month.date, unit: .month),
                                 y: .value("Count", value(month)))
                             .foregroundStyle(Color.chart2)
                             .accessibilityLabel(Text(month.date, format: .dateTime.month(.wide).year()))
-                            .accessibilityValue(value(month).formatted())
+                            .accessibilityValue("\(value(month)) \(String(localized: metric.title))")
                     }
                     .chartXAxis { AxisMarks(values: .stride(by: .month)) { AxisValueLabel(format: .dateTime.month(.abbreviated)) } }
                     .frame(height: AppLayout.statisticsChartHeight)
@@ -71,7 +71,7 @@ private struct InsightRadarView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: AppSpacing.md) {
-            Text("Your month at a glance").font(AppTypography.headline)
+            Text("Your month at a glance").font(AppTypography.headline).accessibilityAddTraits(.isHeader)
             Canvas { context, size in
                 let center = CGPoint(x: size.width / 2, y: size.height / 2)
                 let radius = min(size.width, size.height) * 0.35

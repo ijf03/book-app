@@ -34,13 +34,43 @@ final class FirebaseAuthenticationService: AuthenticationService {
         catch { throw map(error) }
     }
 
-    func resetPassword(email: String) async throws {
-        do { try await auth.sendPasswordReset(withEmail: email) }
-        catch {
-            // Keep reset responses neutral even when enumeration protection is disabled.
-            if AuthErrorCode(rawValue: (error as NSError).code) == .userNotFound { return }
-            throw map(error)
+    private func reauthenticate(userID: String, password: String) async throws -> User {
+        guard let user = auth.currentUser, user.uid == userID, let email = user.email else { throw AuthenticationError.invalidCredentials }
+        try Task.checkCancellation()
+        _ = try await user.reauthenticate(with: EmailAuthProvider.credential(withEmail: email, password: password))
+        try Task.checkCancellation()
+        guard auth.currentUser === user else { throw AuthenticationError.invalidCredentials }
+        return user
+    }
+
+    func changeEmail(userID: String, email: String, currentPassword: String) async throws {
+        do {
+            let user = try await reauthenticate(userID: userID, password: currentPassword)
+            // Direct changes require the Firebase project to allow this operation.
+            try await user.updateEmail(to: email)
+        } catch {
+            if AuthErrorCode(rawValue: (error as NSError).code) == .operationNotAllowed {
+                throw AuthenticationError.emailChangeUnavailable
+            }
+            throw (error as? AuthenticationError) ?? map(error)
         }
+    }
+
+    func changePassword(userID: String, currentPassword: String, newPassword: String) async throws {
+        do {
+            let user = try await reauthenticate(userID: userID, password: currentPassword)
+            try await user.updatePassword(to: newPassword)
+        } catch { throw (error as? AuthenticationError) ?? map(error) }
+    }
+
+    func refreshedUser(userID: String) async throws -> AuthenticatedUser {
+        do {
+            guard let user = auth.currentUser, user.uid == userID else { throw AuthenticationError.invalidCredentials }
+            try await user.reload()
+            try Task.checkCancellation()
+            guard auth.currentUser === user else { throw AuthenticationError.invalidCredentials }
+            return AuthenticatedUser(id: user.uid, email: user.email ?? "")
+        } catch { throw (error as? AuthenticationError) ?? map(error) }
     }
 
     func signOut() throws {

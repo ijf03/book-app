@@ -8,6 +8,11 @@ struct Book: Identifiable, Codable, Hashable {
     var description: String?
     var coverURL: URL?
 
+    var audioDurationSeconds: Int? = nil
+    var immersiveCompanion: ReadingFormat? = nil
+    var immersiveReadingPercentage: Double? = nil
+    var abandonedAt: Date? = nil
+    var formatsUsed: [ReadingFormat]? = nil
     var pageCount: Int?
     var status: ReadingStatus
     var format: ReadingFormat
@@ -17,6 +22,9 @@ struct Book: Identifiable, Codable, Hashable {
     var completedAt: Date? = nil
     // Optional for backwards-compatible decoding of existing account libraries.
     var genre: String? = nil
+    var genres: [String]? = nil
+    var metadata: BookMetadata? = nil
+    var genreChips: [String] { GenreTags.normalized(genres ?? genre.map { [$0] } ?? []) }
     var bookType: String? = nil // fiction or nonfiction; nil means unrecorded
     var language: String? = nil
     var progress: ReadingProgress = .empty
@@ -40,6 +48,7 @@ struct Book: Identifiable, Codable, Hashable {
         currentReadStartedAt = date
         completedAt = nil
         status = .reading
+        immersiveReadingPercentage = nil
         progress = ReadingProgress(page: 0, percentage: 0, timestampSeconds: 0)
     }
 

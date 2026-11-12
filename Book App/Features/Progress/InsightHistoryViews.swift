@@ -7,7 +7,7 @@ struct InsightFinishedBooks: View {
     var body: some View {
         AppCard {
             VStack(alignment: .leading, spacing: AppSpacing.md) {
-                Text("Books finished").font(AppTypography.title)
+                Text("Books finished").font(AppTypography.title).accessibilityAddTraits(.isHeader)
                 ForEach(months) { month in
                     VStack(alignment: .leading, spacing: AppSpacing.sm) {
                         HStack(alignment: .center, spacing: AppSpacing.sm) {
@@ -48,10 +48,10 @@ struct InsightStreakView: View {
     var body: some View {
         AppCard {
             VStack(alignment: .leading, spacing: AppSpacing.md) {
-                Text("Your reading streak").font(AppTypography.title)
-                Text("Purple: best streak · Dark grey: read · ★: finished a book")
+                Text("Your reading streak").font(AppTypography.title).accessibilityAddTraits(.isHeader)
+                Text("Bold: best streak · Underlined: read · ★: finished a book")
                     .font(AppTypography.caption)
-                LazyVGrid(columns: [GridItem(.adaptive(minimum: typeSize.isAccessibilitySize ? AppLayout.insightCalendarWidth * 2 : AppLayout.insightCalendarWidth))], alignment: .leading, spacing: AppSpacing.md) {
+                LazyVGrid(columns: typeSize.isAccessibilitySize ? [GridItem(.flexible())] : [GridItem(.adaptive(minimum: AppLayout.insightCalendarWidth))], alignment: .leading, spacing: AppSpacing.md) {
                     ForEach(insights.months) { month in InsightCalendarMonth(month: month) }
                 }
                 Text("\(insights.currentStreak) days current · \(insights.longestStreak) days best")
@@ -70,40 +70,54 @@ struct InsightStreakView: View {
 }
 
 private struct InsightCalendarMonth: View {
+    @Environment(\.dynamicTypeSize) private var typeSize
     let month: ReadingInsights.Month
     private let columns = Array(repeating: GridItem(.flexible(), spacing: AppSpacing.xs), count: 7)
     var body: some View {
         VStack(alignment: .leading, spacing: AppSpacing.sm) {
-            Text(month.date, format: .dateTime.month(.wide).year()).font(AppTypography.headline)
-            LazyVGrid(columns: columns, spacing: AppSpacing.xs) {
-                ForEach(0..<7, id: \.self) { day in
-                    Text(Calendar.current.veryShortStandaloneWeekdaySymbols[day])
-                        .font(AppTypography.caption).accessibilityHidden(true)
-                }
-                ForEach(0..<month.leadingDays, id: \.self) { _ in
-                    Color.clear.aspectRatio(1, contentMode: .fit).accessibilityHidden(true)
-                }
+            Text(month.date, format: .dateTime.month(.wide).year()).font(AppTypography.headline).accessibilityAddTraits(.isHeader)
+            if typeSize.isAccessibilitySize {
                 ForEach(month.days) { day in
-                    Text(day.number.formatted())
-                        .font(AppTypography.caption)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, AppSpacing.xs)
-                        .foregroundStyle(day.active ? Color.surface : Color.textPrimary)
-                        .background(day.best ? Color.appAccent : day.active ? Color.textSecondary : Color.clear, in: Circle())
-                        .overlay {
-                            if day.finished { Circle().stroke(Color.appAccent, lineWidth: 2) }
-                        }
-                        .overlay(alignment: .bottomTrailing) {
-                            if day.finished {
-                                Image(systemName: "star.fill")
-                                    .font(AppTypography.caption)
-                                    .foregroundStyle(Color.appAccent)
-                                    .background(Color.surface, in: Circle())
-                                    .offset(x: AppSpacing.xs, y: AppSpacing.xs)
-                                    .accessibilityHidden(true)
+                    VStack(alignment: .leading, spacing: AppSpacing.xs) {
+                        Text(day.date, format: .dateTime.weekday(.wide).day().month())
+                        Text(day.best ? "Best streak" : day.active ? "Read" : "No recorded reading")
+                        if day.finished { Label("Finished a book", systemImage: "star.fill") }
+                    }
+                    .accessibilityElement(children: .combine)
+                }
+            } else {
+                LazyVGrid(columns: columns, spacing: AppSpacing.xs) {
+                    ForEach(0..<7, id: \.self) { day in
+                        Text(Calendar.current.veryShortStandaloneWeekdaySymbols[day])
+                            .font(AppTypography.caption).accessibilityHidden(true)
+                    }
+                    ForEach(0..<month.leadingDays, id: \.self) { _ in
+                        Color.clear.aspectRatio(1, contentMode: .fit).accessibilityHidden(true)
+                    }
+                    ForEach(month.days) { day in
+                        Text(day.number.formatted())
+                            .font(AppTypography.caption)
+                            .fontWeight(day.best ? .bold : .regular)
+                            .underline(day.active)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, AppSpacing.xs)
+                            .foregroundStyle(day.active ? Color.surface : Color.textPrimary)
+                            .background(day.best ? Color.appAccent : day.active ? Color.textSecondary : Color.clear, in: Circle())
+                            .overlay {
+                                if day.finished { Circle().stroke(Color.appAccent, lineWidth: 2) }
                             }
-                        }
-                        .accessibilityLabel("\(day.date.formatted(date: .complete, time: .omitted)): \(day.best ? String(localized: "best streak") : day.active ? String(localized: "read") : String(localized: "no recorded reading"))\(day.finished ? String(localized: ", finished a book") : "")")
+                            .overlay(alignment: .bottomTrailing) {
+                                if day.finished {
+                                    Image(systemName: "star.fill")
+                                        .font(AppTypography.caption)
+                                        .foregroundStyle(Color.appAccent)
+                                        .background(Color.surface, in: Circle())
+                                        .offset(x: AppSpacing.xs, y: AppSpacing.xs)
+                                        .accessibilityHidden(true)
+                                }
+                            }
+                            .accessibilityLabel("\(day.date.formatted(date: .complete, time: .omitted)): \(day.best ? String(localized: "best streak") : day.active ? String(localized: "read") : String(localized: "no recorded reading"))\(day.finished ? String(localized: ", finished a book") : "")")
+                    }
                 }
             }
         }
@@ -117,7 +131,7 @@ struct InsightCountChart: View {
     var body: some View {
         AppCard {
             VStack(alignment: .leading, spacing: AppSpacing.md) {
-                Text(title).font(AppTypography.title)
+                Text(title).font(AppTypography.title).accessibilityAddTraits(.isHeader)
                 if counts.allSatisfy({ $0.count == 0 }) {
                     Text(empty).foregroundStyle(Color.textSecondary)
                 }
@@ -174,7 +188,7 @@ struct InsightPaceView: View {
     var body: some View {
         AppCard {
             VStack(alignment: .leading, spacing: AppSpacing.md) {
-                Text("Your reading pace").font(AppTypography.title)
+                Text("Your reading pace").font(AppTypography.title).accessibilityAddTraits(.isHeader)
                 Chart(insights.months) { month in
                     if let pace = month.pagesPerHour {
                         BarMark(x: .value("Month", month.date, unit: .month), y: .value("Pages / hour", pace))

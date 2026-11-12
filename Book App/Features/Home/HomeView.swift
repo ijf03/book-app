@@ -25,14 +25,19 @@ struct HomeView: View {
                 VStack(alignment: .leading, spacing: AppSpacing.lg) {
                     HStack(alignment: .top, spacing: AppSpacing.md) {
                         VStack(alignment: .leading, spacing: AppSpacing.sm) {
-                            Text(viewModel.greeting).font(AppTypography.largeTitle)
+                            Text(viewModel.greeting).font(AppTypography.largeTitle).accessibilityAddTraits(.isHeader)
                             Text("Keep your reading momentum going.")
                                 .font(AppTypography.body).foregroundStyle(Color.textSecondary)
                         }
                         Spacer(minLength: 0)
-                        Image("AppLogo").resizable().scaledToFit()
-                            .frame(width: AppLayout.minimumTapTarget, height: AppLayout.minimumTapTarget)
-                            .accessibilityHidden(true)
+                        NavigationLink {
+                            AboutView().toolbar(.visible, for: .navigationBar)
+                        } label: {
+                            Image("AppLogo").resizable().scaledToFit()
+                                .frame(width: AppLayout.minimumTapTarget, height: AppLayout.minimumTapTarget)
+                        }
+                        .accessibilityLabel("About Book Tracker")
+                        .accessibilityHint("Learn about the app and its creator.")
                     }
                     HomeCheckInCard(model: viewModel)
                     currentlyReading
@@ -45,7 +50,9 @@ struct HomeView: View {
                         Label("Find your next read", systemImage: "magnifyingglass")
                     }.buttonStyle(AppButtonStyle(kind: .secondary))
                 }
-                .padding(AppSpacing.md)
+                .padding(.horizontal, AppSpacing.md)
+                .padding(.bottom, AppSpacing.md)
+                .padding(.top, AppSpacing.sm)
                 .frame(maxWidth: AppLayout.readableWidth)
                 .frame(maxWidth: .infinity)
             }
@@ -72,7 +79,7 @@ struct HomeView: View {
 
     private var currentlyReading: some View {
         VStack(alignment: .leading, spacing: AppSpacing.md) {
-            Text("Currently reading").font(AppTypography.title)
+            Text("Currently reading").font(AppTypography.title).accessibilityAddTraits(.isHeader)
             if viewModel.currentlyReadingBooks.isEmpty {
                 AppCard {
                     VStack(alignment: .leading, spacing: AppSpacing.sm) {
@@ -114,7 +121,7 @@ private struct HomeCheckInCard: View {
         VStack(alignment: .leading, spacing: AppSpacing.md) {
             HStack(alignment: .top) {
                 VStack(alignment: .leading, spacing: AppSpacing.xs) {
-                    Text("Today’s check-in").font(AppTypography.headline)
+                    Text("Today’s check-in").font(AppTypography.headline).accessibilityAddTraits(.isHeader)
                     Text(model.didReadToday ? "You’ve read today. Well done!" : "Did you read today?")
                         .font(AppTypography.body).foregroundStyle(Color.onAccent)
                 }
@@ -233,13 +240,14 @@ private struct HomeReadingCard<Destination: View>: View {
 }
 
 private struct HomeBookShelf<Destination: View>: View {
+    @Environment(\.dynamicTypeSize) private var typeSize
     let title: LocalizedStringResource
     let books: [Book]
     let empty: LocalizedStringResource
     let destination: (Book) -> Destination
     var body: some View {
         VStack(alignment: .leading, spacing: AppSpacing.md) {
-            Text(title).font(AppTypography.title)
+            Text(title).font(AppTypography.title).accessibilityAddTraits(.isHeader)
             if books.isEmpty {
                 Text(empty).font(AppTypography.body).foregroundStyle(Color.textSecondary)
             } else {
@@ -249,8 +257,8 @@ private struct HomeBookShelf<Destination: View>: View {
                             NavigationLink { destination(book) } label: {
                                 VStack(alignment: .leading, spacing: AppSpacing.xs) {
                                     BookCoverView(url: book.coverURL)
-                                    Text(book.title).font(AppTypography.caption).foregroundStyle(Color.textPrimary).lineLimit(2)
-                                }.frame(width: AppLayout.homeCoverWidth)
+                                    Text(book.title).font(AppTypography.caption).foregroundStyle(Color.textPrimary).lineLimit(typeSize.isAccessibilitySize ? nil : 2)
+                                }.frame(width: typeSize.isAccessibilitySize ? AppLayout.homeCoverWidth * 2 : AppLayout.homeCoverWidth)
                             }
                             .buttonStyle(.plain)
                             .accessibilityLabel("View \(book.title)")

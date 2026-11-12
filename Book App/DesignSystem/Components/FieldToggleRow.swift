@@ -8,6 +8,7 @@
 import SwiftUI
 
 struct FieldToggleRow: View {
+    @Environment(\.dynamicTypeSize) private var typeSize
     let title: String
     let helperText: String
     let placeholder: String
@@ -18,10 +19,10 @@ struct FieldToggleRow: View {
 
     var body: some View {
         AppCard {
-            HStack(
-                alignment: .center,
-                spacing: AppSpacing.md
-            ) {
+            let layout = typeSize.isAccessibilitySize
+                ? AnyLayout(VStackLayout(alignment: .leading, spacing: AppSpacing.md))
+                : AnyLayout(HStackLayout(alignment: .center, spacing: AppSpacing.md))
+            layout {
                 Button {
                     isEnabled.toggle()
                 } label: {
@@ -31,6 +32,8 @@ struct FieldToggleRow: View {
                             : "square"
                     )
                     .font(.title3)
+                    .frame(minWidth: 44, minHeight: 44)
+                    .contentShape(Rectangle())
                     .foregroundStyle(
                         isEnabled
                             ? Color.appAccent
@@ -38,6 +41,7 @@ struct FieldToggleRow: View {
                     )
                 }
                 .buttonStyle(.plain)
+                .accessibilityValue(isEnabled ? "On" : "Off")
                 .accessibilityLabel(
                     isEnabled
                         ? "Disable \(title)"
@@ -64,8 +68,9 @@ struct FieldToggleRow: View {
                     text: $text
                 )
                 .keyboardType(keyboardType)
+                .accessibilityLabel(title)
                 .multilineTextAlignment(.trailing)
-                .frame(width: 100)
+                .frame(width: typeSize.isAccessibilitySize ? nil : 100)
                 .padding(AppSpacing.sm)
                 .background {
                     RoundedRectangle(

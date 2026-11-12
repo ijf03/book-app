@@ -14,10 +14,12 @@ struct BookDetailHeader: View {
         VStack(spacing: AppSpacing.md) {
             BookCoverView(url: book.coverURL)
                 .frame(width: 150)
+                .accessibilityLabel("Cover of \(book.title)")
 
             VStack(spacing: AppSpacing.sm) {
                 Text(book.title)
                     .font(AppTypography.title)
+                    .accessibilityAddTraits(.isHeader)
                     .foregroundStyle(Color.textPrimary)
                     .multilineTextAlignment(.center)
 

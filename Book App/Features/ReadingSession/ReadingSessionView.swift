@@ -8,6 +8,9 @@
 import SwiftUI
 
 struct ReadingSessionView: View {
+    @ScaledMetric(relativeTo: .largeTitle) private var timerFontSize = 44
+    @Environment(\.dynamicTypeSize) private var typeSize
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     @Environment(ReadingSessionStore.self)
     private var sessionStore
@@ -75,15 +78,16 @@ struct ReadingSessionView: View {
 
     private var bookSection: some View {
         AppCard {
-            HStack(
-                alignment: .top,
-                spacing: AppSpacing.md
-            ) {
+            let layout = typeSize.isAccessibilitySize
+                ? AnyLayout(VStackLayout(alignment: .leading, spacing: AppSpacing.md))
+                : AnyLayout(HStackLayout(alignment: .top, spacing: AppSpacing.md))
+            layout {
 
                 BookCoverView(
                     url: book.coverURL
                 )
                 .frame(width: 75)
+                .accessibilityHidden(true)
 
                 VStack(
                     alignment: .leading,
@@ -195,10 +199,10 @@ struct ReadingSessionView: View {
                 maxWidth: .infinity
             )
             .frame(
-                height: 170
+                minHeight: 170
             )
             .animation(
-                .easeInOut(duration: 0.2),
+                reduceMotion ? nil : .easeInOut(duration: 0.2),
                 value:
                     currentSession?.isPaused
             )
@@ -207,68 +211,19 @@ struct ReadingSessionView: View {
     
     @ViewBuilder
     private var timerValue: some View {
-
         if let session = currentSession {
-
             if session.isPaused {
-
-                Text(
-                    FinishReadingSessionView
-                        .formatDuration(
-                            session.elapsedSeconds(
-                                at:
-                                    session.pausedAt ??
-                                    Date()
-                            )
-                        )
-                )
-                .font(
-                    .system(
-                        size: 44,
-                        weight: .semibold,
-                        design: .rounded
-                    )
-                )
-                .monospacedDigit()
-                .foregroundStyle(
-                    Color.textPrimary
-                )
-
+                ReadingDurationText(seconds: session.elapsedSeconds(at: session.pausedAt ?? Date()))
+                    .foregroundStyle(Color.textPrimary)
             } else {
-
-                TimelineView(
-                    .periodic(
-                        from: .now,
-                        by: 1
-                    )
-                ) { context in
-
-                    Text(
-                        FinishReadingSessionView
-                            .formatDuration(
-                                session.elapsedSeconds(
-                                    at:
-                                        context.date
-                                )
-                            )
-                    )
-                    .font(
-                        .system(
-                            size: 44,
-                            weight: .semibold,
-                            design: .rounded
-                        )
-                    )
-                    .monospacedDigit()
-                    .foregroundStyle(
-                        Color.appAccent
-                    )
+                TimelineView(.periodic(from: .now, by: 1)) { context in
+                    ReadingDurationText(seconds: session.elapsedSeconds(at: context.date))
+                        .foregroundStyle(Color.appAccent)
+                        .accessibilityAddTraits(.updatesFrequently)
                 }
             }
-
         } else {
-
-            SwiftUI.ProgressView()
+            SwiftUI.ProgressView("Starting reading session")
         }
     }
 
@@ -302,7 +257,7 @@ struct ReadingSessionView: View {
                     )
                     .font(
                         .system(
-                            size: 44,
+                            size: timerFontSize,
                             weight: .semibold,
                             design: .rounded
                         )
@@ -354,7 +309,7 @@ struct ReadingSessionView: View {
                 )
                 .font(
                     .system(
-                        size: 44,
+                        size: timerFontSize,
                         weight: .semibold,
                         design: .rounded
                     )
@@ -381,16 +336,16 @@ struct ReadingSessionView: View {
             .padding(AppSpacing.lg)
         }
         .frame(maxWidth: .infinity)
-        .frame(height: 220)
+        .frame(minHeight: 220)
     }
 
     // MARK: - Actions
 
     private var actionSection: some View {
-
-        HStack(
-            spacing: AppSpacing.sm
-        ) {
+        let layout = typeSize.isAccessibilitySize
+            ? AnyLayout(VStackLayout(spacing: AppSpacing.sm))
+            : AnyLayout(HStackLayout(spacing: AppSpacing.sm))
+        return layout {
 
             if let session =
                 currentSession

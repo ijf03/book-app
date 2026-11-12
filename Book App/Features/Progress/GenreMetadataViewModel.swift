@@ -12,7 +12,7 @@ final class GenreMetadataViewModel {
         message = nil
         defer { isLoading = false }
         let scope = library.accountScope
-        let candidates = library.books.filter { $0.genre?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ?? true }
+        let candidates = library.books.filter { $0.genreChips.isEmpty }
         var updated = 0
         var failures = 0
         for book in candidates {
@@ -29,11 +29,11 @@ final class GenreMetadataViewModel {
                     return result.title.caseInsensitiveCompare(book.title) == .orderedSame &&
                         !Set(result.authors.map { $0.lowercased() }).isDisjoint(with: book.authors.map { $0.lowercased() })
                 }
-                guard matches.count == 1, let genre = matches.first?.genre,
+                guard matches.count == 1, let result = matches.first, !result.genreChips.isEmpty,
                       let current = library.book(id: book.id),
                       current.sourceBookID == book.sourceBookID,
-                      current.genre?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ?? true else { continue }
-                library.updateGenre(bookID: book.id, genre: genre)
+                      current.genreChips.isEmpty else { continue }
+                library.applyMetadata(result, bookID: book.id, fillGenres: true)
                 if library.persistenceError == nil { updated += 1 } else { failures += 1 }
             } catch is CancellationError {
                 return

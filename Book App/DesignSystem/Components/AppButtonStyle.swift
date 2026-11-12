@@ -38,11 +38,11 @@ struct AppButtonStyle: ButtonStyle {
     private var foregroundColor: Color {
         switch kind {
         case .primary:
-            return .white
+            return .onAccent
         case .secondary, .onAccent:
             return .appAccent
         case .destructive:
-            return .white
+            return .onAccent
         }
     }
 

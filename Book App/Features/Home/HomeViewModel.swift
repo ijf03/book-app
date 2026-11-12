@@ -31,10 +31,11 @@ final class HomeViewModel {
         "\(store.books.hashValue)-\(sessionStore.sessions.hashValue)-\(checkIns.entries.hashValue)-\(store.accountScope?.cloudRevision ?? 0)"
     }
     var greeting: LocalizedStringResource {
+        let name = store.profile.profile?.displayName
         switch Calendar.current.component(.hour, from: now) {
-        case 5..<12: "Good morning"
-        case 12..<17: "Good afternoon"
-        default: "Good evening"
+        case 5..<12: return name.map { "Good morning, \($0)" } ?? "Good morning"
+        case 12..<17: return name.map { "Good afternoon, \($0)" } ?? "Good afternoon"
+        default: return name.map { "Good evening, \($0)" } ?? "Good evening"
         }
     }
     var currentStreak: Int {

@@ -1,6 +1,7 @@
 import Foundation
 
 enum AppLayout {
+    static let genreChipMinimumWidth: CGFloat = 120
     static let homeCoverWidth: CGFloat = 80
     static let selectionOutlineWidth: CGFloat = 3
     static let statisticsExportWidth: CGFloat = 540

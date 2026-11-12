@@ -91,6 +91,7 @@ struct BookNotesView: View {
                             "plus"
                     )
                 }
+                .accessibilityLabel("Add a note for \(book.title)")
             }
         }
         .navigationDestination(
@@ -290,10 +291,12 @@ struct BookNotesView: View {
                             Color.textSecondary
                         )
                         .frame(
-                            width: 32,
-                            height: 32
+                            width: 44,
+                            height: 44
                         )
                     }
+                    .accessibilityLabel("Note actions")
+                    .accessibilityHint("Edit or delete this note.")
                 }
 
                 if note.containsSpoilers &&

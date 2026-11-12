@@ -15,6 +15,9 @@ struct BookSearchResult: Identifiable, Hashable, Sendable {
     let coverURL: URL?
     let pageCount: Int?
     var genre: String? = nil
+    var genres: [String]? = nil
+    var metadata: BookMetadata? = nil
+    var genreChips: [String] { GenreTags.normalized(genres ?? genre.map { [$0] } ?? []) }
 
     var authorText: String {
         authors.isEmpty

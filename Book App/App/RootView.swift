@@ -115,10 +115,11 @@ struct RootView: View {
                         "chart.bar.fill"
                 )
             }
-            AccountView(authentication: authentication, sync: sync)
+            AccountView(authentication: authentication, sync: sync, profile: libraryStore.profile, library: libraryStore, sessions: readingSessionStore)
                 .tag(AppTab.account)
                 .tabItem { Label("Account", systemImage: "person.crop.circle") }
         }
+        .environment(\.bookCatalogue, bookRepository)
         .task {
             await reminders.reconcile()
             await libraryStore.refreshSampleBooks(using: bookRepository)

@@ -7,7 +7,7 @@ final class AccountLocalStorage {
         "library.json", "reading-sessions.json", "book-content.json",
         "reading-goals.json", "custom-book-lists.json", "reading-reminders.json"
     ]
-    static let accountFileNames = legacyFileNames + ["reading-check-ins.json"]
+    static let accountFileNames = legacyFileNames + ["reading-check-ins.json", "reader-profile.json", "review-moods.json"]
     private let root: URL
     private let fileManager: FileManager
 

@@ -14,15 +14,17 @@ final class LibraryStore {
     /// Hydration never saves back to the repository, avoiding listener feedback.
     func reloadFromLocalSync() {
         checkIns.reload()
+        profile.reload()
         do {
             books = try localDataSource.loadBooks() ?? []
             persistenceError = nil
         } catch { persistenceError = SyncFailure.localStorage.message }
     }
 
-    func clearAccountMemory() { checkIns.clear(); books = []; sampleRefreshError = nil; persistenceError = nil }
+    func clearAccountMemory() { profile.clear(); checkIns.clear(); books = []; sampleRefreshError = nil; persistenceError = nil }
 
 
+    let profile: ReaderProfileStore
     let checkIns: ReadingCheckInStore
     private(set) var books: [Book]
 
@@ -37,6 +39,7 @@ final class LibraryStore {
         localDataSource: LocalLibraryDataSource
     ) {
         // Loading history must not manufacture completion dates or upload inferred edits.
+        self.profile = ReaderProfileStore(scope: localDataSource.scope)
         self.checkIns = ReadingCheckInStore(scope: localDataSource.scope)
         self.books = books
         self.localDataSource = localDataSource
@@ -64,6 +67,9 @@ final class LibraryStore {
 
         var savedBook = book
         if savedBook.status == .completed && savedBook.completedAt == nil { savedBook.completedAt = Date() }
+        if savedBook.status == .abandoned && savedBook.abandonedAt == nil { savedBook.abandonedAt = Date() }
+        if savedBook.status == .reading && savedBook.currentReadStartedAt == nil { savedBook.currentReadStartedAt = Date() }
+        savedBook.formatsUsed = [savedBook.format]
         books.append(savedBook)
 
         print(
@@ -88,7 +94,35 @@ final class LibraryStore {
         guard let index = books.firstIndex(where: { $0.id == bookID }) else { return }
         let previous = books[index]
         books[index].genre = genre
+        books[index].genres = genre.map { [$0] } ?? []
         if !save() { books[index] = previous }
+    }
+
+    /// Merge only catalogue fields into the latest record; never replace progress or review history.
+    func applyMetadata(_ result: BookSearchResult, bookID: String, selectingEdition: Bool = false, fillGenres: Bool = false) {
+        guard accountScope?.isActive != false,
+              let index = books.firstIndex(where: { $0.id == bookID }) else { return }
+        let old = books[index]
+        books[index].description = result.description ?? old.description
+        if var metadata = result.metadata {
+            if !selectingEdition { metadata.edition = old.metadata?.edition }
+            books[index].metadata = metadata
+        }
+        if old.genres == nil || (fillGenres && old.genreChips.isEmpty) {
+            books[index].genres = GenreTags.normalized(old.genreChips + result.genreChips)
+            books[index].genre = books[index].genres?.first
+        }
+        if selectingEdition, let edition = result.metadata?.edition {
+            let fraction = old.progress.normalizedFraction(pageCount: old.pageCount, audioDuration: old.audioDurationSeconds)
+            if let fraction {
+                books[index].progress.percentage = fraction * 100
+                if old.pageCount != edition.pages { books[index].progress.page = nil }
+            }
+            books[index].pageCount = edition.pages
+            books[index].language = edition.languages.first
+            books[index].coverURL = edition.coverURL ?? old.coverURL
+        }
+        if !save() { books[index] = old }
     }
 
     // MARK: - Update
@@ -124,6 +158,11 @@ final class LibraryStore {
         savedBook.completedAt = savedBook.status == .completed
             ? (oldBook.status == .completed ? oldBook.completedAt : Date())
             : nil
+        savedBook.abandonedAt = savedBook.status == .abandoned
+            ? (oldBook.abandonedAt ?? Date()) : nil
+        savedBook.formatsUsed = ReadingFormat.allCases.filter {
+            Set((oldBook.formatsUsed ?? [oldBook.format]) + [savedBook.format]).contains($0)
+        }
         books[index] = savedBook
 
         if !save() {

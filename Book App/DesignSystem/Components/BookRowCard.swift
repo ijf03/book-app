@@ -9,16 +9,18 @@ import SwiftUI
 
 struct BookRowCard: View {
     let book: Book
+    @Environment(\.dynamicTypeSize) private var typeSize
 
     var body: some View {
-        HStack(
-            alignment: .top,
-            spacing: AppSpacing.md
-        ) {
+        let layout = typeSize.isAccessibilitySize
+            ? AnyLayout(VStackLayout(alignment: .leading, spacing: AppSpacing.md))
+            : AnyLayout(HStackLayout(alignment: .top, spacing: AppSpacing.md))
+        return layout {
             BookCoverView(
                 url: book.coverURL
             )
             .frame(width: 72)
+            .accessibilityHidden(true)
 
             VStack(
                 alignment: .leading,
@@ -31,14 +33,14 @@ struct BookRowCard: View {
                     .foregroundStyle(
                         Color.textPrimary
                     )
-                    .lineLimit(2)
+                    .lineLimit(typeSize.isAccessibilitySize ? nil : 2)
 
                 Text(book.authorText)
                     .font(AppTypography.body)
                     .foregroundStyle(
                         Color.textSecondary
                     )
-                    .lineLimit(1)
+                    .lineLimit(typeSize.isAccessibilitySize ? nil : 1)
 
                 Spacer()
 
@@ -60,6 +62,7 @@ struct BookRowCard: View {
             Spacer()
         }
         .frame(minHeight: 108)
+        .accessibilityElement(children: .combine)
     }
 
     private var readingProgress:

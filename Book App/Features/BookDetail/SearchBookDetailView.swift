@@ -1,240 +1,88 @@
-//
-//  SearchBookDetailView.swift
-//  Book App
-//
-//  Created by Sabi on 4/10/2026.
-//
-
 import SwiftUI
 
 struct SearchBookDetailView: View {
-
-    let book: BookSearchResult
+    @Environment(\.dynamicTypeSize) private var typeSize
     let libraryStore: LibraryStore
+    @Environment(\.bookCatalogue) private var repository
+    @State private var model: BookMetadataViewModel
+    @State private var isShowingAddSheet = false
+    @State private var isShowingEditions = false
+    @State private var request = 0
 
-    @State
-    private var isShowingAddSheet = false
-
-    @State
-    private var wasJustAdded = false
-
-    private var isAlreadyAdded: Bool {
-        libraryStore.contains(
-            bookID: book.id
-        )
+    init(book: BookSearchResult, libraryStore: LibraryStore) {
+        self.libraryStore = libraryStore
+        _model = State(initialValue: BookMetadataViewModel(book: book))
     }
 
     var body: some View {
         ScrollView {
-            VStack(
-                alignment: .leading,
-                spacing: AppSpacing.xl
-            ) {
-
-                header
-
-                addSection
-
-                metadataSection
-
-                if let description =
-                    book.description
-                {
-                    aboutSection(
-                        description
-                    )
+            VStack(alignment: .leading, spacing: AppSpacing.lg) {
+                let layout = typeSize.isAccessibilitySize
+                    ? AnyLayout(VStackLayout(alignment: .leading, spacing: AppSpacing.md))
+                    : AnyLayout(HStackLayout(alignment: .top, spacing: AppSpacing.md))
+                layout {
+                    BookCoverView(url: model.result.coverURL).frame(width: AppLayout.homeCoverWidth)
+                        .accessibilityLabel("Cover of \(model.result.title)")
+                    VStack(alignment: .leading, spacing: AppSpacing.sm) {
+                        Text(model.result.title).font(AppTypography.title).fontDesign(.serif)
+                            .accessibilityAddTraits(.isHeader)
+                        Text(model.result.authorText).foregroundStyle(Color.textSecondary)
+                    }
                 }
+                BookMetadataSection(book: model.result, isLoading: model.isLoading, error: model.error,
+                                    retry: { request += 1 }, chooseEdition: { isShowingEditions = true })
             }
-            .padding(
-                AppSpacing.md
-            )
+            .padding(AppSpacing.md)
+            .frame(maxWidth: AppLayout.readableWidth)
+            .frame(maxWidth: .infinity)
         }
-        .background(
-            Color.surfaceSecondary
-        )
-        .navigationTitle(
-            "Book Details"
-        )
-        .navigationBarTitleDisplayMode(
-            .inline
-        )
-        .sheet(
-            isPresented:
-                $isShowingAddSheet
-        ) {
-            AddBookSheet(
-                book: book
-            ) {
-                status,
-                format in
-
-                addBook(
-                    status: status,
-                    format: format
-                )
-            }
-        }
-    }
-
-    // MARK: - Header
-
-    private var header: some View {
-        VStack(
-            spacing: AppSpacing.md
-        ) {
-            BookCoverView(
-                url: book.coverURL
-            )
-            .frame(
-                width: 150
-            )
-
-            VStack(
-                spacing: AppSpacing.sm
-            ) {
-                Text(book.title)
-                    .font(
-                        AppTypography.title
-                    )
-                    .foregroundStyle(
-                        Color.textPrimary
-                    )
-                    .multilineTextAlignment(
-                        .center
-                    )
-
-                Text(book.authorText)
-                    .font(
-                        AppTypography.body
-                    )
-                    .foregroundStyle(
-                        Color.textSecondary
-                    )
-                    .multilineTextAlignment(
-                        .center
-                    )
-            }
-        }
-        .frame(
-            maxWidth: .infinity
-        )
-    }
-
-    // MARK: - Add
-
-    private var addSection: some View {
-        VStack(
-            spacing: AppSpacing.sm
-        ) {
-
-            if isAlreadyAdded ||
-                wasJustAdded
-            {
-                Label(
-                    "Added to Library",
-                    systemImage:
-                        "checkmark.circle.fill"
-                )
-                .font(
-                    AppTypography.headline
-                )
-                .foregroundStyle(
-                    Color.appAccent
-                )
-                .frame(
-                    maxWidth: .infinity
-                )
-
-            } else {
-                Button(
-                    "Add to Library"
-                ) {
-                    isShowingAddSheet =
-                        true
+        .background(Color.surfaceSecondary)
+        .navigationTitle("Book details")
+        .navigationBarTitleDisplayMode(.inline)
+        .safeAreaInset(edge: .bottom) {
+            VStack(spacing: AppSpacing.sm) {
+                if libraryStore.contains(bookID: model.result.id) {
+                    Label("Added to library", systemImage: "checkmark.circle.fill")
+                        .frame(minHeight: AppLayout.minimumTapTarget)
+                } else {
+                    Button("Add to library") { isShowingAddSheet = true }
+                        .buttonStyle(AppButtonStyle(kind: .primary))
                 }
-                .buttonStyle(
-                    AppButtonStyle(
-                        kind: .primary
-                    )
-                )
+                if let error = libraryStore.persistenceError { Text(error).font(AppTypography.caption) }
+            }.padding(AppSpacing.md).background(Color.surface)
+        }
+        .task(id: request) {
+            guard let repository else { return }
+            await model.load(using: repository, scope: libraryStore.accountScope)
+        }
+        .sheet(isPresented: $isShowingEditions) {
+            BookEditionPicker(model: model, scope: libraryStore.accountScope, onSelect: { _ in })
+        }
+        .sheet(isPresented: $isShowingAddSheet) {
+            AddBookSheet(book: model.result) { status, format in
+                libraryStore.addBook(BookFactory.makeBook(from: model.result, status: status, format: format))
             }
         }
     }
+}
 
-    // MARK: - Metadata
 
-    @ViewBuilder
-    private var metadataSection:
-        some View
-    {
-        if let pageCount =
-            book.pageCount
-        {
-            AppCard {
-                HStack {
-                    Image(
-                        systemName:
-                            "book.pages"
-                    )
-                    .foregroundStyle(
-                        Color.appAccent
-                    )
-
-                    Text(
-                        "\(pageCount) pages"
-                    )
-                    .font(
-                        AppTypography.body
-                    )
-                    .foregroundStyle(
-                        Color.textPrimary
-                    )
-
-                    Spacer()
-                }
-            }
-        }
+#Preview("Search details") {
+    NavigationStack {
+        SearchBookDetailView(book: .init(id: "/works/OL1W", title: "A book to discover", authors: ["An author"],
+            description: "Explore the synopsis before adding a book to your library. Publication information and edition selection sit below, while the Add to library action stays within reach.",
+            coverURL: nil, pageCount: 320, genres: ["Fantasy", "Romance"]),
+            libraryStore: LibraryStore(books: [], localDataSource: LocalLibraryDataSource()))
     }
+}
 
-    // MARK: - About
-
-    private func aboutSection(
-        _ description: String
-    ) -> some View {
-
-        VStack(
-            alignment: .leading,
-            spacing: AppSpacing.sm
-        ) {
-            SectionHeader(
-                title: "About"
-            )
-
-            Text(description)
-                .font(
-                    AppTypography.body
-                )
-                .foregroundStyle(
-                    Color.textPrimary
-                )
-        }
+#Preview("Search details · large text · dark") {
+    NavigationStack {
+        SearchBookDetailView(book: .init(id: "/works/OL1W", title: "A book to discover", authors: ["An author"],
+            description: "A synopsis that remains readable at larger text sizes.", coverURL: nil, pageCount: nil,
+            genres: ["Science fiction", "Mystery"]),
+            libraryStore: LibraryStore(books: [], localDataSource: LocalLibraryDataSource()))
     }
-
-    // MARK: - Add Book
-
-    private func addBook(
-        status: ReadingStatus,
-        format: ReadingFormat
-    ) -> Bool {
-        guard !isAlreadyAdded else { return true }
-
-        let newBook = BookFactory.makeBook(
-            from: book,
-            status: status,
-            format: format
-        )
-        let didAdd = libraryStore.addBook(newBook)
-        if didAdd { wasJustAdded = true }
-        return didAdd
-    }
+    .environment(\.dynamicTypeSize, .accessibility3)
+    .preferredColorScheme(.dark)
 }

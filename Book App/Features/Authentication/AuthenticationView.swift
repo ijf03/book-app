@@ -1,7 +1,9 @@
 import SwiftUI
+import Accessibility
 
 struct AuthenticationView: View {
     @State private var model: AuthenticationViewModel
+    @State private var contentHeight: CGFloat = 0
 
     init(service: any AuthenticationService, initialMode: AuthenticationViewModel.Mode = .login) {
         let model = AuthenticationViewModel(service: service)
@@ -11,28 +13,31 @@ struct AuthenticationView: View {
 
     var body: some View {
         NavigationStack {
+            GeometryReader { geometry in
             ScrollView {
-                VStack(spacing: AppSpacing.lg) {
+                VStack(spacing: AppSpacing.md) {
                     VStack(spacing: AppSpacing.sm) {
                         Image("AppLogo")
                             .resizable()
                             .scaledToFit()
-                            .frame(width: AppLayout.authenticationLogoSize, height: AppLayout.authenticationLogoSize)
+                            .frame(width: geometry.size.height < 650 ? AppLayout.minimumTapTarget : AppLayout.authenticationLogoSize, height: geometry.size.height < 650 ? AppLayout.minimumTapTarget : AppLayout.authenticationLogoSize)
                             .accessibilityHidden(true)
                         Text("BOOK TRACKER")
                             .font(AppTypography.caption)
                             .foregroundStyle(Color.appAccent)
-                        Text(model.mode == .login ? "Welcome back" : model.mode == .signUp ? "Your next chapter starts here" : "Forgot your password?")
+                        Text(model.mode == .login ? "Welcome back" : "Create your account")
                             .font(AppTypography.largeTitle)
                             .multilineTextAlignment(.center)
-                        Text(model.mode == .login ? "Pick up where you left off." : model.mode == .signUp ? "A home for your books, notes and reading moments." : "We’ll help you get back to your books.")
+                        if geometry.size.height >= 650 {
+                        Text(model.mode == .login ? "Pick up where you left off." : "A home for your books, notes and reading moments.")
                             .font(AppTypography.body)
                             .foregroundStyle(Color.textSecondary)
                             .multilineTextAlignment(.center)
+                        }
                     }
                     AppCard {
-                        VStack(alignment: .leading, spacing: AppSpacing.lg) {
-                            Text(model.title).font(AppTypography.title)
+                        VStack(alignment: .leading, spacing: AppSpacing.md) {
+                            Text(model.title).font(AppTypography.title).accessibilityAddTraits(.isHeader)
                             AuthenticationFields(model: model)
                             AuthenticationFeedback(submission: model.submission)
                             Button {
@@ -53,15 +58,29 @@ struct AuthenticationView: View {
                         }
                     }
                 }
-                .padding(AppSpacing.lg)
+                .padding(AppSpacing.md)
                 .frame(maxWidth: AppLayout.authenticationWidth)
                 .frame(maxWidth: .infinity)
+                .background {
+                    GeometryReader { content in
+                        Color.clear.preference(key: AuthenticationHeightKey.self, value: content.size.height)
+                    }
+                }
             }
+            .onPreferenceChange(AuthenticationHeightKey.self) { contentHeight = $0 }
+            .scrollDisabled(contentHeight <= geometry.size.height)
+            .scrollBounceBehavior(.basedOnSize)
             .scrollDismissesKeyboard(.interactively)
             .background(Color.surfaceSecondary)
+            }
         }
         .tint(Color.appAccent)
     }
+}
+
+private struct AuthenticationHeightKey: PreferenceKey {
+    static let defaultValue: CGFloat = 0
+    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) { value = nextValue() }
 }
 
 private struct AuthenticationFields: View {
@@ -71,22 +90,18 @@ private struct AuthenticationFields: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: AppSpacing.md) {
-            Text("Email").font(AppTypography.headline)
             TextField("Email address", text: $model.email)
                 .textContentType(.username)
                 .keyboardType(.emailAddress)
                 .textInputAutocapitalization(.never)
                 .autocorrectionDisabled()
                 .focused($focus, equals: .email)
-                .submitLabel(model.mode == .reset ? .send : .next)
-                .onSubmit {
-                    if model.mode == .reset { Task { await model.submit() } }
-                    else { focus = .password }
-                }
+                .submitLabel(.next)
+                .onSubmit { focus = .password }
                 .accessibilityIdentifier("auth.email")
+                .accessibilityHint(model.validation(.email) ?? "")
             FieldValidation(message: model.validation(.email))
-            if model.mode != .reset {
-                Text("Password").font(AppTypography.headline)
+            VStack(alignment: .leading, spacing: AppSpacing.md) {
                 Group {
                     if showsPassword {
                         TextField("Password", text: $model.password)
@@ -104,21 +119,26 @@ private struct AuthenticationFields: View {
                     else { Task { await model.submit() } }
                 }
                 .accessibilityIdentifier("auth.password")
-                Button(showsPassword ? "Hide password" : "Show password") { showsPassword.toggle() }
-                    .frame(minHeight: AppLayout.minimumTapTarget)
+                .accessibilityHint(model.validation(.password) ?? "")
+                .padding(.trailing, AppLayout.minimumTapTarget)
+                .overlay(alignment: .trailing) {
+                    Button { showsPassword.toggle() } label: {
+                        Image(systemName: showsPassword ? "eye.slash" : "eye")
+                            .frame(width: AppLayout.minimumTapTarget, height: AppLayout.minimumTapTarget)
+                    }
+                    .accessibilityLabel(showsPassword ? "Hide password" : "Show password")
                     .accessibilityIdentifier("auth.showPassword")
+                }
                 FieldValidation(message: model.validation(.password))
             }
             if model.mode == .signUp {
-                Text("Password requirements are checked securely when you create your account.")
-                    .font(AppTypography.caption).foregroundStyle(Color.textSecondary)
-                Text("Confirm password").font(AppTypography.headline)
                 SecureField("Confirm password", text: $model.confirmation)
                     .textContentType(.newPassword)
                     .focused($focus, equals: .confirmation)
                     .submitLabel(.go)
                     .onSubmit { Task { await model.submit() } }
                     .accessibilityIdentifier("auth.confirmation")
+                    .accessibilityHint(model.validation(.confirmation) ?? "")
                 FieldValidation(message: model.validation(.confirmation))
             }
         }
@@ -147,9 +167,9 @@ private struct AuthenticationFeedback: View {
         case .failed(let message):
             Text(message).font(AppTypography.body).foregroundStyle(Color.danger)
                 .accessibilityIdentifier("auth.error")
-        case .resetSent:
-            Text("If an account uses this email, you’ll receive a password reset link. Check your inbox and spam folder.")
-                .font(AppTypography.body).accessibilityIdentifier("auth.resetSent")
+                .onChange(of: message, initial: true) { _, message in
+                    AccessibilityNotification.Announcement(message).post()
+                }
         case .idle, .loading: EmptyView()
         }
     }
@@ -160,10 +180,6 @@ private struct AuthenticationLinks: View {
     var body: some View {
         VStack(spacing: AppSpacing.md) {
             if model.mode == .login {
-                Button("Forgot password?") { model.changeMode(.reset) }
-                    .frame(minHeight: AppLayout.minimumTapTarget)
-                    .accessibilityIdentifier("auth.forgotPassword")
-                Divider()
                 Text("New to Book Tracker?")
                     .font(AppTypography.caption).foregroundStyle(Color.textSecondary)
                 Button("Create an account") { model.changeMode(.signUp) }
@@ -201,7 +217,6 @@ private struct AuthenticationFieldStyle: TextFieldStyle {
     func cancel() {}
     func signUp(email: String, password: String) async throws {}
     func signIn(email: String, password: String) async throws {}
-    func resetPassword(email: String) async throws {}
     func signOut() throws {}
 }
 

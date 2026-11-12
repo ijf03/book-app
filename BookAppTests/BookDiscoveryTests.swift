@@ -8,6 +8,23 @@ struct BookDiscoveryTests {
         .init(id: id, title: id, authors: ["Author"], description: nil, coverURL: nil, pageCount: nil)
     }
 
+    @Test func genreDefaultsToAllAndExplicitSelectionFiltersDiscoveryAndSearch() async {
+        let repository = DiscoveryRepository(results: [])
+        let discovery = BookDiscoveryViewModel(repository: repository)
+        #expect(discovery.topic == "All")
+        #expect(BookDiscoveryViewModel.seeds(books: [], topic: "All").first?.query == "*")
+        discovery.topic = "Mystery"
+        await discovery.load(books: [Book.mockFourthWing], scope: nil)
+        #expect(repository.queries == ["subject:\"Mystery\""])
+        let search = SearchViewModel(repository: repository)
+        search.searchText = "Lewis"
+        await search.search()
+        #expect(repository.queries.last == "Lewis")
+        search.selectedGenre = "Fantasy"
+        await search.search()
+        #expect(repository.queries.last == "(Lewis) AND subject:\"Fantasy\"")
+    }
+
     @Test func seedsUseActualReadingHistoryAndProvideNewReaderFallback() {
         let fallback = BookDiscoveryViewModel.seeds(books: [], topic: "Mystery")
         #expect(fallback.count == 1 && fallback[0].query == "subject:\"Mystery\"")
@@ -47,6 +64,40 @@ struct BookDiscoveryTests {
         #expect(model.error == nil && model.shelves.first?.books.first?.id == "new")
     }
 
+    @Test func featuredPreferHistoryMatchesAndPreserveFullSynopsis() async {
+        var owned = Book.mockFourthWing
+        owned.status = .reading
+        let synopsis = String(repeating: "A complete synopsis paragraph.\n\n", count: 20)
+        let unrelated = BookSearchResult(id: "other", title: "Other", authors: ["Someone else"],
+                                       description: synopsis, coverURL: nil, pageCount: nil)
+        let matching = BookSearchResult(id: "match", title: "Match", authors: owned.authors,
+                                      description: synopsis, coverURL: nil, pageCount: nil)
+        let repository = DiscoveryRepository(results: [unrelated, matching, matching])
+        let model = BookDiscoveryViewModel(repository: repository)
+        await model.load(books: [owned], scope: nil)
+        #expect(model.featured.map(\.id) == ["match", "other"])
+        #expect(model.featured.first?.book.description == synopsis)
+    }
+
+    @Test func automaticSynopsesAreLimitedToTwoAndMoreBooksLoadOnDemand() async {
+        let results = (0..<12).map { index in
+            BookSearchResult(id: "book-\(index)", title: "Book", authors: [],
+                             description: index < 2 ? "  " : "Full synopsis \(index)",
+                             coverURL: nil, pageCount: nil)
+        }
+        let repository = DiscoveryRepository(results: results)
+        let model = BookDiscoveryViewModel(repository: repository)
+        await model.load(books: [], scope: nil)
+        #expect(model.featured.map(\.id) == ["book-0", "book-1"])
+        #expect(model.moreToExplore.map(\.id) == ["book-2", "book-3"])
+        #expect(repository.detailCalls == 2)
+        let missing = DiscoveryRepository(results: (0..<12).map { result("missing-\($0)") })
+        let fallback = BookDiscoveryViewModel(repository: missing)
+        await fallback.load(books: [], scope: nil)
+        #expect(missing.detailCalls == 2)
+        #expect(fallback.featured.count == 2 && fallback.moreToExplore.count == 2)
+    }
+
     @Test func revokedAccountDiscardsInFlightResults() async {
         let repository = SuspendedDiscoveryRepository()
         let model = BookDiscoveryViewModel(repository: repository)
@@ -64,10 +115,17 @@ struct BookDiscoveryTests {
     let results: [BookSearchResult]
     var fails: Bool
     private(set) var calls = 0
+    private(set) var queries: [String] = []
+    private(set) var detailCalls = 0
+    func details(for book: BookSearchResult) async throws -> BookSearchResult {
+        detailCalls += 1
+        return book
+    }
     init(results: [BookSearchResult], fails: Bool = false) { self.results = results; self.fails = fails }
     func recover() { fails = false }
     func searchBooks(query: String, filter: BookSearchFilter) async throws -> [BookSearchResult] {
         calls += 1
+        queries.append(query)
         if fails { throw URLError(.notConnectedToInternet) }
         return results
     }

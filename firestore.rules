@@ -16,31 +16,61 @@ service cloud.firestore {
     function optionalPositiveInt(data, key) {
       return !(key in data) || (data[key] is int && data[key] >= 0);
     }
+    function formats(data, key) {
+      return !(key in data) || (data[key] is list && data[key].size() <= 4
+        && data[key].hasOnly(['physical', 'ebook', 'audiobook', 'immersive']));
+    }
     function progress(data) {
       return data is map && data.keys().hasOnly(['page', 'percentage', 'timestampSeconds'])
         && optionalPositiveInt(data, 'page') && optionalPositiveInt(data, 'timestampSeconds')
         && (!('percentage' in data) || (data.percentage is number && data.percentage >= 0 && data.percentage <= 100));
     }
+    function edition(data) {
+      return data is map && data.keys().hasAll(['id', 'title', 'publishers', 'languages', 'isbn'])
+        && data.keys().hasOnly(['id', 'title', 'publishers', 'languages', 'isbn', 'published', 'pages', 'physicalFormat', 'coverURL'])
+        && data.id is string && data.id.matches('^/books/OL[0-9]+M$')
+        && data.title is string && data.title.size() <= 10000
+        && data.publishers is list && data.publishers.size() <= 30
+        && data.languages is list && data.languages.size() <= 30
+        && data.isbn is list && data.isbn.size() <= 30
+        && optionalString(data, 'published', 200) && optionalString(data, 'physicalFormat', 200)
+        && optionalString(data, 'coverURL', 8192) && optionalPositiveInt(data, 'pages');
+    }
+    function metadata(data) {
+      return data is map && data.keys().hasAll(['schemaVersion', 'workID', 'fetchedAt'])
+        && data.keys().hasOnly(['schemaVersion', 'workID', 'fetchedAt', 'firstPublished', 'edition', 'communityRating', 'communityRatingCount'])
+        && data.schemaVersion == 1 && data.workID is string && data.workID.matches('^/works/OL[0-9]+W$')
+        && data.fetchedAt is number && optionalString(data, 'firstPublished', 200)
+        && optionalPositiveInt(data, 'communityRatingCount')
+        && (!('communityRating' in data) || (data.communityRating is number && data.communityRating >= 0 && data.communityRating <= 5))
+        && (!('edition' in data) || edition(data.edition));
+    }
     function book(data, id) {
       return data.keys().hasAll(['id', 'title', 'authors', 'status', 'format', 'progress'])
-        && data.keys().hasOnly(['id', 'title', 'authors', 'description', 'coverURL', 'pageCount', 'status', 'format', 'sourceBookID', 'completedAt', 'progress', 'genre', 'bookType', 'language', 'pastReads', 'currentReadID', 'currentReadStartedAt'])
+        && data.keys().hasOnly(['id', 'title', 'authors', 'description', 'coverURL', 'pageCount', 'status', 'format', 'sourceBookID', 'completedAt', 'progress', 'genre', 'bookType', 'language', 'pastReads', 'currentReadID', 'currentReadStartedAt', 'genres', 'metadata', 'audioDurationSeconds', 'immersiveCompanion', 'immersiveReadingPercentage', 'abandonedAt', 'formatsUsed'])
         && data.id == id && data.title is string && data.title.size() <= 10000
         && data.authors is list && data.authors.size() <= 1000
-        && data.status in ['reading', 'toRead', 'completed']
+        && data.status in ['reading', 'toRead', 'completed', 'abandoned']
         && data.format in ['physical', 'ebook', 'audiobook', 'immersive'] && progress(data.progress)
         && optionalString(data, 'description', 700000) && optionalString(data, 'coverURL', 8192)
         && optionalString(data, 'sourceBookID', 4096) && optionalPositiveInt(data, 'pageCount')
+        && (!('immersiveReadingPercentage' in data) || (data.immersiveReadingPercentage is number && data.immersiveReadingPercentage >= 0 && data.immersiveReadingPercentage <= 100))
+        && (!('immersiveCompanion' in data) || data.immersiveCompanion in ['physical', 'ebook'])
+        && optionalNumber(data, 'abandonedAt') && formats(data, 'formatsUsed')
+        && (!('audioDurationSeconds' in data) || (data.audioDurationSeconds is int && data.audioDurationSeconds > 0 && data.audioDurationSeconds <= 360003599))
         && optionalNumber(data, 'completedAt') && optionalString(data, 'genre', 100)
         && optionalString(data, 'language', 100)
+        && (!('genres' in data) || (data.genres is list && data.genres.size() <= 30))
+        && (!('metadata' in data) || metadata(data.metadata))
         && optionalString(data, 'currentReadID', 100) && optionalNumber(data, 'currentReadStartedAt')
         && (!('pastReads' in data) || (data.pastReads is list && data.pastReads.size() <= 10000))
         && (!('bookType' in data) || data.bookType in ['fiction', 'nonfiction']);
     }
     function session(data, id) {
       return data.keys().hasAll(['id', 'bookID', 'startedAt', 'totalPausedSeconds', 'startProgress'])
-        && data.keys().hasOnly(['id', 'bookID', 'startedAt', 'endedAt', 'pausedAt', 'totalPausedSeconds', 'startProgress', 'endProgress', 'readID'])
+        && data.keys().hasOnly(['id', 'bookID', 'startedAt', 'endedAt', 'pausedAt', 'totalPausedSeconds', 'startProgress', 'endProgress', 'readID', 'formats'])
         && data.id == id && data.bookID is string && data.bookID.size() > 0 && data.bookID.size() <= 4096
-        && optionalString(data, 'readID', 100)
+        && optionalString(data, 'readID', 100) && formats(data, 'formats')
         && data.startedAt is number && optionalNumber(data, 'endedAt') && optionalNumber(data, 'pausedAt')
         && data.totalPausedSeconds is int && data.totalPausedSeconds >= 0 && progress(data.startProgress)
         && (!('endProgress' in data) || progress(data.endProgress));
@@ -81,7 +111,14 @@ service cloud.firestore {
         && data.bookIDs is list && data.bookIDs.size() <= 10000;
     }
     function preferences(data, id) {
-      return (id.matches('^checkIn-[0-9]{4}-[0-9]{2}-[0-9]{2}$')
+      return (id.matches('^mood-.+$') && data.keys().hasOnly(['name'])
+          && data.keys().hasAll(['name']) && data.name is string
+          && data.name.size() > 0 && data.name.size() <= 100 && id == 'mood-' + data.name.lower())
+        || (id == 'readerProfile' && data.keys().hasAll(['username'])
+          && data.keys().hasOnly(['username', 'preferredName', 'bio'])
+          && data.username is string && data.username.matches('^[a-z0-9_]{3,24}$')
+          && optionalString(data, 'preferredName', 60) && optionalString(data, 'bio', 240))
+        || (id.matches('^checkIn-[0-9]{4}-[0-9]{2}-[0-9]{2}$')
           && data.keys().hasAll(['day', 'didRead', 'recordedAt'])
           && data.keys().hasOnly(['day', 'didRead', 'recordedAt'])
           && data.day is string && data.day.matches('^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$')

@@ -106,6 +106,7 @@ final class DetailedStatisticsViewModel {
             let displayEnd = selection.period == .year ? calendar.dateInterval(of: .year, for: date)?.end : nil
             result.insights = ReadingInsightsCalculator.calculate(input, statistics: result, calendar: calendar, now: date, displayEnd: displayEnd)
             result.extended = ExtendedStatisticsCalculator.calculate(input, statistics: result, calendar: calendar, now: date)
+            result.behaviour = ReadingBehaviourCalculator.calculate(input, now: date, calendar: calendar)
             return result
         }
         worker = task

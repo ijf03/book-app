@@ -8,6 +8,7 @@
 import SwiftUI
 
 struct NoteEditorView: View {
+    @Environment(\.dynamicTypeSize) private var typeSize
 
     @Environment(\.dismiss)
     private var dismiss
@@ -134,6 +135,7 @@ struct NoteEditorView: View {
                 TextEditor(
                     text: $text
                 )
+                .accessibilityLabel("Reading note")
                 .font(
                     AppTypography.body
                 )
@@ -168,7 +170,10 @@ struct NoteEditorView: View {
                     spacing: AppSpacing.md
                 ) {
 
-                    HStack {
+                    let layout = typeSize.isAccessibilitySize
+                        ? AnyLayout(VStackLayout(alignment: .leading, spacing: AppSpacing.md))
+                        : AnyLayout(HStackLayout())
+                    layout {
 
                         VStack(
                             alignment: .leading,
@@ -208,7 +213,7 @@ struct NoteEditorView: View {
                             .trailing
                         )
                         .frame(
-                            width: 90
+                            width: typeSize.isAccessibilitySize ? nil : 90
                         )
                         .textFieldStyle(
                             .roundedBorder

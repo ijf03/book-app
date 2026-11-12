@@ -123,6 +123,7 @@ struct CustomBookListsView: View {
                     shelf("To Read", symbol: "bookmark", count: model.library.books.filter { $0.status == .toRead }.count) { onSelectShelf(.toRead) }
                     shelf("Reading", symbol: "book", count: model.library.books.filter { $0.status == .reading }.count) { onSelectShelf(.reading) }
                     shelf("Completed", symbol: "checkmark.circle", count: model.library.books.filter { $0.status == .completed }.count) { onSelectShelf(.completed) }
+                    shelf("Did not finish", symbol: "book.closed", count: model.library.books.filter { $0.status == .abandoned }.count) { onSelectShelf(.abandoned) }
                 }
             }
             Section {
@@ -162,7 +163,7 @@ struct CustomBookListsView: View {
                 if !model.canSave { Button("Retry Loading Lists") { model.reload() } }
             } header: {
                 HStack {
-                    Text("My Lists").font(AppTypography.title).foregroundStyle(Color.textPrimary)
+                    Text("My Lists").font(AppTypography.title).accessibilityAddTraits(.isHeader).foregroundStyle(Color.textPrimary)
                     Spacer()
                     Button { isCreating = true } label: {
                         Image(systemName: "plus.circle.fill")
@@ -178,6 +179,7 @@ struct CustomBookListsView: View {
         }
         .onChange(of: model.library.accountScope?.cloudRevision) { _, _ in model.reload() }
         .scrollContentBackground(.hidden).background(Color.surfaceSecondary)
+        .navigationBarTitleDisplayMode(.inline)
         .navigationTitle(isEmbedded ? "My Library" : "My Lists")
         .onAppear { model.reload() }
         .toolbar {
@@ -270,7 +272,7 @@ private struct CustomBookListEditor: View {
                         .accessibilityIdentifier("list.bookSearch")
                     Picker("Search by", selection: $search.selectedFilter) {
                         ForEach(BookSearchFilter.allCases) { Text($0.displayName).tag($0) }
-                    }.pickerStyle(.segmented)
+                    }.accessibleSegmentedPicker()
                     searchResults
                 }
             }
@@ -333,6 +335,8 @@ private struct CustomBookListEditor: View {
                     }
                 }
                 .buttonStyle(.borderless)
+                .accessibilityAddTraits(isSelected ? .isSelected : [])
+                .accessibilityValue(isSelected ? "Selected" : "Not selected")
                 .accessibilityLabel("\(isSelected ? String(localized: "Remove") : String(localized: "Select")) \(result.title), \(result.authorText)")
             }
         }
@@ -361,6 +365,7 @@ private struct CustomBookListDetailView: View {
                 }
                     .environment(\.editMode, $editMode)
                     .scrollContentBackground(.hidden).background(Color.surfaceSecondary)
+                    .navigationBarTitleDisplayMode(.inline)
                     .navigationTitle(list.name)
                     .toolbar {
                         ToolbarItem(placement: .topBarTrailing) {
@@ -368,7 +373,7 @@ private struct CustomBookListDetailView: View {
                                 editMode = editMode.isEditing ? .inactive : .active
                             }
                             .disabled(!model.canSave || model.books(in: list).count < 2)
-                            .accessibilityHint("Drag the handles beside books to change their order.")
+                            .accessibilityHint("Enables reordering. Use the reorder controls beside each book to change its position.")
                             .accessibilityIdentifier("list.reorderBooks")
                         }
                         ToolbarItem(placement: .topBarTrailing) {

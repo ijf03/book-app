@@ -197,7 +197,7 @@ struct UpdateProgressView: View {
 
     private var instructionSection: some View {
         Text(
-            "Use any one field, or combine page, percentage and timestamp."
+            "Choose a format and enter your position. Your shared percentage follows you when you switch formats."
         )
         .font(AppTypography.body)
         .foregroundStyle(Color.textSecondary)
@@ -206,38 +206,7 @@ struct UpdateProgressView: View {
     // MARK: - Fields
 
     private var progressFields: some View {
-        VStack(spacing: AppSpacing.md) {
-
-            FieldToggleRow(
-                title: "Page",
-                helperText: "Physical or ebook",
-                placeholder: "0",
-                keyboardType: .numberPad,
-                isEnabled: pageEnabledBinding,
-                text: pageBinding
-            )
-
-            FieldToggleRow(
-                title: "Percentage",
-                helperText: "Works with any format",
-                placeholder: "0",
-                keyboardType: .decimalPad,
-                isEnabled:
-                    percentageEnabledBinding,
-                text: percentageBinding
-            )
-
-            FieldToggleRow(
-                title: "Timestamp",
-                helperText: "HH:MM:SS for audio",
-                placeholder: "00:00:00",
-                keyboardType:
-                    .numbersAndPunctuation,
-                isEnabled:
-                    timestampEnabledBinding,
-                text: timestampBinding
-            )
-        }
+        ProgressEntryFields(model: viewModel)
     }
 
     // MARK: - Validation
@@ -330,85 +299,6 @@ struct UpdateProgressView: View {
         dismiss()
     }
     
-    // MARK: - Bindings
-
-    private var pageEnabledBinding:
-        Binding<Bool>
-    {
-        Binding(
-            get: {
-                viewModel.isPageEnabled
-            },
-            set: {
-                viewModel.isPageEnabled = $0
-            }
-        )
-    }
-
-    private var percentageEnabledBinding:
-        Binding<Bool>
-    {
-        Binding(
-            get: {
-                viewModel.isPercentageEnabled
-            },
-            set: {
-                viewModel
-                    .isPercentageEnabled = $0
-            }
-        )
-    }
-
-    private var timestampEnabledBinding:
-        Binding<Bool>
-    {
-        Binding(
-            get: {
-                viewModel.isTimestampEnabled
-            },
-            set: {
-                viewModel
-                    .isTimestampEnabled = $0
-            }
-        )
-    }
-
-    private var pageBinding: Binding<String> {
-        Binding(
-            get: {
-                viewModel.pageText
-            },
-            set: {
-                viewModel.updatePage($0)
-            }
-        )
-    }
-
-    private var percentageBinding:
-        Binding<String>
-    {
-        Binding(
-            get: {
-                viewModel.percentageText
-            },
-            set: {
-                viewModel.updatePercentage($0)
-            }
-        )
-    }
-
-    private var timestampBinding:
-        Binding<String>
-    {
-        Binding(
-            get: {
-                viewModel.timestampText
-            },
-            set: {
-                viewModel.updateTimestamp($0)
-            }
-        )
-    }
 }
 
 #Preview {

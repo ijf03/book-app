@@ -46,6 +46,9 @@ struct StatisticsShareView: View {
                     if let image = model.image, let export = model.export {
                         image.resizable().scaledToFit()
                             .accessibilityLabel("Reading statistics image preview")
+                        DisclosureGroup("Preview as text") {
+                            StatisticsShareCard(statistics: statistics)
+                        }
                         ShareLink(item: export, preview: SharePreview("My reading insights", image: image)) {
                             Label("Share image", systemImage: "square.and.arrow.up")
                         }

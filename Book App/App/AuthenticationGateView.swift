@@ -12,25 +12,38 @@ struct AuthenticationGateView: View {
                 AuthenticationView(service: container.authenticationService)
             case .signedIn:
                 if let account = container.account, container.storageState == .ready {
-                    RootView(
-                        bookRepository: container.bookRepository,
-                        libraryStore: account.libraryStore,
-                        readingSessionStore: account.readingSessionStore,
-                        authentication: container.authentication,
-                        sync: account.sync,
-                        reminders: account.reminders
-                    )
-                    .environment(account.router)
-                    .environment(account.libraryStore)
-                    .environment(account.readingSessionStore)
-                    .environment(account.bookContentStore)
-                    .id(account.id)
+                    SignedInContent(container: container, account: account)
+                        .id(account.id)
                 } else {
                     AccountStorageChoiceView(container: container)
                 }
             }
         }
         .tint(Color.appAccent)
+    }
+}
+
+private struct SignedInContent: View {
+    let container: AppContainer
+    let account: AccountSession
+    @State private var deferredWelcome = false
+
+    var body: some View {
+        if account.libraryStore.profile.needsWelcome && !deferredWelcome {
+            ReaderProfileView(store: account.libraryStore.profile, isOnboarding: true,
+                              onFinish: { deferredWelcome = true })
+        } else {
+            RootView(bookRepository: container.bookRepository,
+                     libraryStore: account.libraryStore,
+                     readingSessionStore: account.readingSessionStore,
+                     authentication: container.authentication,
+                     sync: account.sync,
+                     reminders: account.reminders)
+                .environment(account.router)
+                .environment(account.libraryStore)
+                .environment(account.readingSessionStore)
+                .environment(account.bookContentStore)
+        }
     }
 }
 

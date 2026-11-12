@@ -9,7 +9,7 @@ struct InsightPieChart: View {
     var body: some View {
         AppCard {
             VStack(alignment: .leading, spacing: AppSpacing.md) {
-                Text(title).font(AppTypography.title)
+                Text(title).font(AppTypography.title).accessibilityAddTraits(.isHeader)
                 if counts.isEmpty {
                     Text("No dated completed books in this period.").foregroundStyle(Color.textSecondary)
                 } else {
@@ -63,7 +63,7 @@ struct BookComparisonView: View {
     var body: some View {
         AppCard {
             VStack(alignment: .leading, spacing: AppSpacing.md) {
-                Text("Compare books").font(AppTypography.title)
+                Text("Compare books").font(AppTypography.title).accessibilityAddTraits(.isHeader)
                 Text("Sessions, pages and pace use the selected period. Completion metrics use recorded history up to completion for books finished in this period.")
                     .font(AppTypography.caption).foregroundStyle(Color.textSecondary)
                 if books.isEmpty {
@@ -79,7 +79,7 @@ struct BookComparisonView: View {
                     }
                     Picker("Compare", selection: $metric) {
                         ForEach(ComparisonMetric.allCases) { Text($0.title).tag($0) }
-                    }.pickerStyle(.segmented)
+                    }.accessibleSegmentedPicker()
                     if selected.isEmpty { Text("Select up to two books to see recorded metrics.") }
                     ForEach(selected) { book in
                         VStack(alignment: .leading, spacing: AppSpacing.sm) {
@@ -120,7 +120,7 @@ struct RatingsByBookTypeView: View {
     @State private var byFormat = false
     var body: some View {
         VStack(alignment: .leading, spacing: AppSpacing.md) {
-            Text("Ratings by book type").font(AppTypography.title)
+            Text("Ratings by book type").font(AppTypography.title).accessibilityAddTraits(.isHeader)
             Picker("Group ratings by", selection: $byFormat) {
                 Text("Fiction / non-fiction").tag(false)
                 Text("Format").tag(true)
@@ -146,7 +146,7 @@ struct ExtendedStatisticsSection: View {
             BookComparisonView(books: statistics.extended.books)
             AppCard {
                 VStack(alignment: .leading, spacing: AppSpacing.sm) {
-                    Text("Average recorded time to finish").font(AppTypography.title)
+                    Text("Average recorded time to finish").font(AppTypography.title).accessibilityAddTraits(.isHeader)
                     if let seconds = statistics.extended.averageFinishSeconds {
                         Text(Duration.seconds(seconds).formatted(.units(allowed: [.hours, .minutes, .seconds], width: .abbreviated, maximumUnitCount: 2)))
                             .font(AppTypography.title)

@@ -20,6 +20,14 @@ enum SyncEntityCodec {
     static func entities(file: String, data: Data) throws -> [Entity] {
         let decoder = JSONDecoder()
         switch file {
+        case "review-moods.json":
+            return try decoder.decode([ReviewMood].self, from: data).map {
+                Entity(collection: .preferences, id: $0.id, payload: try encode($0))
+            }
+        case "reader-profile.json":
+            let values = try decoder.decode([ReaderProfile].self, from: data)
+            guard values.count <= 1 else { throw SyncFailure.malformed }
+            return try values.map { Entity(collection: .preferences, id: "readerProfile", payload: try encode($0)) }
         case "library.json":
             let values = try decoder.decode([Book].self, from: data)
             var result = try values.map { Entity(collection: .books, id: $0.id, payload: try encode($0)) }
@@ -61,7 +69,7 @@ enum SyncEntityCodec {
         case .goals: "reading-goals.json"
         case .lists: "custom-book-lists.json"
         case .preferences:
-            id.hasPrefix("checkIn-") ? "reading-check-ins.json" : id == "bookOrder" ? "library.json" : id == "listOrder" ? "custom-book-lists.json" : "reading-reminders.json"
+            id.hasPrefix("mood-") ? "review-moods.json" : id == "readerProfile" ? "reader-profile.json" : id.hasPrefix("checkIn-") ? "reading-check-ins.json" : id == "bookOrder" ? "library.json" : id == "listOrder" ? "custom-book-lists.json" : "reading-reminders.json"
         }
     }
 
@@ -76,11 +84,19 @@ enum SyncEntityCodec {
         switch record.collection {
         case .books:
             let value = try decoder.decode(Book.self, from: data)
+            guard (value.genres?.count ?? 0) <= 30,
+                  value.genres?.allSatisfy({ !$0.isEmpty && $0.count <= 100 }) ?? true,
+                  value.metadata?.isValid ?? true else { throw SyncFailure.malformed }
             guard value.genre.map({ $0.count <= 100 }) ?? true else { throw SyncFailure.malformed }
             guard value.language.map({ $0.count <= 100 }) ?? true,
                   value.bookType.map({ ["fiction", "nonfiction"].contains($0) }) ?? true else { throw SyncFailure.malformed }
             guard value.currentReadID.map({ !$0.isEmpty && $0.count <= 100 }) ?? true,
                   value.currentReadStartedAt.map({ $0.timeIntervalSinceReferenceDate.isFinite }) ?? true else { throw SyncFailure.malformed }
+            guard value.immersiveReadingPercentage.map({ $0.isFinite && (0...100).contains($0) }) ?? true,
+                  value.immersiveCompanion.map({ $0 == .physical || $0 == .ebook }) ?? true,
+                  value.audioDurationSeconds.map({ $0 > 0 && $0 <= 360_003_599 }) ?? true,
+                  value.abandonedAt.map({ $0.timeIntervalSinceReferenceDate.isFinite }) ?? true,
+                  (value.formatsUsed?.count ?? 0) <= 4 else { throw SyncFailure.malformed }
             let reads = value.pastReads ?? []
             guard reads.count <= 10000, Set(reads.map(\.id)).count == reads.count,
                   !reads.contains(where: { $0.id == (value.currentReadID ?? "initial") }) else { throw SyncFailure.malformed }
@@ -97,6 +113,7 @@ enum SyncEntityCodec {
             let value = try decoder.decode(ReadingSession.self, from: data)
             guard !value.bookID.isEmpty, value.totalPausedSeconds >= 0,
                   value.readID.map({ !$0.isEmpty && $0.count <= 100 }) ?? true else { throw SyncFailure.malformed }
+            guard (value.formats?.count ?? 0) <= 4 else { throw SyncFailure.malformed }
             try validateProgress(value.startProgress)
             if let progress = value.endProgress { try validateProgress(progress) }
             identity = value.id.uuidString
@@ -119,7 +136,12 @@ enum SyncEntityCodec {
         case .lists:
             identity = try decoder.decode(CustomBookList.self, from: data).id.uuidString
         case .preferences:
-            if record.entityID.hasPrefix("checkIn-") {
+            if record.entityID.hasPrefix("mood-") {
+                let mood = try decoder.decode(ReviewMood.self, from: data)
+                guard mood.isValid, mood.id == record.entityID else { throw SyncFailure.malformed }
+            } else if record.entityID == "readerProfile" {
+                guard try decoder.decode(ReaderProfile.self, from: data).validationError == nil else { throw SyncFailure.malformed }
+            } else if record.entityID.hasPrefix("checkIn-") {
                 let value = try decoder.decode(ReadingCheckIn.self, from: data)
                 guard value.id == record.entityID, value.date(calendar: Calendar(identifier: .gregorian)) != nil,
                       value.recordedAt.timeIntervalSinceReferenceDate.isFinite else { throw SyncFailure.malformed }
@@ -159,6 +181,13 @@ enum SyncEntityCodec {
             }
         }
         switch file {
+        case "review-moods.json":
+            return try encode(live.filter { $0.collection == .preferences && $0.entityID.hasPrefix("mood-") }
+                .sorted { $0.entityID < $1.entityID }
+                .compactMap { try $0.payload.map { try JSONDecoder().decode(ReviewMood.self, from: $0) } })
+        case "reader-profile.json":
+            let payload = live.first { $0.collection == .preferences && $0.entityID == "readerProfile" }?.payload
+            return try encode(payload.map { [try JSONDecoder().decode(ReaderProfile.self, from: $0)] } ?? [])
         case "library.json":
             return try encode(ordered(values(.books, Book.self), orderID: "bookOrder", identity: { $0.id }))
         case "reading-check-ins.json":
